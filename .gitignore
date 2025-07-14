@@ -1,0 +1,78 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# SQLite
+*.sqlite3
+*.sqlite
+
+# SQLite DB de backend
+backend/data.sqlite3
+backend/node_modules
+
+
+# Logs
+logs/
+*.log
+
+# Vite/React
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+frontend/node_modules/
+
+# Build de backend
+backend/dist/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+
+# Build
+
+
+# Misc
+*.bak
+*.tmp
+
+# Coverage
+coverage/
+
+# Test output
+*.test-results
+*.coverage
+coverage/
+
+# IDEs
+.idea/
+.history/
+.swp
+.swo
+.vscode/
+
+# Otros archivos temporales
+tmp/
+temp/
+*.tmp
+*.log
+*.bak
+*.old
+*.orig
+
+# Archivos de sistema
+ehthumbs.db
+Icon?
+Desktop.ini
+Thumbs.db
+
+# Others
+backend/data.sqlite3
