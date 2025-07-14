@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs, Tab, Box } from '@mui/material';
+import { Tabs, Tab, Box, Paper } from '@mui/material';
 import Pedidos from '../components/Pedidos';
 import Clientes from '../components/Clientes';
 import Armadores from '../components/Armadores';
@@ -11,9 +11,8 @@ import Estados from '../components/Estados';
 export default function Dashboard() {
   const [tab, setTab] = React.useState(0);
   return (
-    <Box sx={{ width: '100%' }}>
-      <Tabs value={tab} onChange={(_, v) => setTab(v)}>
-        <Tab label="Pedidos" />
+    <Box>
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }} textColor="primary" indicatorColor="primary">
         <Tab label="Clientes" />
         <Tab label="Armadores" />
         <Tab label="Transportes" />
@@ -21,13 +20,14 @@ export default function Dashboard() {
         <Tab label="Vendedores" />
         <Tab label="Estados" />
       </Tabs>
-      {tab === 0 && <Pedidos />}
-      {tab === 1 && <Clientes />}
-      {tab === 2 && <Armadores />}
-      {tab === 3 && <Transportes />}
-      {tab === 4 && <TiposTransporte />}
-      {tab === 5 && <Vendedores />}
-      {tab === 6 && <Estados />}
+      <div>
+        {tab === 0 && <Clientes />}
+        {tab === 1 && <Armadores />}
+        {tab === 2 && <Transportes />}
+        {tab === 3 && <TiposTransporte />}
+        {tab === 4 && <Vendedores />}
+        {tab === 5 && <Estados />}
+      </div>
     </Box>
   );
 }

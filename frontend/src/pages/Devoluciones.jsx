@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination,
-  IconButton, Button, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel
+  IconButton, Button, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Box
 } from '@mui/material';
 import { Edit, Delete, Add } from '@mui/icons-material';
 import API from '../api';
@@ -13,6 +13,7 @@ const columns = [
   { id: 'fecha', label: 'Fecha' },
   { id: 'acciones', label: 'Acciones' }
 ];
+
 const pageSizes = [10, 15, 25, 50];
 
 export default function Devoluciones() {
@@ -36,7 +37,7 @@ export default function Devoluciones() {
   };
   const fetchPedidos = async () => {
     const res = await API.get('/pedidos');
-    setPedidos(res.data.data || res.data);
+    setPedidos(res.data.data);
   };
   const handleChangePage = (_, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
@@ -47,14 +48,15 @@ export default function Devoluciones() {
   const handleDelete = async id => { if (window.confirm('¿Borrar devolución?')) { await API.delete(`/devoluciones/${id}`); fetchData(); } };
 
   return (
-    <Paper sx={{ p: 2 }}>
+    <Box>
+      <h2 className="main-table-title">Devoluciones</h2>
       <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()} sx={{ mb: 2 }}>Nueva Devolución</Button>
       <TableContainer>
-        <Table size="small">
+        <Table className="main-table" size="small">
           <TableHead>
             <TableRow>
               {columns.map(col => (
-                <TableCell key={col.id}>{col.label}</TableCell>
+                <TableCell key={col.id} className="main-table-cell">{col.label}</TableCell>
               ))}
             </TableRow>
           </TableHead>
@@ -63,14 +65,14 @@ export default function Devoluciones() {
               <TableRow key={row.id}>
                 {columns.map(col => (
                   col.id === 'acciones' ? (
-                    <TableCell key={col.id}>
+                    <TableCell key={col.id} className="main-table-cell">
                       <IconButton onClick={() => handleOpen(row)}><Edit /></IconButton>
                       <IconButton onClick={() => handleDelete(row.id)}><Delete /></IconButton>
                     </TableCell>
                   ) : col.id === 'recibido' ? (
-                    <TableCell key={col.id}>{row.recibido ? 'Sí' : 'No'}</TableCell>
+                    <TableCell key={col.id} className="main-table-cell">{row.recibido ? 'Sí' : 'No'}</TableCell>
                   ) : (
-                    <TableCell key={col.id}>{row[col.id]}</TableCell>
+                    <TableCell key={col.id} className="main-table-cell">{row[col.id]}</TableCell>
                   )
                 ))}
               </TableRow>
@@ -117,6 +119,8 @@ export default function Devoluciones() {
           <Button onClick={handleSubmit} variant="contained">Guardar</Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </Box>
   );
 }
+
+

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Box } from '@mui/material';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination
 } from '@mui/material';
@@ -23,7 +24,7 @@ export default function PedidosParciales() {
 
   const fetchData = async () => {
     const res = await API.get('/pedidos', {
-      params: { page: page + 1, pageSize, estado: 3 } // Suponiendo que el id 3 es 'parcial'
+      params: { page: page + 1, pageSize, estado: 3 }
     });
     setData(res.data.data);
     setTotal(Number(res.data.total));
@@ -32,14 +33,14 @@ export default function PedidosParciales() {
   const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <h2>Pedidos Parciales</h2>
+    <Box>
+      <h2 className="main-table-title">Pedidos Parciales</h2>
       <TableContainer>
-        <Table size="small">
+        <Table className="main-table" size="small">
           <TableHead>
             <TableRow>
               {columns.map(col => (
-                <TableCell key={col.id}>{col.label}</TableCell>
+                <TableCell key={col.id} className="main-table-cell">{col.label}</TableCell>
               ))}
             </TableRow>
           </TableHead>
@@ -47,7 +48,7 @@ export default function PedidosParciales() {
             {data.map(row => (
               <TableRow key={row.id}>
                 {columns.map(col => (
-                  <TableCell key={col.id}>{row[col.id]}</TableCell>
+                  <TableCell key={col.id} className="main-table-cell">{row[col.id]}</TableCell>
                 ))}
               </TableRow>
             ))}
@@ -63,6 +64,6 @@ export default function PedidosParciales() {
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={pageSizes}
       />
-    </Paper>
+    </Box>
   );
 }
