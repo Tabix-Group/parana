@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination, Box } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination, Box, TextField, FormControl, Select, MenuItem, Button } from '@mui/material';
 import API from '../api';
 
 const columns = [
@@ -22,10 +22,23 @@ export default function PedidosVisual() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState({ comprobante: '', cliente: '', fecha_entrega: '', estado: '' });
+  const [clientes, setClientes] = useState([]);
+  const [estados, setEstados] = useState([]);
 
   useEffect(() => {
-    API.get('/pedidos').then(res => {
-      // Soporta respuesta { data, total } o array directa
+    API.get('/clientes').then(res => setClientes(res.data.data || []));
+    API.get('/estados').then(res => setEstados(res.data.data || []));
+  }, []);
+
+  useEffect(() => {
+    API.get('/pedidos', {
+      params: {
+        ...filters,
+        page: page + 1,
+        pageSize
+      }
+    }).then(res => {
       if (Array.isArray(res.data)) {
         setData(res.data);
         setTotal(res.data.length);
@@ -37,7 +50,7 @@ export default function PedidosVisual() {
         setTotal(0);
       }
     });
-  }, []);
+  }, [filters, page, pageSize]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -48,8 +61,59 @@ export default function PedidosVisual() {
     setPage(0);
   };
 
+  const handleFilter = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+    setPage(0);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({ comprobante: '', cliente: '', fecha_entrega: '', estado: '' });
+    setPage(0);
+  };
+
   return (
     <Paper sx={{ p: { xs: 1, sm: 2 }, boxShadow: '0 4px 32px 0 rgba(34,51,107,0.10)', borderRadius: 3, border: '1.5px solid #e0e3e7', background: '#fff' }}>
+      {/* Filtros en una sola fila arriba de la tabla */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'nowrap', overflowX: 'auto', alignItems: 'center' }}>
+        <TextField
+          size="small"
+          name="comprobante"
+          value={filters.comprobante}
+          onChange={handleFilter}
+          placeholder="Comprobante"
+          sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+        />
+        <FormControl size="small" sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
+          <Select name="cliente" value={filters.cliente} onChange={handleFilter} displayEmpty>
+            <MenuItem value="">Cliente</MenuItem>
+            {clientes.map(c => <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>)}
+          </Select>
+        </FormControl>
+        <TextField
+          size="small"
+          name="fecha_entrega"
+          value={filters.fecha_entrega}
+          onChange={handleFilter}
+          type="date"
+          InputLabelProps={{ shrink: true }}
+          sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+        />
+        <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
+          <Select name="estado" value={filters.estado} onChange={handleFilter} displayEmpty>
+            <MenuItem value="">Estado</MenuItem>
+            {estados.map(e => <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>)}
+          </Select>
+        </FormControl>
+        <Button
+          variant="text"
+          color="secondary"
+          onClick={handleClearFilters}
+          sx={{ fontWeight: 500, px: 2, py: 1.2, borderRadius: 2 }}
+        >
+          Limpiar filtros
+        </Button>
+      </Box>
       <TableContainer sx={{ borderRadius: 2, boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)', border: '1px solid #e0e3e7', background: '#fff' }}>
         <Table size="small" stickyHeader>
           <TableHead>
