@@ -11,6 +11,7 @@ import vendedoresRoutes from './routes/vendedores.js';
 import estadosRoutes from './routes/estados.js';
 import devolucionesRoutes from './routes/devoluciones.js';
 import usuariosRoutes from './routes/usuarios.js';
+import loginRoutes from './routes/login.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -39,6 +40,7 @@ app.use('/api/vendedores', vendedoresRoutes);
 app.use('/api/estados', estadosRoutes);
 app.use('/api/devoluciones', devolucionesRoutes);
 app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/login', loginRoutes);
 
 app.listen(port, () => {
   console.log(`Backend escuchando en http://localhost:${port}`);

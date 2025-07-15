@@ -1,6 +1,10 @@
 
 
 import React from 'react';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import { useAuth } from '../auth.jsx';
+import LogoutIcon from '@mui/icons-material/Logout';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { AppBar, Toolbar, Typography, Button, Box, Paper, Divider, IconButton, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
 import DashboardCustomizeOutlinedIcon from '@mui/icons-material/DashboardCustomizeOutlined';
@@ -38,6 +42,13 @@ export default function Layout({ children }) {
   else if (location.pathname === '/logistica') pageTitle = 'Logística';
   else if (location.pathname === '/') pageTitle = 'Configuración';
   else pageTitle = '';
+
+  // Obtener usuario y rol del contexto de autenticación
+  const { user, logout } = useAuth();
+  const [userMenuAnchor, setUserMenuAnchor] = React.useState(null);
+  const openUserMenu = Boolean(userMenuAnchor);
+  const handleUserMenuOpen = (event) => setUserMenuAnchor(event.currentTarget);
+  const handleUserMenuClose = () => setUserMenuAnchor(null);
 
   return (
     <Box sx={{ minHeight: '100vh', background: '#f4f6fb', fontFamily: 'Avenir, Helvetica, Arial, sans-serif', display: 'flex', flexDirection: 'column' }}>
@@ -152,6 +163,64 @@ export default function Layout({ children }) {
               to { width: 38%; opacity: 0.18; }
             }
           `}</style>
+        {/* Usuario y rol alineados a la derecha */}
+        <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
+          {user && (
+            <>
+              <Box
+                onClick={handleUserMenuOpen}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.2,
+                  bgcolor: '#f8fafc',
+                  px: 2.2,
+                  py: 1,
+                  borderRadius: 3,
+                  boxShadow: '0 2px 12px 0 rgba(34,51,107,0.10)',
+                  cursor: 'pointer',
+                  transition: 'box-shadow 0.2s, background 0.2s',
+                  '&:hover': {
+                    boxShadow: '0 4px 24px 0 rgba(34,51,107,0.16)',
+                    bgcolor: '#e8f0fe',
+                  },
+                  minWidth: 160
+                }}
+              >
+                <Box sx={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: '50%',
+                  bgcolor: '#2563eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px 0 rgba(34,51,107,0.10)',
+                  mr: 1
+                }}>
+                  <AccountCircleIcon sx={{ color: '#fff', fontSize: 28 }} />
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
+                  <Typography sx={{ fontWeight: 700, color: '#22336b', fontSize: 16, lineHeight: 1.1, maxWidth: 90, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{user.nombre}</Typography>
+                  <Typography sx={{ fontWeight: 500, color: '#2563eb', fontSize: 13, lineHeight: 1.1, textTransform: 'capitalize' }}>{user.rol}</Typography>
+                </Box>
+                <ArrowDropDownIcon sx={{ color: '#2563eb', ml: 0.5 }} />
+              </Box>
+              <Menu
+                anchorEl={userMenuAnchor}
+                open={openUserMenu}
+                onClose={handleUserMenuClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                PaperProps={{ sx: { mt: 1, minWidth: 170, borderRadius: 2, boxShadow: '0 6px 24px 0 rgba(34,51,107,0.12)' } }}
+              >
+                <MenuItem onClick={() => { handleUserMenuClose(); logout(); }} sx={{ color: '#e53935', fontWeight: 600 }}>
+                  <LogoutIcon sx={{ mr: 1 }} /> Cerrar sesión
+                </MenuItem>
+              </Menu>
+            </>
+          )}
+        </Box>
         </Toolbar>
         <Divider sx={{ bgcolor: '#e0e3e7', height: 2 }} />
       </AppBar>

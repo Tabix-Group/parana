@@ -6,10 +6,33 @@ import PedidosParciales from './pages/PedidosParciales';
 import Devoluciones from './pages/Devoluciones';
 import Layout from './components/Layout';
 import LogisticaPage from './pages/Logistica';
+import Login from './components/Login';
+import PrivateRoute from './components/PrivateRoute';
+import { AuthProvider, useAuth } from './auth.jsx';
 
 export default function App() {
   return (
-    <Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginWrapper />} />
+          <Route path="/*" element={<ProtectedLayout />} />
+
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+}
+
+function LoginWrapper() {
+  const { user, login } = useAuth();
+  if (user) return <Navigate to="/" replace />;
+  return <Login onLogin={login} />;
+}
+
+function ProtectedLayout() {
+  return (
+    <PrivateRoute>
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
@@ -20,6 +43,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Layout>
-    </Router>
+    </PrivateRoute>
   );
 }
