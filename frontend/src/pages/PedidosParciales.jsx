@@ -19,12 +19,13 @@ export default function PedidosParciales() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [filter, setFilter] = useState('');
 
-  useEffect(() => { fetchData(); }, [page, pageSize]);
+  useEffect(() => { fetchData(); }, [page, pageSize, filter]);
 
   const fetchData = async () => {
     const res = await API.get('/pedidos', {
-      params: { page: page + 1, pageSize, estado: 3 }
+      params: { page: page + 1, pageSize, parcial: true, filter }
     });
     setData(res.data.data);
     setTotal(Number(res.data.total));
@@ -35,6 +36,15 @@ export default function PedidosParciales() {
   return (
     <Box>
       <h2 className="main-table-title">Pedidos Parciales</h2>
+      <Box sx={{ mb: 2 }}>
+        <input
+          type="text"
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          placeholder="Buscar..."
+          style={{ padding: 8, borderRadius: 6, border: '1px solid #d0d7e2', minWidth: 220 }}
+        />
+      </Box>
       <TableContainer>
         <Table className="main-table" size="small">
           <TableHead>

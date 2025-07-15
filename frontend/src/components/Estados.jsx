@@ -83,13 +83,26 @@ export default function Estados() {
         rowsPerPageOptions={pageSizes}
       />
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{editRow ? 'Editar Estado' : 'Nuevo Estado'}</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} fullWidth />
+        <DialogTitle sx={{ fontWeight: 700, fontSize: 22, mb: 1 }}>{editRow ? 'Editar Estado' : 'Nuevo Estado'}</DialogTitle>
+        <DialogContent
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            gap: 2.2,
+            alignItems: 'start',
+            py: 0.5,
+            background: '#f8fafc',
+            borderRadius: 2,
+            boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)',
+            overflow: 'visible',
+            mt: 0,
+          }}
+        >
+          <TextField label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, gridColumn: { md: '1/3' }, mt: 0, mb: 0 }} />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained">Guardar</Button>
+        <DialogActions sx={{ px: 3, pb: 2, pt: 1, justifyContent: 'flex-end' }}>
+          <Button onClick={handleClose} variant="outlined" color="secondary" sx={{ minWidth: 120, fontWeight: 600 }}>Cancelar</Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary" sx={{ minWidth: 120, fontWeight: 600, ml: 2 }}>Guardar</Button>
         </DialogActions>
       </Dialog>
     </Paper>

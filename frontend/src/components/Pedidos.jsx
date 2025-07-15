@@ -180,52 +180,65 @@ export default function Pedidos() {
         rowsPerPageOptions={pageSizes}
       />
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-        <DialogTitle>{editRow ? 'Editar Pedido' : 'Nuevo Pedido'}</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          <TextField label="Comprobante" name="comprobante" value={form.comprobante} onChange={handleChange} fullWidth sx={{ mb: 2 }} />
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Cliente</InputLabel>
+        <DialogTitle sx={{ fontWeight: 700, fontSize: 22, mb: 1 }}>{editRow ? 'Editar Pedido' : 'Nuevo Pedido'}</DialogTitle>
+        <DialogContent
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            gap: 2.2,
+            alignItems: 'start',
+            py: 0.5,
+            background: '#f8fafc',
+            borderRadius: 2,
+            boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)',
+            overflow: 'visible',
+            mt: 0,
+          }}
+        >
+          <TextField label="Comprobante" name="comprobante" value={form.comprobante} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+            <InputLabel shrink>Cliente</InputLabel>
             <Select name="cliente_id" value={form.cliente_id} onChange={handleChange} label="Cliente">
               {clientes.map(c => <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>)}
             </Select>
           </FormControl>
-          <TextField label="Dirección" name="direccion" value={form.direccion} onChange={handleChange} fullWidth sx={{ mb: 2 }} />
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Armador</InputLabel>
+          <TextField label="Dirección" name="direccion" value={form.direccion} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+            <InputLabel shrink>Armador</InputLabel>
             <Select name="armador_id" value={form.armador_id} onChange={handleChange} label="Armador">
               {armadores.map(a => <MenuItem key={a.id} value={a.id}>{a.nombre} {a.apellido}</MenuItem>)}
             </Select>
           </FormControl>
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Tipo Transporte</InputLabel>
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+            <InputLabel shrink>Tipo Transporte</InputLabel>
             <Select name="tipo_transporte_id" value={form.tipo_transporte_id} onChange={handleChange} label="Tipo Transporte">
               {tiposTransporte.map(t => <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>)}
             </Select>
           </FormControl>
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Transporte</InputLabel>
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+            <InputLabel shrink>Transporte</InputLabel>
             <Select name="transporte_id" value={form.transporte_id} onChange={handleChange} label="Transporte">
               {transportes.map(t => <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>)}
             </Select>
           </FormControl>
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Vendedor</InputLabel>
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+            <InputLabel shrink>Vendedor</InputLabel>
             <Select name="vendedor_id" value={form.vendedor_id} onChange={handleChange} label="Vendedor">
               {vendedores.map(v => <MenuItem key={v.id} value={v.id}>{v.nombre} {v.apellido}</MenuItem>)}
             </Select>
           </FormControl>
-          <TextField label="Fecha Entrega" name="fecha_entrega" type="date" value={form.fecha_entrega} onChange={handleChange} fullWidth sx={{ mb: 2 }} InputLabelProps={{ shrink: true }} />
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Estado</InputLabel>
+          <TextField label="Fecha Entrega" name="fecha_entrega" type="date" value={form.fecha_entrega} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+            <InputLabel shrink>Estado</InputLabel>
             <Select name="estado_id" value={form.estado_id} onChange={handleChange} label="Estado">
               {estados.map(e => <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>)}
             </Select>
           </FormControl>
-          <TextField label="Notas" name="notas" value={form.notas} onChange={handleChange} fullWidth multiline rows={2} sx={{ mb: 2 }} />
+          <TextField label="Notas" name="notas" value={form.notas} onChange={handleChange} fullWidth multiline rows={2} InputLabelProps={{ shrink: true }} sx={{ gridColumn: { md: '1/3' }, bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained">Guardar</Button>
+        <DialogActions sx={{ px: 3, pb: 2, pt: 1, justifyContent: 'flex-end' }}>
+          <Button onClick={handleClose} variant="outlined" color="secondary" sx={{ minWidth: 120, fontWeight: 600 }}>Cancelar</Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary" sx={{ minWidth: 120, fontWeight: 600, ml: 2 }}>Guardar</Button>
         </DialogActions>
       </Dialog>
     </Paper>

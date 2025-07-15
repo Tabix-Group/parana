@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, Paper, Divider, IconButton } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, Paper, Divider, IconButton, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
 import DashboardCustomizeOutlinedIcon from '@mui/icons-material/DashboardCustomizeOutlined';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -18,42 +18,42 @@ const menuItems = [
 
 export default function Layout({ children }) {
   const location = useLocation();
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const openMenu = Boolean(anchorEl);
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
   return (
     <Box sx={{ minHeight: '100vh', background: '#f4f6fb', fontFamily: 'Avenir, Helvetica, Arial, sans-serif' }}>
       <AppBar position="static" elevation={0} sx={{ bgcolor: '#fff', color: '#22336b', boxShadow: '0 2px 8px 0 rgba(34,51,107,0.08)' }}>
         <Toolbar sx={{ minHeight: 64, px: { xs: 1, sm: 3, md: 6 } }}>
-          <IconButton edge="start" sx={{ mr: 2, color: '#22336b', p: 0.5 }}>
+          <IconButton edge="start" sx={{ mr: 2, color: '#22336b', p: 0.5 }} onClick={handleMenuOpen} aria-controls={openMenu ? 'main-menu' : undefined} aria-haspopup="true" aria-expanded={openMenu ? 'true' : undefined}>
             <DashboardCustomizeOutlinedIcon fontSize="medium" />
           </IconButton>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: 1, color: '#22336b', fontFamily: 'Avenir, Helvetica, Arial, sans-serif', mr: 2 }}>
-            </Typography>
+          <Menu
+            id="main-menu"
+            anchorEl={anchorEl}
+            open={openMenu}
+            onClose={handleMenuClose}
+            MenuListProps={{ 'aria-labelledby': 'main-menu-button' }}
+            PaperProps={{ sx: { minWidth: 220, mt: 1 } }}
+          >
             {menuItems.map(item => (
-              <Button
+              <MenuItem
                 key={item.path}
                 component={Link}
                 to={item.path}
-                startIcon={item.icon}
-                sx={{
-                  color: location.pathname === item.path ? '#1976d2' : '#22336b',
-                  bgcolor: location.pathname === item.path ? 'rgba(25,118,210,0.08)' : 'transparent',
-                  fontWeight: 500,
-                  fontSize: '1rem',
-                  px: 2,
-                  py: 1.2,
-                  borderRadius: 2,
-                  boxShadow: location.pathname === item.path ? '0 2px 8px 0 rgba(25,118,210,0.08)' : 'none',
-                  transition: 'all 0.18s',
-                  '&:hover': {
-                    bgcolor: 'rgba(25,118,210,0.12)',
-                    color: '#1976d2',
-                  },
-                }}
+                selected={location.pathname === item.path}
+                onClick={handleMenuClose}
               >
-                {item.label}
-              </Button>
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.label} />
+              </MenuItem>
             ))}
-          </Box>
+          </Menu>
         </Toolbar>
         <Divider sx={{ bgcolor: '#e0e3e7', height: 2 }} />
       </AppBar>

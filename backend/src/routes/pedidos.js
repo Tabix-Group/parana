@@ -5,7 +5,7 @@ const router = express.Router();
 
 // Listar pedidos con paginación, filtros y orden
 router.get('/', async (req, res) => {
-  const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', estado, cliente, comprobante } = req.query;
+  const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', estado, cliente, comprobante, parcial } = req.query;
   let query = db('pedidos')
     .leftJoin('clientes', 'pedidos.cliente_id', 'clientes.id')
     .leftJoin('armadores', 'pedidos.armador_id', 'armadores.id')
@@ -24,7 +24,11 @@ router.get('/', async (req, res) => {
       'vendedores.apellido as vendedor_apellido',
       'estados.nombre as estado_nombre'
     );
-  if (estado) query = query.where('pedidos.estado_id', estado);
+  if (parcial === 'true') {
+    query = query.where('estados.nombre', 'like', '%Parcial%');
+  } else if (estado) {
+    query = query.where('pedidos.estado_id', estado);
+  }
   if (cliente) query = query.where('pedidos.cliente_id', cliente);
   if (comprobante) query = query.where('pedidos.comprobante', 'like', `%${comprobante}%`);
   const total = await query.clone().count({ count: '*' }).first();

@@ -21,16 +21,17 @@ export default function Devoluciones() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [open, setOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
   const [form, setForm] = useState({ pedido_id: '', tipo: '', recibido: false, fecha: '' });
   const [pedidos, setPedidos] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState('');
 
-  useEffect(() => { fetchData(); fetchPedidos(); }, [page, pageSize]);
+  useEffect(() => { fetchData(); fetchPedidos(); }, [page, pageSize, filter]);
 
   const fetchData = async () => {
     const res = await API.get('/devoluciones', {
-      params: { page: page + 1, pageSize }
+      params: { page: page + 1, pageSize, filter }
     });
     setData(res.data.data);
     setTotal(Number(res.data.total));
@@ -51,6 +52,15 @@ export default function Devoluciones() {
     <Box>
       <h2 className="main-table-title">Devoluciones</h2>
       <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()} sx={{ mb: 2 }}>Nueva Devolución</Button>
+      <Box sx={{ mb: 2 }}>
+        <input
+          type="text"
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          placeholder="Buscar..."
+          style={{ padding: 8, borderRadius: 6, border: '1px solid #d0d7e2', minWidth: 220 }}
+        />
+      </Box>
       <TableContainer>
         <Table className="main-table" size="small">
           <TableHead>
@@ -90,37 +100,51 @@ export default function Devoluciones() {
         rowsPerPageOptions={pageSizes}
       />
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{editRow ? 'Editar Devolución' : 'Nueva Devolución'}</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <FormControl fullWidth>
-            <InputLabel>Pedido</InputLabel>
+        <DialogTitle sx={{ fontWeight: 700, fontSize: 22, mb: 1 }}>{editRow ? 'Editar Devolución' : 'Nueva Devolución'}</DialogTitle>
+        <DialogContent
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            gap: 2.2,
+            alignItems: 'start',
+            py: 0.5,
+            background: '#f8fafc',
+            borderRadius: 2,
+            boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)',
+            overflow: 'visible',
+            mt: 0,
+          }}
+        >
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+            <InputLabel shrink>Pedido</InputLabel>
             <Select name="pedido_id" value={form.pedido_id} onChange={handleChange} label="Pedido">
               {pedidos.map(p => <MenuItem key={p.id} value={p.id}>{p.comprobante}</MenuItem>)}
             </Select>
           </FormControl>
-          <FormControl fullWidth>
-            <InputLabel>Tipo</InputLabel>
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+            <InputLabel shrink>Tipo</InputLabel>
             <Select name="tipo" value={form.tipo} onChange={handleChange} label="Tipo">
               <MenuItem value="efectivo">Efectivo</MenuItem>
               <MenuItem value="material">Material</MenuItem>
             </Select>
           </FormControl>
-          <FormControl fullWidth>
-            <InputLabel>Recibido</InputLabel>
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+            <InputLabel shrink>Recibido</InputLabel>
             <Select name="recibido" value={form.recibido} onChange={handleChange} label="Recibido">
               <MenuItem value={true}>Sí</MenuItem>
               <MenuItem value={false}>No</MenuItem>
             </Select>
           </FormControl>
-          <TextField label="Fecha" name="fecha" type="date" value={form.fecha} onChange={handleChange} InputLabelProps={{ shrink: true }} fullWidth />
+          <TextField label="Fecha" name="fecha" type="date" value={form.fecha} onChange={handleChange} InputLabelProps={{ shrink: true }} fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained">Guardar</Button>
+        <DialogActions sx={{ px: 3, pb: 2, pt: 1, justifyContent: 'flex-end' }}>
+          <Button onClick={handleClose} variant="outlined" color="secondary" sx={{ minWidth: 120, fontWeight: 600 }}>Cancelar</Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary" sx={{ minWidth: 120, fontWeight: 600, ml: 2 }}>Guardar</Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
 }
+
 
 
