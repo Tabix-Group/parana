@@ -72,7 +72,17 @@ export default function Pedidos() {
   // Manejar cambios en el form
   const handleChange = e => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    // Si cambia el cliente, autocompletar dirección si existe
+    if (name === 'cliente_id') {
+      const cliente = clientes.find(c => String(c.id) === String(value));
+      setForm(prev => ({
+        ...prev,
+        cliente_id: value,
+        direccion: cliente && cliente.direccion ? cliente.direccion : ''
+      }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   // Guardar pedido (alta o edición)
