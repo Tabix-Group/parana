@@ -68,8 +68,19 @@ export default function Layout({ children }) {
             open={openMenu}
             onClose={handleMenuClose}
             MenuListProps={{ 'aria-labelledby': 'main-menu-button' }}
-            PaperProps={{ sx: { minWidth: 220, mt: 1 } }}
+            PaperProps={{
+              sx: {
+                minWidth: 220,
+                mt: 1,
+                bgcolor: '#fff',
+                border: '1.5px solid #e0e3e7',
+                boxShadow: '0 6px 24px 0 rgba(34,51,107,0.10)',
+                borderRadius: 2.5,
+                p: 0.5
+              }
+            }}
           >
+            <Box sx={{ borderTop: '1.5px solid #f4f6fb', mb: 0.5 }} />
             {menuItems.map(item => (
               <MenuItem
                 key={item.path}
@@ -77,8 +88,25 @@ export default function Layout({ children }) {
                 to={item.path}
                 selected={location.pathname === item.path}
                 onClick={handleMenuClose}
+                sx={{
+                  fontFamily: 'Segoe UI, Roboto, Arial, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 17,
+                  color: location.pathname === item.path ? '#2563eb' : '#22336b',
+                  borderRadius: 1.5,
+                  mx: 0.5,
+                  my: 0.2,
+                  px: 2,
+                  py: 1.2,
+                  transition: 'background 0.18s, color 0.18s',
+                  background: location.pathname === item.path ? '#e8f0fe' : 'transparent',
+                  '&:hover': {
+                    background: '#f4f6fb',
+                    color: '#2563eb'
+                  }
+                }}
               >
-                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemIcon sx={{ color: location.pathname === item.path ? '#2563eb' : '#22336b', minWidth: 36 }}>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.label} />
               </MenuItem>
             ))}

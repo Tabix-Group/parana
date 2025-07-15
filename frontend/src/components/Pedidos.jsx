@@ -32,7 +32,8 @@ export default function Pedidos() {
   const [pageSize, setPageSize] = useState(10);
   const [sortBy, setSortBy] = useState('id');
   const [order, setOrder] = useState('desc');
-  const [filters, setFilters] = useState({ comprobante: '', cliente: '', estado: '' });
+  const initialFilters = { comprobante: '', cliente: '', estado: '', fecha_entrega: '' };
+  const [filters, setFilters] = useState(initialFilters);
   const [open, setOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
   const [form, setForm] = useState({ comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', fecha_entrega: '', estado_id: '', notas: '' });
@@ -50,15 +51,18 @@ export default function Pedidos() {
   }, [page, pageSize, sortBy, order, filters]);
 
   const fetchData = async () => {
-    const res = await API.get('/pedidos', {
-      params: {
-        page: page + 1,
-        pageSize,
-        sortBy,
-        order,
-        ...filters
-      }
-    });
+    const params = {
+      page: page + 1,
+      pageSize,
+      sortBy,
+      order,
+      ...filters
+    };
+    // Si el filtro de fecha_entrega está vacío, no lo mandes
+    if (!filters.fecha_entrega) {
+      delete params.fecha_entrega;
+    }
+    const res = await API.get('/pedidos', { params });
     setData(res.data.data);
     setTotal(Number(res.data.total));
   };
@@ -87,6 +91,7 @@ export default function Pedidos() {
     setOrder(order === 'asc' ? 'desc' : 'asc');
   };
   const handleFilter = e => setFilters({ ...filters, [e.target.name]: e.target.value });
+  const handleClearFilters = () => setFilters(initialFilters);
 
   const handleOpen = (row = null) => {
     setEditRow(row);
@@ -161,6 +166,14 @@ export default function Pedidos() {
         >
           Exportar
         </Button>
+        <Button
+          variant="text"
+          color="secondary"
+          onClick={handleClearFilters}
+          sx={{ ml: 'auto', fontWeight: 500 }}
+        >
+          Limpiar filtros
+        </Button>
         <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={handleExportClose}>
           <MenuItem onClick={() => { handleExportExcel(); handleExportClose(); }}>Exportar a Excel</MenuItem>
           <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
@@ -168,42 +181,54 @@ export default function Pedidos() {
       </Box>
       <TableContainer>
         <Table size="small">
-          <TableHead>
-            <TableRow>
-              {columns.map(col => (
-                <TableCell key={col.id} onClick={() => col.id !== 'acciones' && handleSort(col.id)} style={{ cursor: col.id !== 'acciones' ? 'pointer' : 'default' }}>
-                  {col.label}
-                </TableCell>
-              ))}
-            </TableRow>
-            <TableRow>
-              <TableCell><TextField size="small" name="comprobante" value={filters.comprobante} onChange={handleFilter} placeholder="Buscar..." /></TableCell>
-              <TableCell>
-                <FormControl size="small" fullWidth>
-                  <Select name="cliente" value={filters.cliente} onChange={handleFilter} displayEmpty>
-                    <MenuItem value="">Todos</MenuItem>
-                    {clientes.map(c => <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </TableCell>
-              <TableCell />
-              <TableCell />
-              <TableCell />
-              <TableCell />
-              <TableCell />
-              <TableCell />
-              <TableCell>
-                <FormControl size="small" fullWidth>
-                  <Select name="estado" value={filters.estado} onChange={handleFilter} displayEmpty>
-                    <MenuItem value="">Todos</MenuItem>
-                    {estados.map(e => <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </TableCell>
-              <TableCell />
-              <TableCell />
-            </TableRow>
-          </TableHead>
+      <TableHead>
+        <TableRow>
+          {columns.map(col => (
+            <TableCell key={col.id} onClick={() => col.id !== 'acciones' ? handleSort(col.id) : undefined} style={{ cursor: col.id !== 'acciones' ? 'pointer' : 'default' }}>
+              {col.label}
+            </TableCell>
+          ))}
+        </TableRow>
+        <TableRow>
+          <TableCell>
+            <TextField size="small" name="comprobante" value={filters.comprobante} onChange={handleFilter} placeholder="Buscar..." />
+          </TableCell>
+          <TableCell>
+            <FormControl size="small" fullWidth>
+              <Select name="cliente" value={filters.cliente} onChange={handleFilter} displayEmpty>
+                <MenuItem value="">Todos</MenuItem>
+                {clientes.map(c => <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </TableCell>
+          <TableCell />
+          <TableCell />
+          <TableCell />
+          <TableCell />
+          <TableCell />
+          <TableCell>
+            <TextField
+              size="small"
+              name="fecha_entrega"
+              value={filters.fecha_entrega}
+              onChange={handleFilter}
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+          </TableCell>
+          <TableCell>
+            <FormControl size="small" fullWidth>
+              <Select name="estado" value={filters.estado} onChange={handleFilter} displayEmpty>
+                <MenuItem value="">Todos</MenuItem>
+                {estados.map(e => <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </TableCell>
+          <TableCell />
+          <TableCell />
+        </TableRow>
+      </TableHead>
           <TableBody>
             {data.map(row => (
               <TableRow key={row.id}>
