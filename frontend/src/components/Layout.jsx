@@ -7,13 +7,16 @@ import DashboardCustomizeOutlinedIcon from '@mui/icons-material/DashboardCustomi
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import ReplayIcon from '@mui/icons-material/Replay';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import SettingsIcon from '@mui/icons-material/Settings';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
+import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 
 const menuItems = [
-  { label: 'Pedidos', path: '/pedidos-totales', icon: <AssignmentIcon sx={{ mr: 1 }} /> },
-  { label: 'Parciales', path: '/parciales', icon: <ListAltIcon sx={{ mr: 1 }} /> },
+  { label: 'Pedidos', path: '/pedidos-totales', icon: <ReceiptLongOutlinedIcon sx={{ mr: 1 }} /> },
+  { label: 'Parciales', path: '/parciales', icon: <Inventory2OutlinedIcon sx={{ mr: 1 }} /> },
   { label: 'Devoluciones', path: '/devoluciones', icon: <ReplayIcon sx={{ mr: 1 }} /> },
-  { label: 'Logística', path: '/logistica', icon: <AssignmentIcon sx={{ mr: 1 }} /> },
+  { label: 'Logística', path: '/logistica', icon: <LocalShippingIcon sx={{ mr: 1 }} /> },
   { label: 'Configuración', path: '/', icon: <SettingsIcon sx={{ mr: 1 }} /> },
 ];
 
