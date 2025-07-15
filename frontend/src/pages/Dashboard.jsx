@@ -17,7 +17,7 @@ export default function Dashboard() {
         <Tab label="Clientes" />
         <Tab label="Armadores" />
         <Tab label="Transportes" />
-        <Tab label="Tipos de Transporte" />
+        <Tab label="Tipos de Tte" />
         <Tab label="Vendedores" />
         <Tab label="Estados" />
         <Tab label="Usuarios" />
