@@ -26,3 +26,7 @@ Este proyecto contiene:
 ## Notas
 - La base de datos es SQLite para desarrollo local. Se puede migrar a PostgreSQL fácilmente.
 - El frontend y backend están desacoplados y se comunican por API REST.
+
+## Deployado
+
+https://parana-production-b73d.up.railway.app/

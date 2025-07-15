@@ -210,6 +210,7 @@ export default function Pedidos() {
 
   return (
     <Paper sx={{ p: { xs: 1, sm: 2 }, boxShadow: '0 4px 32px 0 rgba(34,51,107,0.10)', borderRadius: 3, border: '1.5px solid #e0e3e7', background: '#fff' }}>
+      {/* Acciones principales */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <Button
@@ -242,6 +243,40 @@ export default function Pedidos() {
           Limpiar filtros
         </Button>
       </Box>
+
+      {/* Filtros en una sola fila arriba de la tabla */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'nowrap', overflowX: 'auto', alignItems: 'center' }}>
+        <TextField
+          size="small"
+          name="comprobante"
+          value={filters.comprobante}
+          onChange={handleFilter}
+          placeholder="Comprobante"
+          sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+        />
+        <FormControl size="small" sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
+          <Select name="cliente" value={filters.cliente} onChange={handleFilter} displayEmpty>
+            <MenuItem value="">Cliente</MenuItem>
+            {clientes.map(c => <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>)}
+          </Select>
+        </FormControl>
+        <TextField
+          size="small"
+          name="fecha_entrega"
+          value={filters.fecha_entrega}
+          onChange={handleFilter}
+          type="date"
+          InputLabelProps={{ shrink: true }}
+          sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+        />
+        <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
+          <Select name="estado" value={filters.estado} onChange={handleFilter} displayEmpty>
+            <MenuItem value="">Estado</MenuItem>
+            {estados.map(e => <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>)}
+          </Select>
+        </FormControl>
+      </Box>
+
       <TableContainer sx={{ borderRadius: 2, boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)', border: '1px solid #e0e3e7', background: '#fff' }}>
         <Table size="small" stickyHeader>
           <TableHead>
@@ -269,46 +304,6 @@ export default function Pedidos() {
                   </TableCell>
                 );
               })}
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <TextField size="small" name="comprobante" value={filters.comprobante} onChange={handleFilter} placeholder="Buscar..." sx={{ bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }} />
-              </TableCell>
-              <TableCell>
-                <FormControl size="small" fullWidth sx={{ bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
-                  <Select name="cliente" value={filters.cliente} onChange={handleFilter} displayEmpty>
-                    <MenuItem value="">Todos</MenuItem>
-                    {clientes.map(c => <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </TableCell>
-              <TableCell />
-              <TableCell />
-              <TableCell />
-              <TableCell />
-              <TableCell />
-              <TableCell>
-                <TextField
-                  size="small"
-                  name="fecha_entrega"
-                  value={filters.fecha_entrega}
-                  onChange={handleFilter}
-                  type="date"
-                  InputLabelProps={{ shrink: true }}
-                  fullWidth
-                  sx={{ bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
-                />
-              </TableCell>
-              <TableCell>
-                <FormControl size="small" fullWidth sx={{ bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
-                  <Select name="estado" value={filters.estado} onChange={handleFilter} displayEmpty>
-                    <MenuItem value="">Todos</MenuItem>
-                    {estados.map(e => <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </TableCell>
-              <TableCell />
-              <TableCell />
             </TableRow>
           </TableHead>
           <TableBody>

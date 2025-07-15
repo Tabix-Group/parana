@@ -5,6 +5,7 @@ import PedidosTotales from './pages/PedidosTotales';
 import PedidosParciales from './pages/PedidosParciales';
 import Devoluciones from './pages/Devoluciones';
 import Layout from './components/Layout';
+import LogisticaPage from './pages/Logistica';
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           <Route path="/pedidos-totales" element={<PedidosTotales />} />
           <Route path="/parciales" element={<PedidosParciales />} />
           <Route path="/devoluciones" element={<Devoluciones />} />
+          <Route path="/logistica" element={<LogisticaPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Layout>
