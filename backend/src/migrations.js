@@ -1,5 +1,17 @@
 // backend/src/migrations.js
 export async function createTables(db) {
+  // Usuarios
+  await db.schema.hasTable('usuarios').then(exists => {
+    if (!exists) {
+      return db.schema.createTable('usuarios', t => {
+        t.increments('id').primary();
+        t.string('nombre').notNullable();
+        t.string('mail').notNullable();
+        t.string('clave').notNullable();
+        t.string('rol').notNullable(); // admin, ventas, logistica
+      });
+    }
+  });
   // Clientes
   await db.schema.hasTable('clientes').then(exists => {
     if (!exists) {

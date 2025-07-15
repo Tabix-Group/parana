@@ -7,6 +7,7 @@ import Transportes from '../components/Transportes';
 import TiposTransporte from '../components/TiposTransporte';
 import Vendedores from '../components/Vendedores';
 import Estados from '../components/Estados';
+import Usuarios from '../components/Usuarios';
 
 export default function Dashboard() {
   const [tab, setTab] = React.useState(0);
@@ -19,6 +20,7 @@ export default function Dashboard() {
         <Tab label="Tipos de Transporte" />
         <Tab label="Vendedores" />
         <Tab label="Estados" />
+        <Tab label="Usuarios" />
       </Tabs>
       <div>
         {tab === 0 && <Clientes />}
@@ -27,6 +29,7 @@ export default function Dashboard() {
         {tab === 3 && <TiposTransporte />}
         {tab === 4 && <Vendedores />}
         {tab === 5 && <Estados />}
+        {tab === 6 && <Usuarios />}
       </div>
     </Box>
   );
