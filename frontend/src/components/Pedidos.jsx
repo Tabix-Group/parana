@@ -14,7 +14,7 @@ const columns = [
   { id: 'cliente_nombre', label: 'Cliente' },
   { id: 'direccion', label: 'Dirección' },
   { id: 'armador_nombre', label: 'Armador' },
-  { id: 'tipo_transporte_nombre', label: 'Tipo Transporte' },
+  { id: 'tipo_transporte_nombre', label: 'Tipo Tte' },
   { id: 'transporte_nombre', label: 'Transporte' },
   { id: 'vendedor_nombre', label: 'Vendedor' },
   { id: 'fecha_entrega', label: 'Fecha Entrega' },
@@ -262,8 +262,8 @@ export default function Pedidos() {
             </Select>
           </FormControl>
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
-            <InputLabel shrink>Tipo Transporte</InputLabel>
-            <Select name="tipo_transporte_id" value={form.tipo_transporte_id} onChange={handleChange} label="Tipo Transporte">
+            <InputLabel shrink>Tipo Tte</InputLabel>
+            <Select name="tipo_transporte_id" value={form.tipo_transporte_id} onChange={handleChange} label="Tipo Tte">
               {tiposTransporte.map(t => <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>)}
             </Select>
           </FormControl>
