@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, Button, Menu, MenuItem } from '@mui/material';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination
 } from '@mui/material';
+import { FileDownload } from '@mui/icons-material';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import API from '../api';
 
 const columns = [
@@ -33,10 +37,44 @@ export default function PedidosParciales() {
   const handleChangePage = (_, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
 
+  // Exportar a Excel
+  const handleExportExcel = () => {
+    const exportData = data.map(row => {
+      const obj = {};
+      columns.forEach(col => {
+        obj[col.label] = row[col.id];
+      });
+      return obj;
+    });
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'PedidosParciales');
+    const fecha = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `PedidosParciales_${fecha}.xlsx`);
+  };
+
+  // Exportar a PDF
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const exportData = data.map(row => columns.map(col => row[col.id]));
+    doc.autoTable({
+      head: [columns.map(col => col.label)],
+      body: exportData,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [34,51,107] }
+    });
+    const fecha = new Date().toISOString().slice(0,10);
+    doc.save(`PedidosParciales_${fecha}.pdf`);
+  };
+
+  const [exportAnchor, setExportAnchor] = React.useState(null);
+  const handleExportClick = (e) => setExportAnchor(e.currentTarget);
+  const handleExportClose = () => setExportAnchor(null);
+
   return (
     <Box>
       {/* Título ahora en AppBar */}
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <input
           type="text"
           value={filter}
@@ -44,6 +82,17 @@ export default function PedidosParciales() {
           placeholder="Buscar..."
           style={{ padding: 8, borderRadius: 6, border: '1px solid #d0d7e2', minWidth: 220 }}
         />
+        <Button
+          variant="outlined"
+          startIcon={<FileDownload />}
+          onClick={handleExportClick}
+        >
+          Exportar
+        </Button>
+        <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={handleExportClose}>
+          <MenuItem onClick={() => { handleExportExcel(); handleExportClose(); }}>Exportar a Excel</MenuItem>
+          <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
+        </Menu>
       </Box>
       <TableContainer>
         <Table className="main-table" size="small">

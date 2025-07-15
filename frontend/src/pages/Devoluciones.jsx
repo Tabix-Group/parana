@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination,
-  IconButton, Button, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Box
+  IconButton, Button, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Box, Menu
 } from '@mui/material';
+import { FileDownload } from '@mui/icons-material';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { Edit, Delete, Add } from '@mui/icons-material';
 import API from '../api';
 
@@ -48,11 +52,58 @@ export default function Devoluciones() {
   const handleSubmit = async () => { if (editRow) { await API.put(`/devoluciones/${editRow.id}`, form); } else { await API.post('/devoluciones', form); } setOpen(false); fetchData(); };
   const handleDelete = async id => { if (window.confirm('¿Borrar devolución?')) { await API.delete(`/devoluciones/${id}`); fetchData(); } };
 
+  // Exportar a Excel
+  const handleExportExcel = () => {
+    const exportData = data.map(row => {
+      const obj = {};
+      columns.filter(c => c.id !== 'acciones').forEach(col => {
+        obj[col.label] = row[col.id];
+      });
+      return obj;
+    });
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Devoluciones');
+    const fecha = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `Devoluciones_${fecha}.xlsx`);
+  };
+
+  // Exportar a PDF
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const exportData = data.map(row =>
+      columns.filter(c => c.id !== 'acciones').map(col => col.id === 'recibido' ? (row[col.id] ? 'Sí' : 'No') : row[col.id])
+    );
+    doc.autoTable({
+      head: [columns.filter(c => c.id !== 'acciones').map(col => col.label)],
+      body: exportData,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [34,51,107] }
+    });
+    const fecha = new Date().toISOString().slice(0,10);
+    doc.save(`Devoluciones_${fecha}.pdf`);
+  };
+
+  const [exportAnchor, setExportAnchor] = React.useState(null);
+  const handleExportClick = (e) => setExportAnchor(e.currentTarget);
+  const handleExportClose = () => setExportAnchor(null);
+
   return (
     <Box>
       {/* Título ahora en AppBar */}
-      <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()} sx={{ mb: 2 }}>Nueva Devolución</Button>
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()}>Nueva Devolución</Button>
+        <Button
+          variant="outlined"
+          startIcon={<FileDownload />}
+          onClick={handleExportClick}
+        >
+          Exportar
+        </Button>
+        <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={handleExportClose}>
+          <MenuItem onClick={() => { handleExportExcel(); handleExportClose(); }}>Exportar a Excel</MenuItem>
+          <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
+        </Menu>
         <input
           type="text"
           value={filter}

@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination,
-  IconButton, Button, TextField, Select, MenuItem, InputLabel, FormControl, Dialog, DialogTitle, DialogContent, DialogActions
+  IconButton, Button, TextField, Select, MenuItem, InputLabel, FormControl, Dialog, DialogTitle, DialogContent, DialogActions, Menu, Box
 } from '@mui/material';
-import { Edit, Delete, Add } from '@mui/icons-material';
+import { Edit, Delete, Add, FileDownload } from '@mui/icons-material';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import API from '../api';
 
 const columns = [
@@ -111,9 +114,58 @@ export default function Pedidos() {
     }
   };
 
+  // Exportar a Excel
+  const handleExportExcel = () => {
+    const exportData = data.map(row => {
+      const obj = {};
+      columns.filter(c => c.id !== 'acciones').forEach(col => {
+        obj[col.label] = row[col.id];
+      });
+      return obj;
+    });
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Pedidos');
+    const fecha = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `PedidosTotales_${fecha}.xlsx`);
+  };
+
+  // Exportar a PDF
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const exportData = data.map(row =>
+      columns.filter(c => c.id !== 'acciones').map(col => row[col.id])
+    );
+    doc.autoTable({
+      head: [columns.filter(c => c.id !== 'acciones').map(col => col.label)],
+      body: exportData,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [34,51,107] }
+    });
+    const fecha = new Date().toISOString().slice(0,10);
+    doc.save(`PedidosTotales_${fecha}.pdf`);
+  };
+
+  const [exportAnchor, setExportAnchor] = React.useState(null);
+  const handleExportClick = (e) => setExportAnchor(e.currentTarget);
+  const handleExportClose = () => setExportAnchor(null);
+
   return (
     <Paper sx={{ p: 2 }}>
-      <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()} sx={{ mb: 2 }}>Nuevo Pedido</Button>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()}>Nuevo Pedido</Button>
+        <Button
+          variant="outlined"
+          startIcon={<FileDownload />}
+          onClick={handleExportClick}
+        >
+          Exportar
+        </Button>
+        <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={handleExportClose}>
+          <MenuItem onClick={() => { handleExportExcel(); handleExportClose(); }}>Exportar a Excel</MenuItem>
+          <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
+        </Menu>
+      </Box>
       <TableContainer>
         <Table size="small">
           <TableHead>
