@@ -9,6 +9,7 @@ import API from '../api';
 
 const columns = [
   { id: 'nombre', label: 'Nombre' },
+  { id: 'apellido', label: 'Apellido' },
   { id: 'telefono', label: 'Teléfono' },
   { id: 'acciones', label: 'Acciones' }
 ];
@@ -24,7 +25,7 @@ export default function Vendedores() {
   const [filter, setFilter] = useState('');
   const [open, setOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
-  const [form, setForm] = useState({ nombre: '', telefono: '' });
+  const [form, setForm] = useState({ nombre: '', apellido: '', telefono: '' });
 
   useEffect(() => { fetchData(); }, [page, pageSize, sortBy, order, filter]);
 
@@ -38,7 +39,7 @@ export default function Vendedores() {
   const handleChangePage = (_, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
   const handleSort = col => { setSortBy(col); setOrder(order === 'asc' ? 'desc' : 'asc'); };
-  const handleOpen = (row = null) => { setEditRow(row); setForm(row ? { ...row } : { nombre: '', telefono: '' }); setOpen(true); };
+  const handleOpen = (row = null) => { setEditRow(row); setForm(row ? { ...row } : { nombre: '', apellido: '', telefono: '' }); setOpen(true); };
   const handleClose = () => setOpen(false);
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
   const handleSubmit = async () => { if (editRow) { await API.put(`/vendedores/${editRow.id}`, form); } else { await API.post('/vendedores', form); } setOpen(false); fetchData(); };
@@ -127,7 +128,7 @@ export default function Vendedores() {
         <DialogContent
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
             gap: 2.2,
             alignItems: 'start',
             py: 0.5,
@@ -139,6 +140,7 @@ export default function Vendedores() {
           }}
         >
           <TextField label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+          <TextField label="Apellido" name="apellido" value={form.apellido} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
           <TextField label="Teléfono" name="telefono" value={form.telefono} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2, pt: 1, justifyContent: 'flex-end' }}>
