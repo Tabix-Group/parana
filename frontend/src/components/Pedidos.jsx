@@ -200,12 +200,12 @@ export default function Pedidos() {
 
   return (
     <Paper sx={{ p: { xs: 1, sm: 2 }, boxShadow: '0 4px 32px 0 rgba(34,51,107,0.10)', borderRadius: 3, border: '1.5px solid #e0e3e7', background: '#fff' }}>
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
         <Button
           variant="contained"
           startIcon={<Add />}
           onClick={() => handleOpen()}
-          sx={{ ml: 'auto', fontWeight: 700, px: 2.5, py: 1.2, borderRadius: 2, boxShadow: '0 2px 8px 0 rgba(34,51,107,0.10)' }}
+          sx={{ fontWeight: 700, px: 2.5, py: 1.2, borderRadius: 2, boxShadow: '0 2px 8px 0 rgba(34,51,107,0.10)' }}
         >
           Nuevo Pedido
         </Button>

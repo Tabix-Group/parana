@@ -112,46 +112,64 @@ export default function Devoluciones() {
           style={{ padding: 8, borderRadius: 6, border: '1px solid #d0d7e2', minWidth: 220 }}
         />
       </Box>
-      <TableContainer>
-        <Table className="main-table" size="small">
+      <TableContainer sx={{ borderRadius: 2, boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)', border: '1px solid #e0e3e7', background: '#fff' }}>
+        <Table size="small" stickyHeader>
           <TableHead>
-            <TableRow>
-              {columns.map(col => (
-                <TableCell key={col.id} className="main-table-cell">{col.label}</TableCell>
-              ))}
+            <TableRow sx={{ background: '#f6f8fa' }}>
+              {columns.map(col => {
+                let cellSx = {
+                  fontWeight: 700,
+                  fontSize: 16,
+                  color: '#22336b',
+                  borderBottom: '2px solid #e0e3e7',
+                  background: '#f6f8fa',
+                  letterSpacing: 0.2
+                };
+                if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
+                if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
+                if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400 };
+                if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
+                return (
+                  <TableCell key={col.id} sx={cellSx}>{col.label}</TableCell>
+                );
+              })}
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map(row => (
-              <TableRow key={row.id}>
-                {columns.map(col => (
-                  col.id === 'acciones' ? (
-                    <TableCell key={col.id} className="main-table-cell">
-                      <IconButton onClick={() => handleOpen(row)}><Edit /></IconButton>
-                      <IconButton onClick={() => handleDelete(row.id)}><Delete /></IconButton>
+            {data.map((row, idx) => (
+              <TableRow
+                key={row.id}
+                sx={{
+                  background: idx % 2 === 0 ? '#fff' : '#f8fafc',
+                  transition: 'background 0.18s',
+                  '&:hover': { background: '#e8f0fe' }
+                }}
+              >
+                {columns.map(col => {
+                  let cellSx = { fontSize: 15, color: '#22336b', py: 1.2, px: 1.5 };
+                  if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
+                  if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
+                  if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400, whiteSpace: 'pre-line', wordBreak: 'break-word' };
+                  if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
+                  return col.id === 'acciones' ? (
+                    <TableCell key={col.id} sx={cellSx}>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                        <IconButton onClick={() => handleOpen(row)} sx={{ color: '#2563eb', '&:hover': { bgcolor: '#e8f0fe' }, p: 0.7 }} size="small"><Edit fontSize="small" /></IconButton>
+                        <IconButton onClick={() => handleDelete(row.id)} sx={{ color: '#e53935', '&:hover': { bgcolor: '#fdeaea' }, p: 0.7 }} size="small"><Delete fontSize="small" /></IconButton>
+                      </Box>
                     </TableCell>
                   ) : col.id === 'recibido' ? (
-                    <TableCell key={col.id} className="main-table-cell">{row.recibido ? 'Sí' : 'No'}</TableCell>
+                    <TableCell key={col.id} sx={cellSx}>{row.recibido ? 'Sí' : 'No'}</TableCell>
                   ) : (
-                    <TableCell key={col.id} className="main-table-cell">{row[col.id]}</TableCell>
-                  )
-                ))}
+                    <TableCell key={col.id} sx={cellSx}>{row[col.id]}</TableCell>
+                  );
+                })}
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-      <TablePagination
-        component="div"
-        count={total}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={pageSize}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        rowsPerPageOptions={pageSizes}
-      />
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700, fontSize: 22, mb: 1 }}>{editRow ? 'Editar Devolución' : 'Nueva Devolución'}</DialogTitle>
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogContent
           sx={{
             display: 'grid',

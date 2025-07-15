@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs, Tab, Box, Paper } from '@mui/material';
+import { Tabs, Tab, Box, Paper, TableContainer, Table, TableHead, TableBody, TableRow, TableCell } from '@mui/material';
 import Pedidos from '../components/Pedidos';
 import Clientes from '../components/Clientes';
 import Armadores from '../components/Armadores';
