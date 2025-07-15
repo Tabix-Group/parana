@@ -26,82 +26,56 @@ const columns = [
 const pageSizes = [10, 15, 25, 50];
 
 export default function Pedidos() {
-  const [data, setData] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [sortBy, setSortBy] = useState('id');
-  const [order, setOrder] = useState('desc');
-  const initialFilters = { comprobante: '', cliente: '', estado: '', fecha_entrega: '' };
-  const [filters, setFilters] = useState(initialFilters);
+  // Estado para el diálogo de edición/alta
   const [open, setOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
-  const [form, setForm] = useState({ comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', fecha_entrega: '', estado_id: '', notas: '' });
-  const [clientes, setClientes] = useState([]);
-  const [armadores, setArmadores] = useState([]);
-  const [transportes, setTransportes] = useState([]);
-  const [tiposTransporte, setTiposTransporte] = useState([]);
-  const [vendedores, setVendedores] = useState([]);
-  const [estados, setEstados] = useState([]);
+  const [form, setForm] = useState({
+    comprobante: '',
+    cliente_id: '',
+    direccion: '',
+    armador_id: '',
+    tipo_transporte_id: '',
+    transporte_id: '',
+    vendedor_id: '',
+    fecha_entrega: '',
+    estado_id: '',
+    notas: ''
+  });
 
-  useEffect(() => {
-    fetchData();
-    fetchEntidades();
-    // eslint-disable-next-line
-  }, [page, pageSize, sortBy, order, filters]);
-
-  const fetchData = async () => {
-    const params = {
-      page: page + 1,
-      pageSize,
-      sortBy,
-      order,
-      ...filters
-    };
-    // Si el filtro de fecha_entrega está vacío, no lo mandes
-    if (!filters.fecha_entrega) {
-      delete params.fecha_entrega;
-    }
-    const res = await API.get('/pedidos', { params });
-    setData(res.data.data);
-    setTotal(Number(res.data.total));
-  };
-
-  const fetchEntidades = async () => {
-    const [cli, arm, tra, tipo, ven, est] = await Promise.all([
-      API.get('/clientes'),
-      API.get('/armadores'),
-      API.get('/transportes'),
-      API.get('/tipos-transporte'),
-      API.get('/vendedores'),
-      API.get('/estados')
-    ]);
-    setClientes(cli.data.data || cli.data);
-    setArmadores(arm.data.data || arm.data);
-    setTransportes(tra.data.data || tra.data);
-    setTiposTransporte(tipo.data.data || tipo.data);
-    setVendedores(ven.data.data || ven.data);
-    setEstados(est.data.data || est.data);
-  };
-
-  const handleChangePage = (_, newPage) => setPage(newPage);
-  const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
-  const handleSort = col => {
-    setSortBy(col);
-    setOrder(order === 'asc' ? 'desc' : 'asc');
-  };
-  const handleFilter = e => setFilters({ ...filters, [e.target.name]: e.target.value });
-  const handleClearFilters = () => setFilters(initialFilters);
-
+  // Abrir diálogo para nuevo o editar
   const handleOpen = (row = null) => {
     setEditRow(row);
-    setForm(row ? { ...row } : { comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', fecha_entrega: '', estado_id: '', notas: '' });
+    setForm(row ? {
+      comprobante: row.comprobante || '',
+      cliente_id: row.cliente_id || '',
+      direccion: row.direccion || '',
+      armador_id: row.armador_id || '',
+      tipo_transporte_id: row.tipo_transporte_id || '',
+      transporte_id: row.transporte_id || '',
+      vendedor_id: row.vendedor_id || '',
+      fecha_entrega: row.fecha_entrega || '',
+      estado_id: row.estado_id || '',
+      notas: row.notas || ''
+    } : {
+      comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', fecha_entrega: '', estado_id: '', notas: ''
+    });
     setOpen(true);
   };
-  const handleClose = () => setOpen(false);
 
-  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+  // Cerrar diálogo
+  const handleClose = () => {
+    setOpen(false);
+    setEditRow(null);
+    setForm({ comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', fecha_entrega: '', estado_id: '', notas: '' });
+  };
 
+  // Manejar cambios en el form
+  const handleChange = e => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Guardar pedido (alta o edición)
   const handleSubmit = async () => {
     if (editRow) {
       await API.put(`/pedidos/${editRow.id}`, form);
@@ -109,31 +83,100 @@ export default function Pedidos() {
       await API.post('/pedidos', form);
     }
     setOpen(false);
-    fetchData();
+    setEditRow(null);
+    setForm({ comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', fecha_entrega: '', estado_id: '', notas: '' });
+    // Refrescar datos
+    API.get('/pedidos', {
+      params: {
+        ...filters,
+        page: page + 1,
+        pageSize
+      }
+    }).then(res => {
+      setData(res.data.data);
+      setTotal(Number(res.data.total) || 0);
+    });
   };
 
+  // Eliminar pedido
   const handleDelete = async id => {
     if (window.confirm('¿Borrar pedido?')) {
       await API.delete(`/pedidos/${id}`);
-      fetchData();
+      // Refrescar datos
+      API.get('/pedidos', {
+        params: {
+          ...filters,
+          page: page + 1,
+          pageSize
+        }
+      }).then(res => {
+        setData(res.data.data);
+        setTotal(Number(res.data.total) || 0);
+      });
     }
   };
+  // Estados para paginación
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
-  // Exportar a Excel
-  const handleExportExcel = () => {
-    const exportData = data.map(row => {
-      const obj = {};
-      columns.filter(c => c.id !== 'acciones').forEach(col => {
-        obj[col.label] = row[col.id];
-      });
-      return obj;
+
+  // Filtros debe ir antes de cualquier uso
+  const [filters, setFilters] = useState({
+    comprobante: '',
+    cliente: '',
+    fecha_entrega: '',
+    estado: ''
+  });
+  const [total, setTotal] = useState(0);
+
+  // Cargar datos de pedidos con filtros y paginación
+  useEffect(() => {
+    API.get('/pedidos', {
+      params: {
+        ...filters,
+        page: page + 1,
+        pageSize
+      }
+    }).then(res => {
+      setData(res.data.data);
+      setTotal(Number(res.data.total) || 0);
     });
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Pedidos');
-    const fecha = new Date().toISOString().slice(0,10);
-    XLSX.writeFile(wb, `PedidosTotales_${fecha}.xlsx`);
+  }, [filters, page, pageSize]);
+
+  // Handlers de paginación
+  const handleChangePage = (_, newPage) => setPage(newPage);
+  const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
+
+  // Catálogos para selects
+  const [clientes, setClientes] = useState([]);
+  const [estados, setEstados] = useState([]);
+  const [armadores, setArmadores] = useState([]);
+  const [tiposTransporte, setTiposTransporte] = useState([]);
+  const [transportes, setTransportes] = useState([]);
+  const [vendedores, setVendedores] = useState([]);
+
+  // Cargar catálogos al montar
+  useEffect(() => {
+    API.get('/clientes').then(res => setClientes(res.data.data));
+    API.get('/estados').then(res => setEstados(res.data.data));
+    API.get('/armadores').then(res => setArmadores(res.data.data));
+    API.get('/tipos-transporte').then(res => setTiposTransporte(res.data.data));
+    API.get('/transportes').then(res => setTransportes(res.data.data));
+    API.get('/vendedores').then(res => setVendedores(res.data.data));
+  }, []);
+  // Maneja los cambios en los filtros de la tabla
+  const handleFilter = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
   };
+
+  // Función para limpiar los filtros
+  const handleClearFilters = () => {
+    setFilters({ comprobante: '', cliente: '', fecha_entrega: '', estado: '' });
+  };
+  const [data, setData] = useState([]);
+  // ...aquí van los hooks y lógica existentes...
+  // El único return debe estar al final de la función Pedidos
 
   // Exportar a PDF
   const handleExportPDF = () => {
@@ -156,13 +199,21 @@ export default function Pedidos() {
   const handleExportClose = () => setExportAnchor(null);
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()}>Nuevo Pedido</Button>
+    <Paper sx={{ p: { xs: 1, sm: 2 }, boxShadow: '0 4px 32px 0 rgba(34,51,107,0.10)', borderRadius: 3, border: '1.5px solid #e0e3e7', background: '#fff' }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => handleOpen()}
+          sx={{ ml: 'auto', fontWeight: 700, px: 2.5, py: 1.2, borderRadius: 2, boxShadow: '0 2px 8px 0 rgba(34,51,107,0.10)' }}
+        >
+          Nuevo Pedido
+        </Button>
         <Button
           variant="outlined"
           startIcon={<FileDownload />}
           onClick={handleExportClick}
+          sx={{ fontWeight: 600, px: 2.5, py: 1.2, borderRadius: 2 }}
         >
           Exportar
         </Button>
@@ -170,7 +221,7 @@ export default function Pedidos() {
           variant="text"
           color="secondary"
           onClick={handleClearFilters}
-          sx={{ ml: 'auto', fontWeight: 500 }}
+          sx={{ fontWeight: 500, px: 2, py: 1.2, borderRadius: 2 }}
         >
           Limpiar filtros
         </Button>
@@ -179,69 +230,102 @@ export default function Pedidos() {
           <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
         </Menu>
       </Box>
-      <TableContainer>
-        <Table size="small">
-      <TableHead>
-        <TableRow>
-          {columns.map(col => (
-            <TableCell key={col.id} onClick={() => col.id !== 'acciones' ? handleSort(col.id) : undefined} style={{ cursor: col.id !== 'acciones' ? 'pointer' : 'default' }}>
-              {col.label}
-            </TableCell>
-          ))}
-        </TableRow>
-        <TableRow>
-          <TableCell>
-            <TextField size="small" name="comprobante" value={filters.comprobante} onChange={handleFilter} placeholder="Buscar..." />
-          </TableCell>
-          <TableCell>
-            <FormControl size="small" fullWidth>
-              <Select name="cliente" value={filters.cliente} onChange={handleFilter} displayEmpty>
-                <MenuItem value="">Todos</MenuItem>
-                {clientes.map(c => <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>)}
-              </Select>
-            </FormControl>
-          </TableCell>
-          <TableCell />
-          <TableCell />
-          <TableCell />
-          <TableCell />
-          <TableCell />
-          <TableCell>
-            <TextField
-              size="small"
-              name="fecha_entrega"
-              value={filters.fecha_entrega}
-              onChange={handleFilter}
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-          </TableCell>
-          <TableCell>
-            <FormControl size="small" fullWidth>
-              <Select name="estado" value={filters.estado} onChange={handleFilter} displayEmpty>
-                <MenuItem value="">Todos</MenuItem>
-                {estados.map(e => <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>)}
-              </Select>
-            </FormControl>
-          </TableCell>
-          <TableCell />
-          <TableCell />
-        </TableRow>
-      </TableHead>
+      <TableContainer sx={{ borderRadius: 2, boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)', border: '1px solid #e0e3e7', background: '#fff' }}>
+        <Table size="small" stickyHeader>
+          <TableHead>
+            <TableRow sx={{ background: '#f6f8fa' }}>
+              {columns.map(col => {
+                let cellSx = {
+                  cursor: col.id !== 'acciones' ? 'pointer' : 'default',
+                  fontWeight: 700,
+                  fontSize: 16,
+                  color: '#22336b',
+                  borderBottom: '2px solid #e0e3e7',
+                  background: '#f6f8fa',
+                  letterSpacing: 0.2
+                };
+                if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
+                if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
+                if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400 };
+                return (
+                  <TableCell
+                    key={col.id}
+                    onClick={() => col.id !== 'acciones' ? handleSort(col.id) : undefined}
+                    sx={cellSx}
+                  >
+                    {col.label}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+            <TableRow>
+              <TableCell>
+                <TextField size="small" name="comprobante" value={filters.comprobante} onChange={handleFilter} placeholder="Buscar..." sx={{ bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }} />
+              </TableCell>
+              <TableCell>
+                <FormControl size="small" fullWidth sx={{ bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
+                  <Select name="cliente" value={filters.cliente} onChange={handleFilter} displayEmpty>
+                    <MenuItem value="">Todos</MenuItem>
+                    {clientes.map(c => <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </TableCell>
+              <TableCell />
+              <TableCell />
+              <TableCell />
+              <TableCell />
+              <TableCell />
+              <TableCell>
+                <TextField
+                  size="small"
+                  name="fecha_entrega"
+                  value={filters.fecha_entrega}
+                  onChange={handleFilter}
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  sx={{ bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+                />
+              </TableCell>
+              <TableCell>
+                <FormControl size="small" fullWidth sx={{ bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
+                  <Select name="estado" value={filters.estado} onChange={handleFilter} displayEmpty>
+                    <MenuItem value="">Todos</MenuItem>
+                    {estados.map(e => <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </TableCell>
+              <TableCell />
+              <TableCell />
+            </TableRow>
+          </TableHead>
           <TableBody>
-            {data.map(row => (
-              <TableRow key={row.id}>
-                {columns.map(col => (
-                  col.id === 'acciones' ? (
-                    <TableCell key={col.id}>
-                      <IconButton onClick={() => handleOpen(row)}><Edit /></IconButton>
-                      <IconButton onClick={() => handleDelete(row.id)}><Delete /></IconButton>
+            {data.map((row, idx) => (
+              <TableRow
+                key={row.id}
+                sx={{
+                  background: idx % 2 === 0 ? '#fff' : '#f8fafc',
+                  transition: 'background 0.18s',
+                  '&:hover': { background: '#e8f0fe' }
+                }}
+              >
+                {columns.map(col => {
+                  let cellSx = { fontSize: 15, color: '#22336b', py: 1.2, px: 1.5 };
+                  if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
+                  if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
+                  if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400, whiteSpace: 'pre-line', wordBreak: 'break-word' };
+                  if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
+                  return col.id === 'acciones' ? (
+                    <TableCell key={col.id} sx={cellSx}>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                        <IconButton onClick={() => handleOpen(row)} sx={{ color: '#2563eb', '&:hover': { bgcolor: '#e8f0fe' }, p: 0.7 }} size="small"><Edit fontSize="small" /></IconButton>
+                        <IconButton onClick={() => handleDelete(row.id)} sx={{ color: '#e53935', '&:hover': { bgcolor: '#fdeaea' }, p: 0.7 }} size="small"><Delete fontSize="small" /></IconButton>
+                      </Box>
                     </TableCell>
                   ) : (
-                    <TableCell key={col.id}>{row[col.id]}</TableCell>
-                  )
-                ))}
+                    <TableCell key={col.id} sx={cellSx}>{row[col.id]}</TableCell>
+                  );
+                })}
               </TableRow>
             ))}
           </TableBody>
@@ -255,6 +339,7 @@ export default function Pedidos() {
         rowsPerPage={pageSize}
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={pageSizes}
+        sx={{ mt: 2 }}
       />
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle sx={{ fontWeight: 700, fontSize: 22, mb: 1 }}>{editRow ? 'Editar Pedido' : 'Nuevo Pedido'}</DialogTitle>
