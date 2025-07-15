@@ -35,7 +35,7 @@ export default function PedidosParciales() {
 
   return (
     <Box>
-      <h2 className="main-table-title">Pedidos Parciales</h2>
+      {/* Título ahora en AppBar */}
       <Box sx={{ mb: 2 }}>
         <input
           type="text"

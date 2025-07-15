@@ -50,7 +50,7 @@ export default function Devoluciones() {
 
   return (
     <Box>
-      <h2 className="main-table-title">Devoluciones</h2>
+      {/* Título ahora en AppBar */}
       <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()} sx={{ mb: 2 }}>Nueva Devolución</Button>
       <Box sx={{ mb: 2 }}>
         <input

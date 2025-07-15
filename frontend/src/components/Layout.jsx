@@ -26,6 +26,14 @@ export default function Layout({ children }) {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+  // Determinar el título según la ruta
+  let pageTitle = '';
+  if (location.pathname === '/pedidos-totales') pageTitle = 'Pedidos Totales';
+  else if (location.pathname === '/parciales') pageTitle = 'Pedidos Parciales';
+  else if (location.pathname === '/devoluciones') pageTitle = 'Devoluciones';
+  else if (location.pathname === '/') pageTitle = 'Configuración';
+  else pageTitle = '';
+
   return (
     <Box sx={{ minHeight: '100vh', background: '#f4f6fb', fontFamily: 'Avenir, Helvetica, Arial, sans-serif' }}>
       <AppBar position="static" elevation={0} sx={{ bgcolor: '#fff', color: '#22336b', boxShadow: '0 2px 8px 0 rgba(34,51,107,0.08)' }}>
@@ -54,6 +62,7 @@ export default function Layout({ children }) {
               </MenuItem>
             ))}
           </Menu>
+          <Typography variant="h5" sx={{ ml: 3, fontWeight: 700, fontSize: 26, flexGrow: 1 }}>{pageTitle}</Typography>
         </Toolbar>
         <Divider sx={{ bgcolor: '#e0e3e7', height: 2 }} />
       </AppBar>
