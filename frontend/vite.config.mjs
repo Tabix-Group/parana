@@ -1,8 +1,5 @@
-// Archivo migrado a vite.config.mjs (ESM). Elimina este archivo si no es necesario.
-
-// Este archivo ha sido eliminado para evitar conflictos.
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -66,4 +63,4 @@ export default defineConfig({
       ]
     }
   }
-})
+});
