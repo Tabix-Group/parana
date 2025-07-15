@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination,
-  IconButton, Button, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Box, Menu
+  IconButton, Button, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Box, Menu, Typography
 } from '@mui/material';
 import { FileDownload } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
@@ -15,6 +15,7 @@ const columns = [
   { id: 'tipo', label: 'Tipo' },
   { id: 'recibido', label: 'Recibido' },
   { id: 'fecha', label: 'Fecha' },
+  { id: 'texto', label: 'Observaciones', sx: { minWidth: 540, width: 600, maxWidth: 900 } },
   { id: 'acciones', label: 'Acciones' }
 ];
 
@@ -26,7 +27,7 @@ export default function Devoluciones() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [editRow, setEditRow] = useState(null);
-  const [form, setForm] = useState({ pedido_id: '', tipo: '', recibido: false, fecha: '' });
+  const [form, setForm] = useState({ pedido_id: '', tipo: '', recibido: false, fecha: '', texto: '' });
   const [pedidos, setPedidos] = useState([]);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
@@ -46,7 +47,7 @@ export default function Devoluciones() {
   };
   const handleChangePage = (_, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
-  const handleOpen = (row = null) => { setEditRow(row); setForm(row ? { ...row } : { pedido_id: '', tipo: '', recibido: false, fecha: '' }); setOpen(true); };
+  const handleOpen = (row = null) => { setEditRow(row); setForm(row ? { ...row } : { pedido_id: '', tipo: '', recibido: false, fecha: '', texto: '' }); setOpen(true); };
   const handleClose = () => setOpen(false);
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
   const handleSubmit = async () => { if (editRow) { await API.put(`/devoluciones/${editRow.id}`, form); } else { await API.post('/devoluciones', form); } setOpen(false); fetchData(); };
@@ -90,9 +91,9 @@ export default function Devoluciones() {
 
   return (
     <Box>
-      {/* Título ahora en AppBar */}
+      <Typography variant="h5" fontWeight={700} mb={2} color="#22336b">Cobros y Devoluciones</Typography>
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()}>Nueva Devolución</Button>
+        <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()}>Nuevo Cobro/Devolución</Button>
         <Button
           variant="outlined"
           startIcon={<FileDownload />}
@@ -150,7 +151,13 @@ export default function Devoluciones() {
                   if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
                   if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
                   if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400, whiteSpace: 'pre-line', wordBreak: 'break-word' };
+                  if (col.id === 'texto') cellSx = { ...cellSx, minWidth: 540, width: 600, maxWidth: 900, whiteSpace: 'pre-line', wordBreak: 'break-word' };
                   if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
+                  if (col.id === 'pedido_id') {
+                    // Buscar el comprobante del pedido
+                    const pedido = pedidos.find(p => p.id === row.pedido_id);
+                    return <TableCell key={col.id} sx={cellSx}>{pedido ? pedido.comprobante : ''}</TableCell>;
+                  }
                   return col.id === 'acciones' ? (
                     <TableCell key={col.id} sx={cellSx}>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
@@ -205,6 +212,7 @@ export default function Devoluciones() {
             </Select>
           </FormControl>
           <TextField label="Fecha" name="fecha" type="date" value={form.fecha} onChange={handleChange} InputLabelProps={{ shrink: true }} fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+          <TextField label="Observaciones" name="texto" value={form.texto} onChange={handleChange} fullWidth multiline minRows={2} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2, pt: 1, justifyContent: 'flex-end' }}>
           <Button onClick={handleClose} variant="outlined" color="secondary" sx={{ minWidth: 120, fontWeight: 600 }}>Cancelar</Button>

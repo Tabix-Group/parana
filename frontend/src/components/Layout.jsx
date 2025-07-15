@@ -19,7 +19,7 @@ import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 const menuItems = [
   { label: 'Pedidos', path: '/pedidos-totales', icon: <ReceiptLongOutlinedIcon sx={{ mr: 1 }} /> },
   { label: 'Parciales', path: '/parciales', icon: <Inventory2OutlinedIcon sx={{ mr: 1 }} /> },
-  { label: 'Devoluciones', path: '/devoluciones', icon: <ReplayIcon sx={{ mr: 1 }} /> },
+  { label: 'Cobros y Dev', path: '/devoluciones', icon: <ReplayIcon sx={{ mr: 1 }} /> },
   { label: 'Logística', path: '/logistica', icon: <LocalShippingIcon sx={{ mr: 1 }} /> },
   { label: 'Configuración', path: '/', icon: <SettingsIcon sx={{ mr: 1 }} /> },
 ];
@@ -38,7 +38,7 @@ export default function Layout({ children }) {
   let pageTitle = '';
   if (location.pathname === '/pedidos-totales') pageTitle = 'Pedidos Totales';
   else if (location.pathname === '/parciales') pageTitle = 'Pedidos Parciales';
-  else if (location.pathname === '/devoluciones') pageTitle = 'Devoluciones';
+  else if (location.pathname === '/devoluciones') pageTitle = 'Cobros y Devoluciones';
   else if (location.pathname === '/logistica') pageTitle = 'Logística';
   else if (location.pathname === '/') pageTitle = 'Configuración';
   else pageTitle = '';

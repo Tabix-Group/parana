@@ -74,7 +74,7 @@ export async function createTables(db) {
     }
   });
   // Pedidos
-  await db.schema.hasTable('pedidos').then(exists => {
+  await db.schema.hasTable('pedidos').then(async exists => {
     if (!exists) {
       return db.schema.createTable('pedidos', t => {
         t.increments('id').primary();
@@ -85,10 +85,26 @@ export async function createTables(db) {
         t.integer('tipo_transporte_id').references('id').inTable('tipos_transporte');
         t.integer('transporte_id').references('id').inTable('transportes');
         t.integer('vendedor_id').references('id').inTable('vendedores');
+        t.integer('cant_bultos');
+        t.string('tipo_bultos');
         t.date('fecha_entrega');
         t.integer('estado_id').references('id').inTable('estados');
         t.text('notas');
       });
+    } else {
+      // Si las columnas no existen, agregarlas
+      const hasCant = await db.schema.hasColumn('pedidos', 'cant_bultos');
+      if (!hasCant) {
+        await db.schema.table('pedidos', t => {
+          t.integer('cant_bultos');
+        });
+      }
+      const hasTipo = await db.schema.hasColumn('pedidos', 'tipo_bultos');
+      if (!hasTipo) {
+        await db.schema.table('pedidos', t => {
+          t.string('tipo_bultos');
+        });
+      }
     }
   });
   // Devoluciones
@@ -100,6 +116,16 @@ export async function createTables(db) {
         t.string('tipo'); // efectivo o material
         t.boolean('recibido');
         t.date('fecha');
+        t.text('texto'); // Observaciones
+      });
+    } else {
+      // Si la columna no existe, agregarla
+      return db.schema.hasColumn('devoluciones', 'texto').then(hasCol => {
+        if (!hasCol) {
+          return db.schema.table('devoluciones', t => {
+            t.text('texto');
+          });
+        }
       });
     }
   });

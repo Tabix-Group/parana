@@ -17,6 +17,8 @@ const columns = [
   { id: 'tipo_transporte_nombre', label: 'Tipo Tte' },
   { id: 'transporte_nombre', label: 'Transporte' },
   { id: 'vendedor_nombre', label: 'Vendedor' },
+  { id: 'cant_bultos', label: 'Cant' },
+  { id: 'tipo_bultos', label: 'Tipo' },
   { id: 'fecha_entrega', label: 'Fecha Entrega' },
   { id: 'estado_nombre', label: 'Estado' },
   { id: 'notas', label: 'Notas' },
@@ -37,6 +39,8 @@ export default function Pedidos() {
     tipo_transporte_id: '',
     transporte_id: '',
     vendedor_id: '',
+    cant_bultos: '',
+    tipo_bultos: '',
     fecha_entrega: '',
     estado_id: '',
     notas: ''
@@ -53,11 +57,13 @@ export default function Pedidos() {
       tipo_transporte_id: row.tipo_transporte_id || '',
       transporte_id: row.transporte_id || '',
       vendedor_id: row.vendedor_id || '',
+      cant_bultos: row.cant_bultos || '',
+      tipo_bultos: row.tipo_bultos || '',
       fecha_entrega: row.fecha_entrega || '',
       estado_id: row.estado_id || '',
       notas: row.notas || ''
     } : {
-      comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', fecha_entrega: '', estado_id: '', notas: ''
+      comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_entrega: '', estado_id: '', notas: ''
     });
     setOpen(true);
   };
@@ -66,7 +72,7 @@ export default function Pedidos() {
   const handleClose = () => {
     setOpen(false);
     setEditRow(null);
-    setForm({ comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', fecha_entrega: '', estado_id: '', notas: '' });
+    setForm({ comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_entrega: '', estado_id: '', notas: '' });
   };
 
   // Manejar cambios en el form
@@ -394,6 +400,25 @@ export default function Pedidos() {
             <InputLabel shrink>Vendedor</InputLabel>
             <Select name="vendedor_id" value={form.vendedor_id} onChange={handleChange} label="Vendedor">
               {vendedores.map(v => <MenuItem key={v.id} value={v.id}>{v.nombre} {v.apellido}</MenuItem>)}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+            <InputLabel shrink>Cantidad</InputLabel>
+            <TextField
+              name="cant_bultos"
+              value={form.cant_bultos}
+              onChange={handleChange}
+              type="number"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 0 }}
+            />
+          </FormControl>
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+            <InputLabel shrink>Tipo</InputLabel>
+            <Select name="tipo_bultos" value={form.tipo_bultos || ''} label="Tipo" onChange={handleChange}>
+              <MenuItem value="Grande">Grande</MenuItem>
+              <MenuItem value="Chico">Chico</MenuItem>
             </Select>
           </FormControl>
           <TextField label="Fecha Entrega" name="fecha_entrega" type="date" value={form.fecha_entrega} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />

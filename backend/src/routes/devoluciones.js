@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
   if (tipo) query = query.where('tipo', tipo);
   if (recibido !== undefined) query = query.where('recibido', recibido === 'true');
   const total = await query.clone().count({ count: '*' }).first();
-  const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
+  const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize).select('*');
   res.json({ data, total: total.count });
 });
 
