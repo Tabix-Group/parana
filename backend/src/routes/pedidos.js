@@ -6,6 +6,31 @@ const router = express.Router();
 // Listar pedidos con paginación, filtros y orden
 router.get('/', async (req, res) => {
   const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', estado, cliente, comprobante, parcial, fecha_entrega } = req.query;
+  // Filtros para ambos queries
+  let baseQuery = db('pedidos');
+  if (parcial === 'true') {
+    baseQuery = baseQuery.leftJoin('estados', 'pedidos.estado_id', 'estados.id').where('estados.nombre', 'like', '%Parcial%');
+  } else if (estado) {
+    baseQuery = baseQuery.where('pedidos.estado_id', estado);
+  }
+  if (cliente) baseQuery = baseQuery.where('pedidos.cliente_id', cliente);
+  if (comprobante) baseQuery = baseQuery.where('pedidos.comprobante', 'like', `%${comprobante}%`);
+  if (fecha_entrega) baseQuery = baseQuery.where('pedidos.fecha_entrega', fecha_entrega);
+
+  // Consulta de conteo (sin joins extra)
+  const totalResult = await db('pedidos').modify(qb => {
+    if (parcial === 'true') {
+      qb.leftJoin('estados', 'pedidos.estado_id', 'estados.id').where('estados.nombre', 'like', '%Parcial%');
+    } else if (estado) {
+      qb.where('pedidos.estado_id', estado);
+    }
+    if (cliente) qb.where('pedidos.cliente_id', cliente);
+    if (comprobante) qb.where('pedidos.comprobante', 'like', `%${comprobante}%`);
+    if (fecha_entrega) qb.where('pedidos.fecha_entrega', fecha_entrega);
+  }).count({ count: '*' }).first();
+  const total = totalResult ? totalResult.count : 0;
+
+  // Consulta de datos con joins y paginación
   let query = db('pedidos')
     .leftJoin('clientes', 'pedidos.cliente_id', 'clientes.id')
     .leftJoin('armadores', 'pedidos.armador_id', 'armadores.id')
@@ -32,9 +57,8 @@ router.get('/', async (req, res) => {
   if (cliente) query = query.where('pedidos.cliente_id', cliente);
   if (comprobante) query = query.where('pedidos.comprobante', 'like', `%${comprobante}%`);
   if (fecha_entrega) query = query.where('pedidos.fecha_entrega', fecha_entrega);
-  const total = await query.clone().count({ count: '*' }).first();
   const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
-  res.json({ data, total: total.count });
+  res.json({ data, total });
 });
 
 // Crear pedido

@@ -9,9 +9,13 @@ router.get('/', async (req, res) => {
   let query = db('devoluciones');
   if (tipo) query = query.where('tipo', tipo);
   if (recibido !== undefined) query = query.where('recibido', recibido === 'true');
-  const total = await query.clone().count({ count: '*' }).first();
+  const totalResult = await db('devoluciones').modify(qb => {
+    if (tipo) qb.where('tipo', tipo);
+    if (recibido !== undefined) qb.where('recibido', recibido === 'true');
+  }).count({ count: '*' }).first();
+  const total = totalResult ? totalResult.count : 0;
   const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize).select('*');
-  res.json({ data, total: total.count });
+  res.json({ data, total });
 });
 
 // Crear devolucion
