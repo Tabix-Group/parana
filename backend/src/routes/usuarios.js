@@ -19,7 +19,12 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { nombre, mail, clave, rol } = req.body;
-    const [id] = await db('usuarios').insert({ nombre, mail, clave, rol });
+    let id;
+    if (db.client.config.client === 'pg') {
+      id = (await db('usuarios').insert({ nombre, mail, clave, rol }).returning('id'))[0].id;
+    } else {
+      id = await db('usuarios').insert({ nombre, mail, clave, rol });
+    }
     res.status(200).json({ id });
   } catch (err) {
     console.error('Error POST /usuarios:', err);

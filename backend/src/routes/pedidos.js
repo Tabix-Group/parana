@@ -41,7 +41,12 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const pedido = req.body;
-    const [id] = await db('pedidos').insert(pedido);
+    let id;
+    if (db.client.config.client === 'pg') {
+      id = (await db('pedidos').insert(pedido).returning('id'))[0].id;
+    } else {
+      id = await db('pedidos').insert(pedido);
+    }
     res.status(200).json({ id });
   } catch (err) {
     console.error('Error POST /pedidos:', err);

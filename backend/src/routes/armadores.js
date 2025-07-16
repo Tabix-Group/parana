@@ -14,7 +14,12 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const [id] = await db('armadores').insert(req.body);
+    let id;
+    if (db.client.config.client === 'pg') {
+      id = (await db('armadores').insert(req.body).returning('id'))[0].id;
+    } else {
+      id = await db('armadores').insert(req.body);
+    }
     res.status(200).json({ id });
   } catch (err) {
     console.error('Error POST /armadores:', err);
