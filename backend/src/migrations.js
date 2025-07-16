@@ -79,16 +79,16 @@ export async function createTables(db) {
       return db.schema.createTable('pedidos', t => {
         t.increments('id').primary();
         t.string('comprobante', 255).notNullable();
-        t.integer('cliente_id').unsigned().references('id').inTable('clientes').onDelete('SET NULL');
+        t.integer('cliente_id').nullable().references('id').inTable('clientes').onDelete('SET NULL');
         t.string('direccion', 255);
-        t.integer('armador_id').unsigned().references('id').inTable('armadores').onDelete('SET NULL');
-        t.integer('tipo_transporte_id').unsigned().references('id').inTable('tipos_transporte').onDelete('SET NULL');
-        t.integer('transporte_id').unsigned().references('id').inTable('transportes').onDelete('SET NULL');
-        t.integer('vendedor_id').unsigned().references('id').inTable('vendedores').onDelete('SET NULL');
+        t.integer('armador_id').nullable().references('id').inTable('armadores').onDelete('SET NULL');
+        t.integer('tipo_transporte_id').nullable().references('id').inTable('tipos_transporte').onDelete('SET NULL');
+        t.integer('transporte_id').nullable().references('id').inTable('transportes').onDelete('SET NULL');
+        t.integer('vendedor_id').nullable().references('id').inTable('vendedores').onDelete('SET NULL');
         t.integer('cant_bultos');
         t.string('tipo_bultos', 100);
         t.date('fecha_entrega');
-        t.integer('estado_id').unsigned().references('id').inTable('estados').onDelete('SET NULL');
+        t.integer('estado_id').nullable().references('id').inTable('estados').onDelete('SET NULL');
         t.text('notas');
       });
     } else {
@@ -112,7 +112,7 @@ export async function createTables(db) {
     if (!exists) {
       return db.schema.createTable('devoluciones', t => {
         t.increments('id').primary();
-        t.integer('pedido_id').unsigned().references('id').inTable('pedidos').onDelete('SET NULL');
+        t.integer('pedido_id').nullable().references('id').inTable('pedidos').onDelete('SET NULL');
         t.string('tipo', 50); // efectivo o material
         t.boolean('recibido');
         t.date('fecha');
