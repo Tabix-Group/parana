@@ -64,6 +64,7 @@ export async function createTables(db) {
       });
     }
   });
+  console.log('Iniciando creación de tablas en DB:', db.client.config.connection);
   // Estados
   await db.schema.hasTable('estados').then(exists => {
     if (!exists) {
@@ -129,4 +130,5 @@ export async function createTables(db) {
       });
     }
   });
+  console.log('Tablas creadas (o ya existen)');
 }
