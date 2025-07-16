@@ -13,8 +13,8 @@ import devolucionesRoutes from './routes/devoluciones.js';
 import usuariosRoutes from './routes/usuarios.js';
 import loginRoutes from './routes/login.js';
 
-// Detectar si estamos en entorno Railway/Postgres
-const isPostgres = process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE && process.env.PGPORT;
+// Detectar si estamos en Railway/Postgres
+const isPostgres = process.env.DATABASE_URL || (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE && process.env.PGPORT);
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -22,13 +22,17 @@ const port = process.env.PORT || 4000;
 export const db = isPostgres
   ? knex({
       client: 'pg',
-      connection: {
-        host: process.env.PGHOST,
-        user: process.env.PGUSER,
-        password: process.env.PGPASSWORD,
-        database: process.env.PGDATABASE,
-        port: process.env.PGPORT
-      }
+      connection: process.env.DATABASE_URL
+        ? process.env.DATABASE_URL
+        : {
+            host: process.env.PGHOST,
+            user: process.env.PGUSER,
+            password: process.env.PGPASSWORD,
+            database: process.env.PGDATABASE,
+            port: process.env.PGPORT
+          },
+      // Para Railway, forzar SSL si es necesario
+      ...(process.env.DATABASE_URL ? { ssl: { rejectUnauthorized: false } } : {})
     })
   : knex({
       client: 'sqlite3',
