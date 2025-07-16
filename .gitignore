@@ -9,7 +9,6 @@ yarn-error.log*
 *.sqlite
 
 # SQLite DB de backend
-backend/data.sqlite3
 backend/node_modules
 
 
