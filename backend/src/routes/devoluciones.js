@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 // Crear devolucion
 router.post('/', async (req, res) => {
   const [id] = await db('devoluciones').insert(req.body);
-  res.json({ id });
+  res.status(200).json({ id });
 });
 
 // Obtener devolucion por id

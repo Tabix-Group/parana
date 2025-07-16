@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const pedido = req.body;
   const [id] = await db('pedidos').insert(pedido);
-  res.json({ id });
+  res.status(200).json({ id });
 });
 
 // Obtener pedido por id

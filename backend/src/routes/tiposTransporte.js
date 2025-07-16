@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const [id] = await db('tipos_transporte').insert(req.body);
-  res.json({ id });
+  res.status(200).json({ id });
 });
 
 router.get('/:id', async (req, res) => {

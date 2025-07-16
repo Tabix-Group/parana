@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const { nombre, mail, clave, rol } = req.body;
   const [id] = await db('usuarios').insert({ nombre, mail, clave, rol });
-  res.json({ id });
+  res.status(200).json({ id });
 });
 
 // Editar usuario
