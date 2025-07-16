@@ -53,13 +53,13 @@ router.get('/:id', async (req, res) => {
 // Editar pedido
 router.put('/:id', async (req, res) => {
   await db('pedidos').where({ id: req.params.id }).update(req.body);
-  res.sendStatus(204);
+  res.status(200).json({ success: true });
 });
 
 // Borrar pedido
 router.delete('/:id', async (req, res) => {
   await db('pedidos').where({ id: req.params.id }).del();
-  res.sendStatus(204);
+  res.status(200).json({ success: true });
 });
 
 export default router;

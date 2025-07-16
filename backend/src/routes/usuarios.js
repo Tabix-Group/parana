@@ -26,13 +26,13 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   const { nombre, mail, clave, rol } = req.body;
   await db('usuarios').where({ id: req.params.id }).update({ nombre, mail, clave, rol });
-  res.sendStatus(204);
+  res.status(200).json({ success: true });
 });
 
 // Eliminar usuario
 router.delete('/:id', async (req, res) => {
   await db('usuarios').where({ id: req.params.id }).del();
-  res.sendStatus(204);
+  res.status(200).json({ success: true });
 });
 
 export default router;

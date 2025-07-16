@@ -24,12 +24,12 @@ router.get('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   await db('transportes').where({ id: req.params.id }).update(req.body);
-  res.sendStatus(204);
+  res.status(200).json({ success: true });
 });
 
 router.delete('/:id', async (req, res) => {
   await db('transportes').where({ id: req.params.id }).del();
-  res.sendStatus(204);
+  res.status(200).json({ success: true });
 });
 
 export default router;
