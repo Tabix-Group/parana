@@ -39,9 +39,14 @@ router.get('/', async (req, res) => {
 
 // Crear pedido
 router.post('/', async (req, res) => {
-  const pedido = req.body;
-  const [id] = await db('pedidos').insert(pedido);
-  res.status(200).json({ id });
+  try {
+    const pedido = req.body;
+    const [id] = await db('pedidos').insert(pedido);
+    res.status(200).json({ id });
+  } catch (err) {
+    console.error('Error POST /pedidos:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Obtener pedido por id

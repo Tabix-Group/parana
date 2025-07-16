@@ -13,8 +13,13 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const [id] = await db('transportes').insert(req.body);
-  res.status(200).json({ id });
+  try {
+    const [id] = await db('transportes').insert(req.body);
+    res.status(200).json({ id });
+  } catch (err) {
+    console.error('Error POST /transportes:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.get('/:id', async (req, res) => {

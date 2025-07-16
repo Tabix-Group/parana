@@ -17,9 +17,14 @@ router.get('/', async (req, res) => {
 
 // Crear usuario
 router.post('/', async (req, res) => {
-  const { nombre, mail, clave, rol } = req.body;
-  const [id] = await db('usuarios').insert({ nombre, mail, clave, rol });
-  res.status(200).json({ id });
+  try {
+    const { nombre, mail, clave, rol } = req.body;
+    const [id] = await db('usuarios').insert({ nombre, mail, clave, rol });
+    res.status(200).json({ id });
+  } catch (err) {
+    console.error('Error POST /usuarios:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Editar usuario
