@@ -5,10 +5,10 @@ export async function createTables(db) {
     if (!exists) {
       return db.schema.createTable('usuarios', t => {
         t.increments('id').primary();
-        t.string('nombre').notNullable();
-        t.string('mail').notNullable();
-        t.string('clave').notNullable();
-        t.string('rol').notNullable(); // admin, ventas, logistica
+        t.string('nombre', 255).notNullable();
+        t.string('mail', 255).notNullable();
+        t.string('clave', 255).notNullable();
+        t.string('rol', 50).notNullable(); // admin, ventas, logistica
       });
     }
   });
@@ -17,10 +17,10 @@ export async function createTables(db) {
     if (!exists) {
       return db.schema.createTable('clientes', t => {
         t.increments('id').primary();
-        t.string('nombre').notNullable();
-        t.string('direccion');
-        t.string('localidad');
-        t.string('telefono');
+        t.string('nombre', 255).notNullable();
+        t.string('direccion', 255);
+        t.string('localidad', 100);
+        t.string('telefono', 50);
       });
     }
   });
@@ -29,8 +29,8 @@ export async function createTables(db) {
     if (!exists) {
       return db.schema.createTable('armadores', t => {
         t.increments('id').primary();
-        t.string('nombre').notNullable();
-        t.string('apellido').notNullable();
+        t.string('nombre', 255).notNullable();
+        t.string('apellido', 255).notNullable();
       });
     }
   });
@@ -39,8 +39,8 @@ export async function createTables(db) {
     if (!exists) {
       return db.schema.createTable('transportes', t => {
         t.increments('id').primary();
-        t.string('nombre').notNullable();
-        t.string('telefono');
+        t.string('nombre', 255).notNullable();
+        t.string('telefono', 50);
       });
     }
   });
@@ -49,7 +49,7 @@ export async function createTables(db) {
     if (!exists) {
       return db.schema.createTable('tipos_transporte', t => {
         t.increments('id').primary();
-        t.string('nombre').notNullable();
+        t.string('nombre', 255).notNullable();
       });
     }
   });
@@ -58,9 +58,9 @@ export async function createTables(db) {
     if (!exists) {
       return db.schema.createTable('vendedores', t => {
         t.increments('id').primary();
-        t.string('nombre').notNullable();
-        t.string('apellido').notNullable();
-        t.string('telefono');
+        t.string('nombre', 255).notNullable();
+        t.string('apellido', 255).notNullable();
+        t.string('telefono', 50);
       });
     }
   });
@@ -69,7 +69,7 @@ export async function createTables(db) {
     if (!exists) {
       return db.schema.createTable('estados', t => {
         t.increments('id').primary();
-        t.string('nombre').notNullable();
+        t.string('nombre', 255).notNullable();
       });
     }
   });
@@ -78,17 +78,17 @@ export async function createTables(db) {
     if (!exists) {
       return db.schema.createTable('pedidos', t => {
         t.increments('id').primary();
-        t.string('comprobante').notNullable();
-        t.integer('cliente_id').references('id').inTable('clientes');
-        t.string('direccion');
-        t.integer('armador_id').references('id').inTable('armadores');
-        t.integer('tipo_transporte_id').references('id').inTable('tipos_transporte');
-        t.integer('transporte_id').references('id').inTable('transportes');
-        t.integer('vendedor_id').references('id').inTable('vendedores');
+        t.string('comprobante', 255).notNullable();
+        t.integer('cliente_id').unsigned().references('id').inTable('clientes').onDelete('SET NULL');
+        t.string('direccion', 255);
+        t.integer('armador_id').unsigned().references('id').inTable('armadores').onDelete('SET NULL');
+        t.integer('tipo_transporte_id').unsigned().references('id').inTable('tipos_transporte').onDelete('SET NULL');
+        t.integer('transporte_id').unsigned().references('id').inTable('transportes').onDelete('SET NULL');
+        t.integer('vendedor_id').unsigned().references('id').inTable('vendedores').onDelete('SET NULL');
         t.integer('cant_bultos');
-        t.string('tipo_bultos');
+        t.string('tipo_bultos', 100);
         t.date('fecha_entrega');
-        t.integer('estado_id').references('id').inTable('estados');
+        t.integer('estado_id').unsigned().references('id').inTable('estados').onDelete('SET NULL');
         t.text('notas');
       });
     } else {
@@ -102,7 +102,7 @@ export async function createTables(db) {
       const hasTipo = await db.schema.hasColumn('pedidos', 'tipo_bultos');
       if (!hasTipo) {
         await db.schema.table('pedidos', t => {
-          t.string('tipo_bultos');
+          t.string('tipo_bultos', 100);
         });
       }
     }
@@ -112,8 +112,8 @@ export async function createTables(db) {
     if (!exists) {
       return db.schema.createTable('devoluciones', t => {
         t.increments('id').primary();
-        t.integer('pedido_id').references('id').inTable('pedidos');
-        t.string('tipo'); // efectivo o material
+        t.integer('pedido_id').unsigned().references('id').inTable('pedidos').onDelete('SET NULL');
+        t.string('tipo', 50); // efectivo o material
         t.boolean('recibido');
         t.date('fecha');
         t.text('texto'); // Observaciones

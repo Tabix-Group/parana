@@ -17,11 +17,14 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 export const db = knex({
-  client: 'sqlite3',
+  client: 'pg',
   connection: {
-    filename: './data.sqlite3'
-  },
-  useNullAsDefault: true
+    host: process.env.PGHOST,
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    database: process.env.PGDATABASE,
+    port: process.env.PGPORT
+  }
 });
 
 app.use(cors());
