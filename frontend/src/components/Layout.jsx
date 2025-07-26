@@ -238,6 +238,10 @@ export default function Layout({ children }) {
         <Box
           component="footer"
           sx={{
+            position: 'fixed',
+            left: 0,
+            bottom: 0,
+            width: '100%',
             textAlign: 'center',
             py: 1,
             fontSize: 14,
@@ -245,6 +249,7 @@ export default function Layout({ children }) {
             color: '#22336b',
             borderTop: '1px solid #e0e3e7',
             bgcolor: '#f8fafc',
+            zIndex: 1201,
           }}
         >
           © {new Date().getFullYear()}{' '}

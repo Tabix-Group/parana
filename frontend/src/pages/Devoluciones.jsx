@@ -179,6 +179,16 @@ export default function Devoluciones() {
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        component="div"
+        count={total}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={pageSize}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPageOptions={pageSizes}
+        sx={{ mt: 2 }}
+      />
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogContent
           sx={{
