@@ -19,8 +19,7 @@ const Logistica = ({ pedidos }) => {
   const paginatedPedidos = pedidos.slice(page * pageSize, page * pageSize + pageSize);
 
   return (
-    <Paper elevation={3} sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, boxShadow: '0 4px 32px 0 rgba(34,51,107,0.08)', width: '100%', minHeight: 400 }}>
-      <Typography variant="h4" sx={{ mb: 3, fontWeight: 700, color: 'primary.main' }}>Logística</Typography>
+    <>
       <TableContainer sx={{ borderRadius: 2, boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)', border: '1px solid', borderColor: 'divider', background: 'background.paper' }}>
         <Table size="small" stickyHeader>
           <TableHead>
@@ -59,7 +58,7 @@ const Logistica = ({ pedidos }) => {
         rowsPerPageOptions={pageSizes}
         sx={{ mt: 2 }}
       />
-    </Paper>
+    </>
   );
 };
 

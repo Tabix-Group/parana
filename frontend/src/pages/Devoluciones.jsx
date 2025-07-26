@@ -9,7 +9,6 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { Edit, Delete, Add } from '@mui/icons-material';
 import API from '../api';
-import Autocomplete from '@mui/material/Autocomplete';
 
 const columns = [
   { id: 'pedido_id', label: 'Pedido' },
@@ -90,22 +89,8 @@ export default function Devoluciones() {
   const handleExportClick = (e) => setExportAnchor(e.currentTarget);
   const handleExportClose = () => setExportAnchor(null);
 
-  // Filtrado local si el backend no lo soporta
-  const filteredData = filter
-    ? data.filter(row => {
-        // Buscar comprobante del pedido
-        const pedido = pedidos.find(p => p.id === row.pedido_id);
-        return (
-          columns.some(col =>
-            String(row[col.id] || '').toLowerCase().includes(filter.toLowerCase())
-          ) || (pedido && pedido.comprobante && pedido.comprobante.toLowerCase().includes(filter.toLowerCase()))
-        );
-      })
-    : data;
-
   return (
     <Box>
-      <Typography variant="h5" fontWeight={700} mb={2} color="#22336b">Cobros y Devoluciones</Typography>
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()}>Nuevo Cobro/Devolución</Button>
         <Button
@@ -151,55 +136,49 @@ export default function Devoluciones() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredData.map((row, idx) => (
-              <TableRow
-                key={row.id}
-                sx={{
-                  background: idx % 2 === 0 ? '#fff' : '#f8fafc',
-                  transition: 'background 0.18s',
-                  '&:hover': { background: '#e8f0fe' }
-                }}
-              >
-                {columns.map(col => {
-                  let cellSx = { fontSize: 15, color: '#22336b', py: 1.2, px: 1.5 };
-                  if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
-                  if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
-                  if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400, whiteSpace: 'pre-line', wordBreak: 'break-word' };
-                  if (col.id === 'texto') cellSx = { ...cellSx, minWidth: 540, width: 600, maxWidth: 900, whiteSpace: 'pre-line', wordBreak: 'break-word' };
-                  if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
-                  if (col.id === 'pedido_id') {
-                    // Buscar el comprobante del pedido
-                    const pedido = pedidos.find(p => p.id === row.pedido_id);
-                    return <TableCell key={col.id} sx={cellSx}>{pedido ? pedido.comprobante : ''}</TableCell>;
-                  }
-                  return col.id === 'acciones' ? (
-                    <TableCell key={col.id} sx={cellSx}>
-                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                        <IconButton onClick={() => handleOpen(row)} sx={{ color: '#2563eb', '&:hover': { bgcolor: '#e8f0fe' }, p: 0.7 }} size="small"><Edit fontSize="small" /></IconButton>
-                        <IconButton onClick={() => handleDelete(row.id)} sx={{ color: '#e53935', '&:hover': { bgcolor: '#fdeaea' }, p: 0.7 }} size="small"><Delete fontSize="small" /></IconButton>
-                      </Box>
-                    </TableCell>
-                  ) : col.id === 'recibido' ? (
-                    <TableCell key={col.id} sx={cellSx}>{row.recibido ? 'Sí' : 'No'}</TableCell>
-                  ) : (
-                    <TableCell key={col.id} sx={cellSx}>{row[col.id]}</TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
+            {data.map((row, idx) => {
+              return (
+                <TableRow
+                  key={row.id}
+                  sx={{
+                    background: idx % 2 === 0 ? '#fff' : '#f8fafc',
+                    transition: 'background 0.18s',
+                    '&:hover': { background: '#e8f0fe' }
+                  }}
+                >
+                  {columns.map(col => {
+                    let cellSx = { fontSize: 15, color: '#22336b', py: 1.2, px: 1.5 };
+                    if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
+                    if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
+                    if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400, whiteSpace: 'pre-line', wordBreak: 'break-word' };
+                    if (col.id === 'texto') cellSx = { ...cellSx, minWidth: 540, width: 600, maxWidth: 900, whiteSpace: 'pre-line', wordBreak: 'break-word' };
+                    if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
+                    if (col.id === 'pedido_id') {
+                      // Buscar el comprobante del pedido
+                      const pedido = pedidos.find(p => p.id === row.pedido_id);
+                      return <TableCell key={col.id} sx={cellSx}>{pedido ? pedido.comprobante : ''}</TableCell>;
+                    }
+                    if (col.id === 'acciones') {
+                      return (
+                        <TableCell key={col.id} sx={cellSx}>
+                          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                            <IconButton onClick={() => handleOpen(row)} sx={{ color: '#2563eb', '&:hover': { bgcolor: '#e8f0fe' }, p: 0.7 }} size="small"><Edit fontSize="small" /></IconButton>
+                            <IconButton onClick={() => handleDelete(row.id)} sx={{ color: '#e53935', '&:hover': { bgcolor: '#fdeaea' }, p: 0.7 }} size="small"><Delete fontSize="small" /></IconButton>
+                          </Box>
+                        </TableCell>
+                      );
+                    }
+                    if (col.id === 'recibido') {
+                      return <TableCell key={col.id} sx={cellSx}>{row.recibido ? 'Sí' : 'No'}</TableCell>;
+                    }
+                    return <TableCell key={col.id} sx={cellSx}>{row[col.id]}</TableCell>;
+                  })}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
-      <TablePagination
-        component="div"
-        count={total}
-        page={page}
-        onPageChange={(_, newPage) => setPage(newPage)}
-        rowsPerPage={pageSize}
-        onRowsPerPageChange={e => { setPageSize(+e.target.value); setPage(0); }}
-        rowsPerPageOptions={pageSizes}
-        sx={{ mt: 2 }}
-      />
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogContent
           sx={{
@@ -217,17 +196,9 @@ export default function Devoluciones() {
         >
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
             <InputLabel shrink>Pedido</InputLabel>
-            <Autocomplete
-              options={pedidos}
-              getOptionLabel={option => option.comprobante || ''}
-              value={pedidos.find(p => p.id === form.pedido_id) || null}
-              onChange={(_, value) => setForm({ ...form, pedido_id: value ? value.id : '' })}
-              renderInput={params => (
-                <TextField {...params} label="Buscar pedido..." variant="outlined" />
-              )}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              fullWidth
-            />
+            <Select name="pedido_id" value={form.pedido_id} onChange={handleChange} label="Pedido">
+              {pedidos.map(p => <MenuItem key={p.id} value={p.id}>{p.comprobante}</MenuItem>)}
+            </Select>
           </FormControl>
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
             <InputLabel shrink>Tipo</InputLabel>

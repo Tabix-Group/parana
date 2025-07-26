@@ -229,7 +229,7 @@ export default function Pedidos() {
   const handleExportClose = () => setExportAnchor(null);
 
   return (
-    <Paper sx={{ p: { xs: 1, sm: 2 }, boxShadow: '0 4px 32px 0 rgba(34,51,107,0.10)', borderRadius: 3, border: '1.5px solid #e0e3e7', background: '#fff' }}>
+    <>
       {/* Acciones principales */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -449,6 +449,6 @@ export default function Pedidos() {
           <Button onClick={handleSubmit} variant="contained" color="primary" sx={{ minWidth: 120, fontWeight: 600, ml: 2 }}>Guardar</Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </>
   );
 }
