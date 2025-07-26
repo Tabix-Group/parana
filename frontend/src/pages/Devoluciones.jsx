@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Autocomplete } from '@mui/material';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination,
   IconButton, Button, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Box, Menu, Typography
@@ -204,12 +205,19 @@ export default function Devoluciones() {
             mt: 0,
           }}
         >
-          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
-            <InputLabel shrink>Pedido</InputLabel>
-            <Select name="pedido_id" value={form.pedido_id} onChange={handleChange} label="Pedido">
-              {pedidos.map(p => <MenuItem key={p.id} value={p.id}>{p.comprobante}</MenuItem>)}
-            </Select>
-          </FormControl>
+          <Autocomplete
+            options={pedidos}
+            getOptionLabel={option => option.comprobante || ''}
+            value={pedidos.find(p => p.id === form.pedido_id) || null}
+            onChange={(_, newValue) => {
+              setForm({ ...form, pedido_id: newValue ? newValue.id : '' });
+            }}
+            renderInput={params => (
+              <TextField {...params} label="Pedido" variant="outlined" fullWidth />
+            )}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
+          />
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
             <InputLabel shrink>Tipo</InputLabel>
             <Select name="tipo" value={form.tipo} onChange={handleChange} label="Tipo">
