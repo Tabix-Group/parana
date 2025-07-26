@@ -39,15 +39,11 @@ router.get('/', async (req, res) => {
     .leftJoin('vendedores', 'pedidos.vendedor_id', 'vendedores.id')
     .leftJoin('estados', 'pedidos.estado_id', 'estados.id')
     .select(
-      'pedidos.*',
-      'clientes.nombre as cliente_nombre',
-      'armadores.nombre as armador_nombre',
-      'armadores.apellido as armador_apellido',
-      'tipos_transporte.nombre as tipo_transporte_nombre',
-      'transportes.nombre as transporte_nombre',
-      'vendedores.nombre as vendedor_nombre',
-      'vendedores.apellido as vendedor_apellido',
-      'estados.nombre as estado_nombre'
+      'pedidos.id',
+      'clientes.nombre as cliente',
+      'pedidos.fecha_entrega as fecha',
+      'estados.nombre as estado',
+      'transportes.nombre as transporte'
     );
   if (parcial === 'true') {
     query = query.where('estados.nombre', 'like', '%Parcial%');
