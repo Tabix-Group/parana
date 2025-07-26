@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Menu, MenuItem } from '@mui/material';
+import { Box, Button, Menu, MenuItem, Typography } from '@mui/material';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination
 } from '@mui/material';
@@ -17,6 +17,8 @@ const columns = [
   { id: 'notas', label: 'Notas' }
 ];
 const pageSizes = [10, 15, 25, 50];
+
+
 
 export default function PedidosParciales() {
   const [data, setData] = useState([]);
@@ -72,8 +74,8 @@ export default function PedidosParciales() {
   const handleExportClose = () => setExportAnchor(null);
 
   return (
-    <Box>
-      {/* Título ahora en AppBar */}
+    <Paper elevation={3} sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, boxShadow: '0 4px 32px 0 rgba(34,51,107,0.08)', width: '100%', minHeight: 400 }}>
+      <Typography variant="h4" sx={{ mb: 3, fontWeight: 700, color: 'primary.main' }}>Pedidos Parciales</Typography>
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <input
           type="text"
@@ -94,61 +96,36 @@ export default function PedidosParciales() {
           <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
         </Menu>
       </Box>
-        <TableContainer sx={{ borderRadius: 2, boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)', border: '1px solid #e0e3e7', background: '#fff' }}>
-          <Table size="small" stickyHeader>
-            <TableHead>
-              <TableRow sx={{ background: '#f6f8fa' }}>
-                {columns.map(col => {
-                  let cellSx = {
-                    fontWeight: 700,
-                    fontSize: 16,
-                    color: '#22336b',
-                    borderBottom: '2px solid #e0e3e7',
-                    background: '#f6f8fa',
-                    letterSpacing: 0.2
-                  };
-                  if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
-                  if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
-                  if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400 };
-                  if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
-                  return (
-                    <TableCell key={col.id} sx={cellSx}>{col.label}</TableCell>
-                  );
-                })}
+      <TableContainer sx={{ borderRadius: 2, boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)', border: '1px solid #e0e3e7', background: '#fff' }}>
+        <Table size="small" stickyHeader>
+          <TableHead>
+            <TableRow sx={{ background: '#f6f8fa' }}>
+              {columns.map(col => {
+                let cellSx = {
+                  fontWeight: 700,
+                  fontSize: 16,
+                  color: '#22336b',
+                  borderBottom: '2px solid #e0e3e7',
+                  background: '#f6f8fa',
+                  letterSpacing: 0.2
+                };
+                return (
+                  <TableCell key={col.id} sx={cellSx}>{col.label}</TableCell>
+                );
+              })}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.map((row, idx) => (
+              <TableRow key={row.comprobante} sx={{ background: idx % 2 === 0 ? '#fff' : '#f8fafc', '&:hover': { background: '#e8f0fe' } }}>
+                {columns.map(col => (
+                  <TableCell key={col.id}>{row[col.id]}</TableCell>
+                ))}
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.map((row, idx) => (
-                <TableRow
-                  key={row.id}
-                  sx={{
-                    background: idx % 2 === 0 ? '#fff' : '#f8fafc',
-                    transition: 'background 0.18s',
-                    '&:hover': { background: '#e8f0fe' }
-                  }}
-                >
-                  {columns.map(col => {
-                    let cellSx = { fontSize: 15, color: '#22336b', py: 1.2, px: 1.5 };
-                    if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
-                    if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
-                    if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400, whiteSpace: 'pre-line', wordBreak: 'break-word' };
-                    if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
-                    return col.id === 'acciones' ? (
-                      <TableCell key={col.id} sx={cellSx}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                          <IconButton onClick={() => handleOpen(row)} sx={{ color: '#2563eb', '&:hover': { bgcolor: '#e8f0fe' }, p: 0.7 }} size="small"><Edit fontSize="small" /></IconButton>
-                          <IconButton onClick={() => handleDelete(row.id)} sx={{ color: '#e53935', '&:hover': { bgcolor: '#fdeaea' }, p: 0.7 }} size="small"><Delete fontSize="small" /></IconButton>
-                        </Box>
-                      </TableCell>
-                    ) : (
-                      <TableCell key={col.id} sx={cellSx}>{row[col.id]}</TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
       <TablePagination
         component="div"
         count={total}
@@ -157,7 +134,9 @@ export default function PedidosParciales() {
         rowsPerPage={pageSize}
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={pageSizes}
+        sx={{ mt: 2 }}
       />
-    </Box>
+    </Paper>
   );
 }
+

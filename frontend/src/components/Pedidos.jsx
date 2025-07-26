@@ -194,14 +194,28 @@ export default function Pedidos() {
   // ...aquí van los hooks y lógica existentes...
   // El único return debe estar al final de la función Pedidos
 
+  // Exportar a Excel
+  const handleExportExcel = () => {
+    const exportData = data.map(row => {
+      const obj = {};
+      columns.forEach(col => {
+        if (col.id !== 'acciones') obj[col.label] = row[col.id];
+      });
+      return obj;
+    });
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'PedidosTotales');
+    const fecha = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `PedidosTotales_${fecha}.xlsx`);
+  };
+
   // Exportar a PDF
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const exportData = data.map(row =>
-      columns.filter(c => c.id !== 'acciones').map(col => row[col.id])
-    );
+    const exportData = data.map(row => columns.filter(col => col.id !== 'acciones').map(col => row[col.id]));
     doc.autoTable({
-      head: [columns.filter(c => c.id !== 'acciones').map(col => col.label)],
+      head: [columns.filter(col => col.id !== 'acciones').map(col => col.label)],
       body: exportData,
       styles: { fontSize: 9 },
       headStyles: { fillColor: [34,51,107] }
