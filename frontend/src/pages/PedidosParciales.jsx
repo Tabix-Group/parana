@@ -73,6 +73,15 @@ export default function PedidosParciales() {
   const handleExportClick = (e) => setExportAnchor(e.currentTarget);
   const handleExportClose = () => setExportAnchor(null);
 
+  // Filtrado local si el backend no lo soporta
+  const filteredData = filter
+    ? data.filter(row =>
+        columns.some(col =>
+          String(row[col.id] || '').toLowerCase().includes(filter.toLowerCase())
+        )
+      )
+    : data;
+
   return (
     <Paper elevation={3} sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, boxShadow: '0 4px 32px 0 rgba(34,51,107,0.08)', width: '100%', minHeight: 400 }}>
       <Typography variant="h4" sx={{ mb: 3, fontWeight: 700, color: 'primary.main' }}>Pedidos Parciales</Typography>
@@ -116,7 +125,7 @@ export default function PedidosParciales() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((row, idx) => (
+            {filteredData.map((row, idx) => (
               <TableRow key={row.comprobante} sx={{ background: idx % 2 === 0 ? '#fff' : '#f8fafc', '&:hover': { background: '#e8f0fe' } }}>
                 {columns.map(col => (
                   <TableCell key={col.id}>{row[col.id]}</TableCell>

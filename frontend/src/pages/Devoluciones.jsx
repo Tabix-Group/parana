@@ -9,6 +9,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { Edit, Delete, Add } from '@mui/icons-material';
 import API from '../api';
+import Autocomplete from '@mui/material/Autocomplete';
 
 const columns = [
   { id: 'pedido_id', label: 'Pedido' },
@@ -89,6 +90,19 @@ export default function Devoluciones() {
   const handleExportClick = (e) => setExportAnchor(e.currentTarget);
   const handleExportClose = () => setExportAnchor(null);
 
+  // Filtrado local si el backend no lo soporta
+  const filteredData = filter
+    ? data.filter(row => {
+        // Buscar comprobante del pedido
+        const pedido = pedidos.find(p => p.id === row.pedido_id);
+        return (
+          columns.some(col =>
+            String(row[col.id] || '').toLowerCase().includes(filter.toLowerCase())
+          ) || (pedido && pedido.comprobante && pedido.comprobante.toLowerCase().includes(filter.toLowerCase()))
+        );
+      })
+    : data;
+
   return (
     <Box>
       <Typography variant="h5" fontWeight={700} mb={2} color="#22336b">Cobros y Devoluciones</Typography>
@@ -137,7 +151,7 @@ export default function Devoluciones() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((row, idx) => (
+            {filteredData.map((row, idx) => (
               <TableRow
                 key={row.id}
                 sx={{
@@ -176,6 +190,16 @@ export default function Devoluciones() {
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        component="div"
+        count={total}
+        page={page}
+        onPageChange={(_, newPage) => setPage(newPage)}
+        rowsPerPage={pageSize}
+        onRowsPerPageChange={e => { setPageSize(+e.target.value); setPage(0); }}
+        rowsPerPageOptions={pageSizes}
+        sx={{ mt: 2 }}
+      />
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogContent
           sx={{
@@ -193,9 +217,17 @@ export default function Devoluciones() {
         >
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
             <InputLabel shrink>Pedido</InputLabel>
-            <Select name="pedido_id" value={form.pedido_id} onChange={handleChange} label="Pedido">
-              {pedidos.map(p => <MenuItem key={p.id} value={p.id}>{p.comprobante}</MenuItem>)}
-            </Select>
+            <Autocomplete
+              options={pedidos}
+              getOptionLabel={option => option.comprobante || ''}
+              value={pedidos.find(p => p.id === form.pedido_id) || null}
+              onChange={(_, value) => setForm({ ...form, pedido_id: value ? value.id : '' })}
+              renderInput={params => (
+                <TextField {...params} label="Buscar pedido..." variant="outlined" />
+              )}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              fullWidth
+            />
           </FormControl>
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
             <InputLabel shrink>Tipo</InputLabel>
