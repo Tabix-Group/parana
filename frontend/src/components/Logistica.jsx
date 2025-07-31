@@ -5,11 +5,13 @@ import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow
 import API from '../api';
 
 const columns = [
+  { id: 'origen', label: 'Origen' },
   { id: 'comprobante', label: 'Comprobante' },
   { id: 'cliente', label: 'Cliente' },
   { id: 'direccion', label: 'Dirección' },
   { id: 'cantidad', label: 'Cantidad' },
   { id: 'tipo', label: 'Tipo' },
+  { id: 'tipo_devolucion', label: 'Tipo de Devolución' },
   { id: 'fecha', label: 'Fecha' },
   { id: 'estado', label: 'Estado' },
   { id: 'transporte', label: 'Transporte' },
@@ -17,7 +19,7 @@ const columns = [
 
 const pageSizes = [10, 15, 25, 50];
 
-const Logistica = ({ pedidos }) => {
+const Logistica = ({ pedidos, loading }) => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState({ comprobante: '', cliente: '', fecha_entrega: '', estado: '', transporte: '' });
@@ -44,10 +46,10 @@ const Logistica = ({ pedidos }) => {
   // Filtrado frontend igual a Pedidos
   const filteredPedidos = pedidos.filter(p => {
     const matchComprobante = filters.comprobante === '' || (p.comprobante || '').toLowerCase().includes(filters.comprobante.toLowerCase());
-    const matchCliente = filters.cliente === '' || String(p.cliente_id || p.cliente) === String(filters.cliente);
-    const matchFecha = filters.fecha_entrega === '' || (p.fecha_entrega || p.fecha || '').startsWith(filters.fecha_entrega);
-    const matchEstado = filters.estado === '' || String(p.estado_id || p.estado) === String(filters.estado);
-    const matchTransporte = filters.transporte === '' || String(p.transporte_id || p.transporte) === String(filters.transporte);
+    const matchCliente = filters.cliente === '' || String(p.cliente) === String(filters.cliente);
+    const matchFecha = filters.fecha_entrega === '' || (p.fecha || '').startsWith(filters.fecha_entrega);
+    const matchEstado = filters.estado === '' || String(p.estado) === String(filters.estado);
+    const matchTransporte = filters.transporte === '' || String(p.transporte) === String(filters.transporte);
     return matchComprobante && matchCliente && matchFecha && matchEstado && matchTransporte;
   });
   const paginatedPedidos = filteredPedidos.slice(page * pageSize, page * pageSize + pageSize);
@@ -91,6 +93,13 @@ const Logistica = ({ pedidos }) => {
             {transportes.map(t => <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>)}
           </Select>
         </FormControl>
+        <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
+          <Select name="origen" value={filters.origen || ''} onChange={e => { setFilters(f => ({ ...f, origen: e.target.value })); setPage(0); }} displayEmpty>
+            <MenuItem value="">Todos</MenuItem>
+            <MenuItem value="Pedido">Pedido</MenuItem>
+            <MenuItem value="Devolución">Devolución</MenuItem>
+          </Select>
+        </FormControl>
         <Button onClick={handleClearFilters} sx={{ fontWeight: 500, px: 2, py: 1.2, borderRadius: 2 }}>Limpiar filtros</Button>
       </Box>
       <TableContainer sx={{ borderRadius: 2, boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)', border: '1px solid', borderColor: 'divider', background: 'background.paper' }}>
@@ -103,24 +112,18 @@ const Logistica = ({ pedidos }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedPedidos && paginatedPedidos.length > 0 ? (
-              paginatedPedidos.map((pedido) => (
-                <TableRow key={pedido.id} sx={{ background: 'background.paper', '&:hover': { background: '#e8f0fe' } }}>
-                  {columns.map(col => {
-                    if (col.id === 'tipo') {
-                      return <TableCell key={col.id}>{pedido.tipo_bultos ? pedido.tipo_bultos : ''}</TableCell>;
-                    }
-                    if (col.id === 'direccion') {
-                      return <TableCell key={col.id}>{pedido.direccion || ''}</TableCell>;
-                    }
-                    if (col.id === 'cantidad') {
-                      return <TableCell key={col.id}>{pedido.cant_bultos ?? ''}</TableCell>;
-                    }
-                    if (col.id === 'comprobante') {
-                      return <TableCell key={col.id}>{pedido.comprobante || ''}</TableCell>;
-                    }
-                    return <TableCell key={col.id}>{pedido[col.id]}</TableCell>;
-                  })}
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} align="center" sx={{ py: 4, color: 'text.disabled' }}>
+                  Cargando...
+                </TableCell>
+              </TableRow>
+            ) : paginatedPedidos && paginatedPedidos.length > 0 ? (
+              paginatedPedidos.map((pedido, idx) => (
+                <TableRow key={pedido.id ? `p-${pedido.id}` : `d-${idx}`} sx={{ background: 'background.paper', '&:hover': { background: '#e8f0fe' } }}>
+                  {columns.map(col => (
+                    <TableCell key={col.id}>{pedido[col.id] ?? ''}</TableCell>
+                  ))}
                 </TableRow>
               ))
             ) : (
@@ -135,7 +138,7 @@ const Logistica = ({ pedidos }) => {
       </TableContainer>
       <TablePagination
         component="div"
-        count={pedidos.length}
+        count={filteredPedidos.length}
         page={page}
         onPageChange={handleChangePage}
         rowsPerPage={pageSize}

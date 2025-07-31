@@ -115,6 +115,7 @@ export async function createTables(db) {
         t.increments('id').primary();
         t.integer('pedido_id').nullable().references('id').inTable('pedidos').onDelete('SET NULL');
         t.integer('cliente_id').nullable().references('id').inTable('clientes').onDelete('SET NULL');
+        t.integer('transporte_id').nullable().references('id').inTable('transportes').onDelete('SET NULL');
         t.string('tipo', 50); // cobro, pago, entrega_material, retiro_material
         t.boolean('recibido');
         t.date('fecha');
@@ -134,6 +135,13 @@ export async function createTables(db) {
           if (!hasCol) {
             return db.schema.table('devoluciones', t => {
               t.integer('cliente_id').nullable().references('id').inTable('clientes').onDelete('SET NULL');
+            });
+          }
+        }),
+        db.schema.hasColumn('devoluciones', 'transporte_id').then(hasCol => {
+          if (!hasCol) {
+            return db.schema.table('devoluciones', t => {
+              t.integer('transporte_id').nullable().references('id').inTable('transportes').onDelete('SET NULL');
             });
           }
         })

@@ -14,6 +14,7 @@ import API from '../api';
 const columns = [
   { id: 'pedido_id', label: 'Pedido' },
   { id: 'cliente_id', label: 'Cliente' },
+  { id: 'transporte_id', label: 'Transporte' },
   { id: 'tipo', label: 'Tipo' },
   { id: 'recibido', label: 'Recibido' },
   { id: 'fecha', label: 'Fecha' },
@@ -29,13 +30,18 @@ export default function Devoluciones() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [editRow, setEditRow] = useState(null);
-  const [form, setForm] = useState({ pedido_id: '', tipo: '', recibido: false, fecha: '', texto: '' });
+  const [form, setForm] = useState({ pedido_id: '', cliente_id: '', transporte_id: '', tipo: '', recibido: false, fecha: '', texto: '' });
   const [pedidos, setPedidos] = useState([]);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
   const [clientes, setClientes] = useState([]);
+  const [transportes, setTransportes] = useState([]);
 
-  useEffect(() => { fetchData(); fetchPedidos(); fetchClientes(); }, [page, pageSize, filter]);
+  useEffect(() => { fetchData(); fetchPedidos(); fetchClientes(); fetchTransportes(); }, [page, pageSize, filter]);
+  const fetchTransportes = async () => {
+    const res = await API.get('/transportes');
+    setTransportes(res.data.data);
+  };
   const fetchClientes = async () => {
     const res = await API.get('/clientes');
     setClientes(res.data.data);
@@ -54,7 +60,7 @@ export default function Devoluciones() {
   };
   const handleChangePage = (_, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
-  const handleOpen = (row = null) => { setEditRow(row); setForm(row ? { ...row } : { pedido_id: '', tipo: '', recibido: false, fecha: '', texto: '' }); setOpen(true); };
+  const handleOpen = (row = null) => { setEditRow(row); setForm(row ? { ...row } : { pedido_id: '', cliente_id: '', transporte_id: '', tipo: '', recibido: false, fecha: '', texto: '' }); setOpen(true); };
   const handleClose = () => setOpen(false);
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
   const handleSubmit = async () => {
@@ -62,7 +68,8 @@ export default function Devoluciones() {
     const dataToSend = {
       ...form,
       pedido_id: form.pedido_id === '' ? null : form.pedido_id,
-      cliente_id: form.cliente_id === '' ? null : form.cliente_id
+      cliente_id: form.cliente_id === '' ? null : form.cliente_id,
+      transporte_id: form.transporte_id === '' ? null : form.transporte_id
     };
     if (editRow) {
       await API.put(`/devoluciones/${editRow.id}`, dataToSend);
@@ -184,6 +191,10 @@ export default function Devoluciones() {
                       const cliente = clientes.find(c => c.id === row.cliente_id);
                       return <TableCell key={col.id} sx={cellSx}>{cliente ? cliente.nombre : ''}</TableCell>;
                     }
+                    if (col.id === 'transporte_id') {
+                      const transporte = transportes.find(t => t.id === row.transporte_id);
+                      return <TableCell key={col.id} sx={cellSx}>{transporte ? transporte.nombre : ''}</TableCell>;
+                    }
                     if (col.id === 'acciones') {
                       return (
                         <TableCell key={col.id} sx={cellSx}>
@@ -252,6 +263,19 @@ export default function Devoluciones() {
             }}
             renderInput={params => (
               <TextField {...params} label="Cliente (opcional)" variant="outlined" fullWidth />
+            )}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
+          />
+          <Autocomplete
+            options={transportes}
+            getOptionLabel={option => option.nombre || ''}
+            value={transportes.find(t => t.id === form.transporte_id) || null}
+            onChange={(_, newValue) => {
+              setForm({ ...form, transporte_id: newValue ? newValue.id : '' });
+            }}
+            renderInput={params => (
+              <TextField {...params} label="Transporte (opcional)" variant="outlined" fullWidth />
             )}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
