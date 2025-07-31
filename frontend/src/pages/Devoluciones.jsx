@@ -32,8 +32,13 @@ export default function Devoluciones() {
   const [pedidos, setPedidos] = useState([]);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
+  const [clientes, setClientes] = useState([]);
 
-  useEffect(() => { fetchData(); fetchPedidos(); }, [page, pageSize, filter]);
+  useEffect(() => { fetchData(); fetchPedidos(); fetchClientes(); }, [page, pageSize, filter]);
+  const fetchClientes = async () => {
+    const res = await API.get('/clientes');
+    setClientes(res.data.data);
+  };
 
   const fetchData = async () => {
     const res = await API.get('/devoluciones', {
@@ -218,11 +223,26 @@ export default function Devoluciones() {
             isOptionEqualToValue={(option, value) => option.id === value.id}
             sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
           />
+          <Autocomplete
+            options={clientes}
+            getOptionLabel={option => option.nombre || ''}
+            value={clientes.find(c => c.id === form.cliente_id) || null}
+            onChange={(_, newValue) => {
+              setForm({ ...form, cliente_id: newValue ? newValue.id : '' });
+            }}
+            renderInput={params => (
+              <TextField {...params} label="Cliente (opcional)" variant="outlined" fullWidth />
+            )}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
+          />
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
             <InputLabel shrink>Tipo</InputLabel>
             <Select name="tipo" value={form.tipo} onChange={handleChange} label="Tipo">
-              <MenuItem value="efectivo">Efectivo</MenuItem>
-              <MenuItem value="material">Material</MenuItem>
+              <MenuItem value="cobro">Cobro</MenuItem>
+              <MenuItem value="pago">Pago</MenuItem>
+              <MenuItem value="entrega_material">Entrega de material</MenuItem>
+              <MenuItem value="retiro_material">Retiro de material</MenuItem>
             </Select>
           </FormControl>
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>

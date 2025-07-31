@@ -114,20 +114,30 @@ export async function createTables(db) {
       return db.schema.createTable('devoluciones', t => {
         t.increments('id').primary();
         t.integer('pedido_id').nullable().references('id').inTable('pedidos').onDelete('SET NULL');
-        t.string('tipo', 50); // efectivo o material
+        t.integer('cliente_id').nullable().references('id').inTable('clientes').onDelete('SET NULL');
+        t.string('tipo', 50); // cobro, pago, entrega_material, retiro_material
         t.boolean('recibido');
         t.date('fecha');
         t.text('texto'); // Observaciones
       });
     } else {
-      // Si la columna no existe, agregarla
-      return db.schema.hasColumn('devoluciones', 'texto').then(hasCol => {
-        if (!hasCol) {
-          return db.schema.table('devoluciones', t => {
-            t.text('texto');
-          });
-        }
-      });
+      // Si las columnas no existen, agregarlas
+      return Promise.all([
+        db.schema.hasColumn('devoluciones', 'texto').then(hasCol => {
+          if (!hasCol) {
+            return db.schema.table('devoluciones', t => {
+              t.text('texto');
+            });
+          }
+        }),
+        db.schema.hasColumn('devoluciones', 'cliente_id').then(hasCol => {
+          if (!hasCol) {
+            return db.schema.table('devoluciones', t => {
+              t.integer('cliente_id').nullable().references('id').inTable('clientes').onDelete('SET NULL');
+            });
+          }
+        })
+      ]);
     }
   });
   console.log('Tablas creadas (o ya existen)');

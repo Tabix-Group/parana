@@ -27,7 +27,7 @@ const hoverBg = '#f1f5f9';
 const menuItems = [
   { label: 'Pedidos', path: '/pedidos-totales', icon: <ReceiptLongRounded sx={{ color: '#a5d8ff' }} /> },
   { label: 'Parciales', path: '/parciales', icon: <FactCheckRounded sx={{ color: '#b9fbc0' }} /> },
-  { label: 'Cobros y Dev', path: '/devoluciones', icon: <PaidRounded sx={{ color: '#ffd6e0' }} /> },
+  { label: 'Movimientos de Cobros y Materiales', path: '/devoluciones', icon: <PaidRounded sx={{ color: '#ffd6e0' }} /> },
   { label: 'Logística', path: '/logistica', icon: <LocalShippingRounded sx={{ color: '#ffe5b4' }} /> },
   { label: 'Configuración', path: '/', icon: <SettingsRounded sx={{ color: '#dbeafe' }} /> },
 ];
