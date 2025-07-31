@@ -13,6 +13,7 @@ import API from '../api';
 
 const columns = [
   { id: 'pedido_id', label: 'Pedido' },
+  { id: 'cliente_id', label: 'Cliente' },
   { id: 'tipo', label: 'Tipo' },
   { id: 'recibido', label: 'Recibido' },
   { id: 'fecha', label: 'Fecha' },
@@ -178,6 +179,11 @@ export default function Devoluciones() {
                       const pedido = pedidos.find(p => p.id === row.pedido_id);
                       return <TableCell key={col.id} sx={cellSx}>{pedido ? pedido.comprobante : ''}</TableCell>;
                     }
+                    if (col.id === 'cliente_id') {
+                      // Buscar el nombre del cliente
+                      const cliente = clientes.find(c => c.id === row.cliente_id);
+                      return <TableCell key={col.id} sx={cellSx}>{cliente ? cliente.nombre : ''}</TableCell>;
+                    }
                     if (col.id === 'acciones') {
                       return (
                         <TableCell key={col.id} sx={cellSx}>
@@ -232,7 +238,7 @@ export default function Devoluciones() {
               setForm({ ...form, pedido_id: newValue ? newValue.id : '' });
             }}
             renderInput={params => (
-              <TextField {...params} label="Pedido" variant="outlined" fullWidth />
+              <TextField {...params} label="Pedido (opcional)" variant="outlined" fullWidth />
             )}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
