@@ -56,7 +56,21 @@ export default function Devoluciones() {
   const handleOpen = (row = null) => { setEditRow(row); setForm(row ? { ...row } : { pedido_id: '', tipo: '', recibido: false, fecha: '', texto: '' }); setOpen(true); };
   const handleClose = () => setOpen(false);
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
-  const handleSubmit = async () => { if (editRow) { await API.put(`/devoluciones/${editRow.id}`, form); } else { await API.post('/devoluciones', form); } setOpen(false); fetchData(); };
+  const handleSubmit = async () => {
+    // Ajustar para que los campos numéricos opcionales vayan como null si están vacíos
+    const dataToSend = {
+      ...form,
+      pedido_id: form.pedido_id === '' ? null : form.pedido_id,
+      cliente_id: form.cliente_id === '' ? null : form.cliente_id
+    };
+    if (editRow) {
+      await API.put(`/devoluciones/${editRow.id}`, dataToSend);
+    } else {
+      await API.post('/devoluciones', dataToSend);
+    }
+    setOpen(false);
+    fetchData();
+  };
   const handleDelete = async id => { if (window.confirm('¿Borrar devolución?')) { await API.delete(`/devoluciones/${id}`); fetchData(); } };
 
   // Exportar a Excel
