@@ -7,6 +7,7 @@ import { Edit, Delete, Add } from '@mui/icons-material';
 import API from '../api';
 
 const columns = [
+  { id: 'Codigo', label: 'Código' },
   { id: 'nombre', label: 'Nombre' },
   { id: 'direccion', label: 'Dirección' },
   { id: 'localidad', label: 'Localidad' },
