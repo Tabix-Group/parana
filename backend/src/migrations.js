@@ -13,7 +13,7 @@ export async function createTables(db) {
     }
   });
   // Clientes
-  await db.schema.hasTable('clientes').then(exists => {
+  await db.schema.hasTable('clientes').then(async exists => {
     if (!exists) {
       return db.schema.createTable('clientes', t => {
         t.increments('id').primary();
@@ -21,7 +21,16 @@ export async function createTables(db) {
         t.string('direccion', 255);
         t.string('localidad', 100);
         t.string('telefono', 50);
+        t.integer('Codigo'); // Nueva columna Codigo
       });
+    } else {
+      // Si la columna Codigo no existe, agregarla
+      const hasCodigo = await db.schema.hasColumn('clientes', 'Codigo');
+      if (!hasCodigo) {
+        await db.schema.table('clientes', t => {
+          t.integer('Codigo');
+        });
+      }
     }
   });
   // Armadores
