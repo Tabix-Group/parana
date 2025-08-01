@@ -25,7 +25,7 @@ export default function Clientes() {
   const [filter, setFilter] = useState('');
   const [open, setOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
-  const [form, setForm] = useState({ nombre: '', direccion: '', localidad: '', telefono: '' });
+  const [form, setForm] = useState({ nombre: '', direccion: '', localidad: '', telefono: '', Codigo: '' });
 
   useEffect(() => { fetchData(); }, [page, pageSize, sortBy, order, filter]);
 
@@ -39,7 +39,7 @@ export default function Clientes() {
   const handleChangePage = (_, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
   const handleSort = col => { setSortBy(col); setOrder(order === 'asc' ? 'desc' : 'asc'); };
-  const handleOpen = (row = null) => { setEditRow(row); setForm(row ? { ...row } : { nombre: '', direccion: '', localidad: '', telefono: '' }); setOpen(true); };
+  const handleOpen = (row = null) => { setEditRow(row); setForm(row ? { ...row } : { nombre: '', direccion: '', localidad: '', telefono: '', Codigo: '' }); setOpen(true); };
   const handleClose = () => setOpen(false);
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
   const handleSubmit = async () => { if (editRow) { await API.put(`/clientes/${editRow.id}`, form); } else { await API.post('/clientes', form); } setOpen(false); fetchData(); };
@@ -145,6 +145,7 @@ export default function Clientes() {
           <TextField label="Dirección" name="direccion" value={form.direccion} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
           <TextField label="Localidad" name="localidad" value={form.localidad} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
           <TextField label="Teléfono" name="telefono" value={form.telefono} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+          <TextField label="Código" name="Codigo" type="number" value={form.Codigo} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2, pt: 1, justifyContent: 'flex-end' }}>
           <Button onClick={handleClose} variant="outlined" color="secondary" sx={{ minWidth: 120, fontWeight: 600 }}>Cancelar</Button>
