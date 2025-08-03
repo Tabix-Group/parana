@@ -11,6 +11,7 @@ import API from '../api';
 
 const columns = [
   { id: 'comprobante', label: 'Comprobante' },
+  { id: 'Codigo', label: 'Código' },
   { id: 'cliente_nombre', label: 'Cliente' },
   { id: 'direccion', label: 'Dirección' },
   { id: 'armador_nombre', label: 'Armador' },
@@ -34,6 +35,7 @@ export default function Pedidos() {
   const [form, setForm] = useState({
     comprobante: '',
     cliente_id: '',
+    Codigo: '',
     direccion: '',
     armador_id: '',
     tipo_transporte_id: '',
@@ -48,24 +50,37 @@ export default function Pedidos() {
 
   // Abrir diálogo para nuevo o editar
   const handleOpen = (row = null) => {
-    setEditRow(row);
-    setForm(row ? {
-      comprobante: row.comprobante || '',
-      cliente_id: row.cliente_id || '',
-      direccion: row.direccion || '',
-      armador_id: row.armador_id || '',
-      tipo_transporte_id: row.tipo_transporte_id || '',
-      transporte_id: row.transporte_id || '',
-      vendedor_id: row.vendedor_id || '',
-      cant_bultos: row.cant_bultos || '',
-      tipo_bultos: row.tipo_bultos || '',
-      fecha_entrega: row.fecha_entrega || '',
-      estado_id: row.estado_id || '',
-      notas: row.notas || ''
-    } : {
-      comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_entrega: '', estado_id: '', notas: ''
-    });
-    setOpen(true);
+  setEditRow(row);
+  setForm(row ? {
+    comprobante: row.comprobante || '',
+    cliente_id: row.cliente_id || '',
+    Codigo: row.Codigo || '',
+    direccion: row.direccion || '',
+    armador_id: row.armador_id || '',
+    tipo_transporte_id: row.tipo_transporte_id || '',
+    transporte_id: row.transporte_id || '',
+    vendedor_id: row.vendedor_id || '',
+    cant_bultos: row.cant_bultos || '',
+    tipo_bultos: row.tipo_bultos || '',
+    fecha_entrega: row.fecha_entrega || '',
+    estado_id: row.estado_id || '',
+    notas: row.notas || ''
+  } : {
+    comprobante: '',
+    cliente_id: '',
+    Codigo: '',
+    direccion: '',
+    armador_id: '',
+    tipo_transporte_id: '',
+    transporte_id: '',
+    vendedor_id: '',
+    cant_bultos: '',
+    tipo_bultos: '',
+    fecha_entrega: '',
+    estado_id: '',
+    notas: ''
+  });
+  setOpen(true);
   };
 
   // Cerrar diálogo
@@ -78,14 +93,36 @@ export default function Pedidos() {
   // Manejar cambios en el form
   const handleChange = e => {
     const { name, value } = e.target;
-    // Si cambia el cliente, autocompletar dirección si existe
     if (name === 'cliente_id') {
       const cliente = clientes.find(c => String(c.id) === String(value));
       setForm(prev => ({
         ...prev,
         cliente_id: value,
-        direccion: cliente && cliente.direccion ? cliente.direccion : ''
+        direccion: cliente && cliente.direccion ? cliente.direccion : '',
+        Codigo: cliente && cliente.Codigo ? cliente.Codigo : ''
       }));
+    } else if (name === 'Codigo') {
+      // Buscar por código y autocompletar cliente y dirección
+      if (value && value.length > 0) {
+        setClientesLoading(true);
+        API.get('/clientes', { params: { Codigo: value, pageSize: 1 } })
+          .then(res => {
+            const cliente = res.data.data[0];
+            if (cliente) {
+              setForm(prev => ({
+                ...prev,
+                cliente_id: cliente.id,
+                direccion: cliente.direccion || '',
+                Codigo: cliente.Codigo || ''
+              }));
+            } else {
+              setForm(prev => ({ ...prev, Codigo: value }));
+            }
+          })
+          .finally(() => setClientesLoading(false));
+      } else {
+        setForm(prev => ({ ...prev, Codigo: value }));
+      }
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
     }
@@ -358,6 +395,7 @@ export default function Pedidos() {
                 {columns.map(col => {
                   let cellSx = { fontSize: 15, color: '#22336b', py: 1.2, px: 1.5 };
                   if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
+                  if (col.id === 'Codigo') cellSx = { ...cellSx, minWidth: 80, width: 100, maxWidth: 120 };
                   if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
                   if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400, whiteSpace: 'pre-line', wordBreak: 'break-word' };
                   if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
@@ -403,8 +441,9 @@ export default function Pedidos() {
             mt: 0,
           }}
         >
-          <Box sx={{ display: 'flex', gap: 2.2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 2.2 }}>
             <TextField label="Comprobante" name="comprobante" value={form.comprobante} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+            <TextField label="Código" name="Codigo" value={form.Codigo} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
             <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
               <InputLabel shrink>Cliente</InputLabel>
               <Box sx={{ pt: 0, pb: 0 }}>
@@ -416,7 +455,8 @@ export default function Pedidos() {
                   setForm(prev => ({
                     ...prev,
                     cliente_id: value ? value.id : '',
-                    direccion: value && value.direccion ? value.direccion : ''
+                    direccion: value && value.direccion ? value.direccion : '',
+                    Codigo: value && value.Codigo ? value.Codigo : ''
                   }));
                 }}
                 onInputChange={(_, value) => {
