@@ -93,17 +93,10 @@ export default function Pedidos() {
   // Manejar cambios en el form
   const handleChange = e => {
     const { name, value } = e.target;
-    if (name === 'cliente_id') {
-      const cliente = clientes.find(c => String(c.id) === String(value));
-      setForm(prev => ({
-        ...prev,
-        cliente_id: value,
-        direccion: cliente && cliente.direccion ? cliente.direccion : '',
-        Codigo: cliente && cliente.Codigo ? cliente.Codigo : ''
-      }));
-    } else if (name === 'Codigo') {
+    if (name === 'Codigo') {
       // Buscar por código y autocompletar cliente y dirección
-      if (value && value.length > 0) {
+      setForm(prev => ({ ...prev, Codigo: value }));
+      if (value && value.length > 0 && /^[0-9]{1,5}$/.test(value)) {
         setClientesLoading(true);
         API.get('/clientes', { params: { Codigo: value, pageSize: 1 } })
           .then(res => {
@@ -112,17 +105,23 @@ export default function Pedidos() {
               setForm(prev => ({
                 ...prev,
                 cliente_id: cliente.id,
+                Codigo: cliente.Codigo || '',
                 direccion: cliente.direccion || '',
-                Codigo: cliente.Codigo || ''
+                cliente_nombre: cliente.nombre || ''
               }));
-            } else {
-              setForm(prev => ({ ...prev, Codigo: value }));
             }
           })
           .finally(() => setClientesLoading(false));
-      } else {
-        setForm(prev => ({ ...prev, Codigo: value }));
       }
+    } else if (name === 'cliente_id') {
+      const cliente = clientes.find(c => String(c.id) === String(value));
+      setForm(prev => ({
+        ...prev,
+        cliente_id: value,
+        Codigo: cliente && cliente.Codigo ? cliente.Codigo : '',
+        direccion: cliente && cliente.direccion ? cliente.direccion : '',
+        cliente_nombre: cliente && cliente.nombre ? cliente.nombre : ''
+      }));
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
     }
@@ -448,36 +447,37 @@ export default function Pedidos() {
               <InputLabel shrink>Cliente</InputLabel>
               <Box sx={{ pt: 0, pb: 0 }}>
                 <Autocomplete
-                options={clientes}
-                getOptionLabel={option => option.nombre || ''}
-                value={clientes.find(c => String(c.id) === String(form.cliente_id)) || null}
-                onChange={(_, value) => {
-                  setForm(prev => ({
-                    ...prev,
-                    cliente_id: value ? value.id : '',
-                    direccion: value && value.direccion ? value.direccion : '',
-                    Codigo: value && value.Codigo ? value.Codigo : ''
-                  }));
-                }}
-                onInputChange={(_, value) => {
-                  if (value && value.length > 2) {
-                    setClientesLoading(true);
-                    API.get('/clientes', { params: { nombre: value, pageSize: 20 } })
-                      .then(res => setClientes(res.data.data))
-                      .finally(() => setClientesLoading(false));
-                  } else {
-                    setClientes([]);
-                  }
-                }}
-                loading={clientesLoading}
-                renderInput={params => (
-                  <TextField {...params} placeholder="Buscar cliente..." variant="outlined" fullWidth InputLabelProps={{ shrink: true }} />
-                )}
-                isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
-                openOnFocus
-                autoHighlight
-                disablePortal
-              />
+                  options={clientes}
+                  getOptionLabel={option => option.nombre || ''}
+                  value={clientes.find(c => String(c.id) === String(form.cliente_id)) || null}
+                  onChange={(_, value) => {
+                    setForm(prev => ({
+                      ...prev,
+                      cliente_id: value ? value.id : '',
+                      Codigo: value && value.Codigo ? value.Codigo : '',
+                      direccion: value && value.direccion ? value.direccion : '',
+                      cliente_nombre: value && value.nombre ? value.nombre : ''
+                    }));
+                  }}
+                  onInputChange={(_, value) => {
+                    if (value && value.length > 2) {
+                      setClientesLoading(true);
+                      API.get('/clientes', { params: { nombre: value, pageSize: 20 } })
+                        .then(res => setClientes(res.data.data))
+                        .finally(() => setClientesLoading(false));
+                    } else {
+                      setClientes([]);
+                    }
+                  }}
+                  loading={clientesLoading}
+                  renderInput={params => (
+                    <TextField {...params} placeholder="Buscar cliente..." variant="outlined" fullWidth InputLabelProps={{ shrink: true }} />
+                  )}
+                  isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
+                  openOnFocus
+                  autoHighlight
+                  disablePortal
+                />
               </Box>
             </FormControl>
           </Box>
