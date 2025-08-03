@@ -468,15 +468,14 @@ export default function Pedidos() {
         rowsPerPageOptions={pageSizes}
         sx={{ mt: 2 }}
       />
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
         <DialogTitle sx={{ fontWeight: 700, fontSize: 22, mb: 1 }}>{editRow ? 'Editar Pedido' : 'Nuevo Pedido'}</DialogTitle>
         <DialogContent
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-            gap: 2.2,
-            alignItems: 'start',
-            py: 0.5,
+            gridTemplateColumns: '1fr',
+            gap: 3,
+            py: 2,
             background: '#f8fafc',
             borderRadius: 2,
             boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)',
@@ -484,9 +483,15 @@ export default function Pedidos() {
             mt: 0,
           }}
         >
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 2.2 }}>
-            <TextField label="Comprobante" name="comprobante" value={form.comprobante} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
-            <TextField label="Código" name="Codigo" value={form.Codigo} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+          {/* Fila 1: Información básica del pedido */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
+            <TextField label="Comprobante" name="comprobante" value={form.comprobante} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }} />
+            <TextField label="Código" name="Codigo" value={form.Codigo} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }} />
+            <TextField label="Fecha Entrega" name="fecha_entrega" type="date" value={form.fecha_entrega} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }} />
+          </Box>
+
+          {/* Fila 2: Cliente y dirección */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 2 }}>
             <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
               <InputLabel shrink>Cliente</InputLabel>
               <Box sx={{ pt: 0, pb: 0 }}>
@@ -506,7 +511,6 @@ export default function Pedidos() {
                   onInputChange={(_, value) => {
                     if (value && value.length > 0) {
                       setClientesLoading(true);
-                      // Si el valor es solo números, buscar por código
                       const isNumeric = /^\d+$/.test(value);
                       const params = isNumeric 
                         ? { Codigo: value, pageSize: 20 }
@@ -530,66 +534,73 @@ export default function Pedidos() {
                 />
               </Box>
             </FormControl>
+            <TextField label="Dirección" name="direccion" value={form.direccion} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }} />
           </Box>
-          <TextField label="Dirección" name="direccion" value={form.direccion} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
-          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
-            <InputLabel shrink>Armador</InputLabel>
-            <Select name="armador_id" value={form.armador_id} onChange={handleChange} label="Armador">
-              {armadores.map(a => <MenuItem key={a.id} value={a.id}>{a.nombre} {a.apellido}</MenuItem>)}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
-            <InputLabel shrink>Tipo Tte</InputLabel>
-            <Select
-              name="tipo_transporte_id"
-              value={form.tipo_transporte_id}
-              onChange={handleChange}
-              label="Tipo Tte"
-              displayEmpty
-            >
-              <MenuItem value=""><em>Sin tipo</em></MenuItem>
-              {tiposTransporte.map(t => <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>)}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
-            <InputLabel shrink>Transporte</InputLabel>
-            <Select name="transporte_id" value={form.transporte_id} onChange={handleChange} label="Transporte">
-              {transportes.map(t => <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>)}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
-            <InputLabel shrink>Vendedor</InputLabel>
-            <Select name="vendedor_id" value={form.vendedor_id} onChange={handleChange} label="Vendedor">
-              {vendedores.map(v => <MenuItem key={v.id} value={v.id}>{v.nombre} {v.apellido}</MenuItem>)}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
-            <InputLabel shrink>Cantidad</InputLabel>
+
+          {/* Fila 3: Personal (armador, vendedor) y transporte */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
+            <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+              <InputLabel shrink>Armador</InputLabel>
+              <Select name="armador_id" value={form.armador_id} onChange={handleChange} label="Armador">
+                {armadores.map(a => <MenuItem key={a.id} value={a.id}>{a.nombre} {a.apellido}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+              <InputLabel shrink>Vendedor</InputLabel>
+              <Select name="vendedor_id" value={form.vendedor_id} onChange={handleChange} label="Vendedor">
+                {vendedores.map(v => <MenuItem key={v.id} value={v.id}>{v.nombre} {v.apellido}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+              <InputLabel shrink>Tipo Tte</InputLabel>
+              <Select
+                name="tipo_transporte_id"
+                value={form.tipo_transporte_id}
+                onChange={handleChange}
+                label="Tipo Tte"
+                displayEmpty
+              >
+                <MenuItem value=""><em>Sin tipo</em></MenuItem>
+                {tiposTransporte.map(t => <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+              <InputLabel shrink>Transporte</InputLabel>
+              <Select name="transporte_id" value={form.transporte_id} onChange={handleChange} label="Transporte">
+                {transportes.map(t => <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Fila 4: Detalles del envío */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 2 }}>
             <TextField
+              label="Cantidad"
               name="cant_bultos"
               value={form.cant_bultos}
               onChange={handleChange}
               type="number"
               fullWidth
               InputLabelProps={{ shrink: true }}
-              sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 0 }}
+              sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
             />
-          </FormControl>
-          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
-            <InputLabel shrink>Tipo</InputLabel>
-            <Select name="tipo_bultos" value={form.tipo_bultos || ''} label="Tipo" onChange={handleChange}>
-              <MenuItem value="Grande">Grande</MenuItem>
-              <MenuItem value="Chico">Chico</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField label="Fecha Entrega" name="fecha_entrega" type="date" value={form.fecha_entrega} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
-          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
-            <InputLabel shrink>Estado</InputLabel>
-            <Select name="estado_id" value={form.estado_id} onChange={handleChange} label="Estado">
-              {estados.map(e => <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>)}
-            </Select>
-          </FormControl>
-          <TextField label="Notas" name="notas" value={form.notas} onChange={handleChange} fullWidth multiline rows={2} InputLabelProps={{ shrink: true }} sx={{ gridColumn: { md: '1/3' }, bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+            <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+              <InputLabel shrink>Tipo</InputLabel>
+              <Select name="tipo_bultos" value={form.tipo_bultos || ''} label="Tipo" onChange={handleChange}>
+                <MenuItem value="Grande">Grande</MenuItem>
+                <MenuItem value="Chico">Chico</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+              <InputLabel shrink>Estado</InputLabel>
+              <Select name="estado_id" value={form.estado_id} onChange={handleChange} label="Estado">
+                {estados.map(e => <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Fila 5: Notas (campo amplio) */}
+          <TextField label="Notas" name="notas" value={form.notas} onChange={handleChange} fullWidth multiline rows={3} InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }} />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2, pt: 1, justifyContent: 'flex-end' }}>
           <Button onClick={handleClose} variant="outlined" color="secondary" sx={{ minWidth: 120, fontWeight: 600 }}>Cancelar</Button>
