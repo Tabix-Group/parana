@@ -16,19 +16,8 @@ router.get('/', async (req, res) => {
   if (cliente) baseQuery = baseQuery.where('pedidos.cliente_id', cliente);
   if (comprobante) baseQuery = baseQuery.where('pedidos.comprobante', 'like', `%${comprobante}%`);
   if (fecha_entrega) {
-    // Manejo específico para PostgreSQL vs SQLite
-    if (db.client.config.client === 'pg') {
-      // PostgreSQL: usar la fecha exacta sin conversión UTC
-      baseQuery = baseQuery.whereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
-    } else {
-      // SQLite: usar método robusto con múltiples comparaciones
-      const fechaFiltro = new Date(fecha_entrega + 'T00:00:00.000Z').toISOString().split('T')[0];
-      baseQuery = baseQuery.where(function() {
-        this.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fechaFiltro])
-            .orWhereRaw('pedidos.fecha_entrega = ?', [fechaFiltro])
-            .orWhereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
-      });
-    }
+    // Usar comparación directa de fecha sin conversiones UTC problemáticas
+    baseQuery = baseQuery.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fecha_entrega]);
   }
 
   // Consulta de conteo (sin joins extra)
@@ -89,19 +78,8 @@ router.get('/', async (req, res) => {
   if (cliente) query = query.where('pedidos.cliente_id', cliente);
   if (comprobante) query = query.where('pedidos.comprobante', 'like', `%${comprobante}%`);
   if (fecha_entrega) {
-    // Manejo específico para PostgreSQL vs SQLite
-    if (db.client.config.client === 'pg') {
-      // PostgreSQL: usar la fecha exacta sin conversión UTC
-      query = query.whereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
-    } else {
-      // SQLite: usar método robusto con múltiples comparaciones
-      const fechaFiltro = new Date(fecha_entrega + 'T00:00:00.000Z').toISOString().split('T')[0];
-      query = query.where(function() {
-        this.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fechaFiltro])
-            .orWhereRaw('pedidos.fecha_entrega = ?', [fechaFiltro])
-            .orWhereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
-      });
-    }
+    // Usar comparación directa de fecha sin conversiones UTC problemáticas
+    query = query.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fecha_entrega]);
   }
   const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
   res.json({ data, total });
