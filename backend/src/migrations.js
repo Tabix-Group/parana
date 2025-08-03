@@ -100,6 +100,7 @@ export async function createTables(db) {
         t.date('fecha_entrega');
         t.integer('estado_id').nullable().references('id').inTable('estados').onDelete('SET NULL');
         t.text('notas');
+        t.integer('Codigo').nullable().comment('Código del cliente asociado al pedido');
       });
     } else {
       // Si las columnas no existen, agregarlas
@@ -113,6 +114,12 @@ export async function createTables(db) {
       if (!hasTipo) {
         await db.schema.table('pedidos', t => {
           t.string('tipo_bultos', 100);
+        });
+      }
+      const hasCodigo = await db.schema.hasColumn('pedidos', 'Codigo');
+      if (!hasCodigo) {
+        await db.schema.table('pedidos', t => {
+          t.integer('Codigo').nullable().comment('Código del cliente asociado al pedido');
         });
       }
     }
