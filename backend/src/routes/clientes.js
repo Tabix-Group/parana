@@ -17,11 +17,17 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    // Preparar los datos convirtiendo campos vacíos a null para enteros
+    const clienteData = {
+      ...req.body,
+      Codigo: req.body.Codigo === '' || req.body.Codigo === undefined ? null : parseInt(req.body.Codigo, 10) || null
+    };
+    
     let id;
     if (db.client.config.client === 'pg') {
-      id = (await db('clientes').insert(req.body).returning('id'))[0].id;
+      id = (await db('clientes').insert(clienteData).returning('id'))[0].id;
     } else {
-      id = await db('clientes').insert(req.body);
+      id = await db('clientes').insert(clienteData);
     }
     res.status(200).json({ id });
   } catch (err) {
@@ -36,8 +42,19 @@ router.get('/:id', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
-  await db('clientes').where({ id: req.params.id }).update(req.body);
-  res.status(200).json({ success: true });
+  try {
+    // Preparar los datos convirtiendo campos vacíos a null para enteros
+    const clienteData = {
+      ...req.body,
+      Codigo: req.body.Codigo === '' || req.body.Codigo === undefined ? null : parseInt(req.body.Codigo, 10) || null
+    };
+    
+    await db('clientes').where({ id: req.params.id }).update(clienteData);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('Error PUT /clientes:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.delete('/:id', async (req, res) => {

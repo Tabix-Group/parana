@@ -43,7 +43,26 @@ export default function Clientes() {
   const handleOpen = (row = null) => { setEditRow(row); setForm(row ? { ...row } : { nombre: '', direccion: '', localidad: '', telefono: '', Codigo: '' }); setOpen(true); };
   const handleClose = () => setOpen(false);
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
-  const handleSubmit = async () => { if (editRow) { await API.put(`/clientes/${editRow.id}`, form); } else { await API.post('/clientes', form); } setOpen(false); fetchData(); };
+  const handleSubmit = async () => {
+    try {
+      // Preparar los datos convirtiendo campos vacíos a null para enteros
+      const submitData = {
+        ...form,
+        Codigo: form.Codigo === '' ? null : parseInt(form.Codigo, 10) || null
+      };
+      
+      if (editRow) {
+        await API.put(`/clientes/${editRow.id}`, submitData);
+      } else {
+        await API.post('/clientes', submitData);
+      }
+      setOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error('Error al guardar cliente:', error);
+      alert('Error al guardar el cliente. Por favor, verifique los datos.');
+    }
+  };
   const handleDelete = async id => { if (window.confirm('¿Borrar cliente?')) { await API.delete(`/clientes/${id}`); fetchData(); } };
 
   return (
