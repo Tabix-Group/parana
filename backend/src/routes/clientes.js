@@ -18,18 +18,22 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     // Preparar los datos convirtiendo campos vacíos a null para enteros
+    // IMPORTANTE: Excluir el campo 'id' para evitar conflictos de clave primaria
+    const { id, ...bodyWithoutId } = req.body;
     const clienteData = {
-      ...req.body,
+      ...bodyWithoutId,
       Codigo: req.body.Codigo === '' || req.body.Codigo === undefined ? null : parseInt(req.body.Codigo, 10) || null
     };
     
-    let id;
+    console.log('Datos a insertar en clientes:', clienteData);
+    
+    let newId;
     if (db.client.config.client === 'pg') {
-      id = (await db('clientes').insert(clienteData).returning('id'))[0].id;
+      newId = (await db('clientes').insert(clienteData).returning('id'))[0].id;
     } else {
-      id = await db('clientes').insert(clienteData);
+      newId = await db('clientes').insert(clienteData);
     }
-    res.status(200).json({ id });
+    res.status(200).json({ id: newId });
   } catch (err) {
     console.error('Error POST /clientes:', err);
     res.status(500).json({ error: err.message });

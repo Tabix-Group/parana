@@ -46,14 +46,18 @@ export default function Clientes() {
   const handleSubmit = async () => {
     try {
       // Preparar los datos convirtiendo campos vacíos a null para enteros
+      const { id, ...formWithoutId } = form;
       const submitData = {
-        ...form,
+        ...formWithoutId,
         Codigo: form.Codigo === '' ? null : parseInt(form.Codigo, 10) || null
       };
+      
+      console.log('Datos a enviar:', submitData);
       
       if (editRow) {
         await API.put(`/clientes/${editRow.id}`, submitData);
       } else {
+        // Para nuevos clientes, asegurarse de no enviar campo 'id'
         await API.post('/clientes', submitData);
       }
       setOpen(false);
