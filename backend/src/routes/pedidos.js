@@ -16,15 +16,25 @@ router.get('/', async (req, res) => {
   if (cliente) baseQuery = baseQuery.where('pedidos.cliente_id', cliente);
   if (comprobante) baseQuery = baseQuery.where('pedidos.comprobante', 'like', `%${comprobante}%`);
   if (fecha_entrega) {
-    // Función más robusta para comparar fechas sin problemas de zona horaria
-    // Convertir la fecha del filtro a formato compatible con la BD
-    const fechaFiltro = new Date(fecha_entrega + 'T00:00:00.000Z').toISOString().split('T')[0];
+    console.log('Filtro fecha_entrega recibido:', fecha_entrega);
+    console.log('Cliente de BD:', db.client.config.client);
     
-    baseQuery = baseQuery.where(function() {
-      this.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fechaFiltro])
-          .orWhereRaw('pedidos.fecha_entrega = ?', [fechaFiltro])
-          .orWhereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
-    });
+    // Manejo específico para PostgreSQL vs SQLite
+    if (db.client.config.client === 'pg') {
+      // PostgreSQL: usar la fecha exacta sin conversión UTC
+      console.log('Usando query PostgreSQL para fecha');
+      baseQuery = baseQuery.whereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
+    } else {
+      // SQLite: usar método robusto con múltiples comparaciones
+      console.log('Usando query SQLite para fecha');
+      const fechaFiltro = new Date(fecha_entrega + 'T00:00:00.000Z').toISOString().split('T')[0];
+      console.log('Fecha filtro procesada:', fechaFiltro);
+      baseQuery = baseQuery.where(function() {
+        this.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fechaFiltro])
+            .orWhereRaw('pedidos.fecha_entrega = ?', [fechaFiltro])
+            .orWhereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
+      });
+    }
   }
 
   // Consulta de conteo (sin joins extra)
@@ -37,13 +47,19 @@ router.get('/', async (req, res) => {
     if (cliente) qb.where('pedidos.cliente_id', cliente);
     if (comprobante) qb.where('pedidos.comprobante', 'like', `%${comprobante}%`);
     if (fecha_entrega) {
-      const fechaFiltro = new Date(fecha_entrega + 'T00:00:00.000Z').toISOString().split('T')[0];
-      
-      qb.where(function() {
-        this.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fechaFiltro])
-            .orWhereRaw('pedidos.fecha_entrega = ?', [fechaFiltro])
-            .orWhereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
-      });
+      // Manejo específico para PostgreSQL vs SQLite
+      if (db.client.config.client === 'pg') {
+        // PostgreSQL: usar la fecha exacta sin conversión UTC
+        qb.whereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
+      } else {
+        // SQLite: usar método robusto con múltiples comparaciones
+        const fechaFiltro = new Date(fecha_entrega + 'T00:00:00.000Z').toISOString().split('T')[0];
+        qb.where(function() {
+          this.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fechaFiltro])
+              .orWhereRaw('pedidos.fecha_entrega = ?', [fechaFiltro])
+              .orWhereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
+        });
+      }
     }
   }).count({ count: '*' }).first();
   const total = totalResult ? totalResult.count : 0;
@@ -79,12 +95,19 @@ router.get('/', async (req, res) => {
   if (cliente) query = query.where('pedidos.cliente_id', cliente);
   if (comprobante) query = query.where('pedidos.comprobante', 'like', `%${comprobante}%`);
   if (fecha_entrega) {
-    const fechaFiltro = new Date(fecha_entrega + 'T00:00:00.000Z').toISOString().split('T')[0];
-    query = query.where(function() {
-      this.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fechaFiltro])
-          .orWhereRaw('pedidos.fecha_entrega = ?', [fechaFiltro])
-          .orWhereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
-    });
+    // Manejo específico para PostgreSQL vs SQLite
+    if (db.client.config.client === 'pg') {
+      // PostgreSQL: usar la fecha exacta sin conversión UTC
+      query = query.whereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
+    } else {
+      // SQLite: usar método robusto con múltiples comparaciones
+      const fechaFiltro = new Date(fecha_entrega + 'T00:00:00.000Z').toISOString().split('T')[0];
+      query = query.where(function() {
+        this.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fechaFiltro])
+            .orWhereRaw('pedidos.fecha_entrega = ?', [fechaFiltro])
+            .orWhereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
+      });
+    }
   }
   const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
   res.json({ data, total });
