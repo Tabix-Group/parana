@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination,
-  IconButton, Button, TextField, Select, MenuItem, InputLabel, FormControl, Dialog, DialogTitle, DialogContent, DialogActions, Menu, Box
+  IconButton, Button, TextField, Select, MenuItem, InputLabel, FormControl, Dialog, DialogTitle, DialogContent, DialogActions, Menu, Box, Autocomplete
 } from '@mui/material';
 import { Edit, Delete, Add, FileDownload } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
@@ -384,36 +384,37 @@ export default function Pedidos() {
             mt: 0,
           }}
         >
-          <TextField label="Comprobante" name="comprobante" value={form.comprobante} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
-          {/* Autocomplete para buscar y seleccionar cliente */}
-          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
-            <InputLabel shrink>Cliente</InputLabel>
-            <Box sx={{ pt: 2, pb: 1 }}>
-              <Autocomplete
-                options={clientes}
-                getOptionLabel={option => option.nombre || ''}
-                value={clientes.find(c => String(c.id) === String(form.cliente_id)) || null}
-                onChange={(_, value) => {
-                  setForm(prev => ({
-                    ...prev,
-                    cliente_id: value ? value.id : '',
-                    direccion: value && value.direccion ? value.direccion : ''
-                  }));
-                }}
-                renderInput={params => (
-                  <TextField {...params} label="Cliente" variant="outlined" fullWidth InputLabelProps={{ shrink: true }} />
-                )}
-                isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
-                filterOptions={(options, state) => {
-                  const input = state.inputValue.toLowerCase();
-                  return options.filter(o => (o.nombre || '').toLowerCase().includes(input));
-                }}
-                openOnFocus
-                autoHighlight
-                disablePortal
-              />
-            </Box>
-          </FormControl>
+          <Box sx={{ display: 'flex', gap: 2.2 }}>
+            <TextField label="Comprobante" name="comprobante" value={form.comprobante} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+            <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
+              <InputLabel shrink>Cliente</InputLabel>
+              <Box sx={{ pt: 0, pb: 0 }}>
+                <Autocomplete
+                  options={clientes}
+                  getOptionLabel={option => option.nombre || ''}
+                  value={clientes.find(c => String(c.id) === String(form.cliente_id)) || null}
+                  onChange={(_, value) => {
+                    setForm(prev => ({
+                      ...prev,
+                      cliente_id: value ? value.id : '',
+                      direccion: value && value.direccion ? value.direccion : ''
+                    }));
+                  }}
+                  renderInput={params => (
+                    <TextField {...params} placeholder="Buscar cliente..." variant="outlined" fullWidth InputLabelProps={{ shrink: true }} />
+                  )}
+                  isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
+                  filterOptions={(options, state) => {
+                    const input = state.inputValue.toLowerCase();
+                    return options.filter(o => (o.nombre || '').toLowerCase().includes(input));
+                  }}
+                  openOnFocus
+                  autoHighlight
+                  disablePortal
+                />
+              </Box>
+            </FormControl>
+          </Box>
           <TextField label="Dirección" name="direccion" value={form.direccion} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
             <InputLabel shrink>Armador</InputLabel>

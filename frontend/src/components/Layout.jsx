@@ -153,12 +153,19 @@ export default function Layout({ children }) {
           }}
         >
           <Toolbar sx={{ minHeight: 72, px: { xs: 2, sm: 4 } }}>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 700, fontSize: 22, flexGrow: 1, fontFamily: 'Inter, Segoe UI, Roboto, sans-serif', color: '#0f172a' }}
-            >
-              {getPageTitle(location.pathname)}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, fontSize: 22, fontFamily: 'Inter, Segoe UI, Roboto, sans-serif', color: '#0f172a', flex: '1 1 0', textAlign: 'left' }}
+              >
+                {getPageTitle(location.pathname)}
+              </Typography>
+              <Box sx={{ flex: '1 1 0', display: 'flex', justifyContent: 'center' }}>
+                <img src="/logo.png" alt="Logo" style={{ width: 120, height: 48, objectFit: 'contain', display: 'block' }} />
+              </Box>
+              <Box sx={{ flex: '1 1 0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+              </Box>
+            </Box>
 
             {user && (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>

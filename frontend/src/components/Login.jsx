@@ -47,18 +47,8 @@ export default function Login({ onLogin }) {
         alignItems: 'center',
         gap: 2
       }}>
-        <Box sx={{
-          width: 64,
-          height: 64,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, #2563eb 60%, #22336b 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          mb: 2,
-          boxShadow: '0 2px 12px 0 rgba(34,51,107,0.10)'
-        }}>
-          <svg width="38" height="38" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="#fff"/><path d="M4 20c0-2.5 3.5-4 8-4s8 1.5 8 4" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+        <Box sx={{ width: '100%', mb: 2, display: 'flex', justifyContent: 'center' }}>
+          <img src="/logo.png" alt="Logo" style={{ width: '80%', maxWidth: 220, height: 'auto', objectFit: 'contain', display: 'block' }} />
         </Box>
         <Typography variant="h5" fontWeight={700} mb={1} align="center" color="#22336b">Iniciar Sesión</Typography>
         <form onSubmit={handleSubmit} style={{ width: '100%' }}>

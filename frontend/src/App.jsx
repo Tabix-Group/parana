@@ -26,7 +26,7 @@ export default function App() {
 
 function LoginWrapper() {
   const { user, login } = useAuth();
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to="/pedidos-totales" replace />;
   return <Login onLogin={login} />;
 }
 
