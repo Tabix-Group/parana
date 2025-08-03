@@ -232,11 +232,6 @@ export default function Pedidos() {
 
   // Cargar datos de pedidos con filtros y paginación
   useEffect(() => {
-    // Debug temporal
-    if (filters.fecha_entrega) {
-      console.log('Pedidos - Enviando filtro de fecha al backend:', filters.fecha_entrega);
-    }
-    
     API.get('/pedidos', {
       params: {
         ...filters,
@@ -246,11 +241,6 @@ export default function Pedidos() {
     }).then(res => {
       setData(res.data.data);
       setTotal(Number(res.data.total) || 0);
-      
-      // Debug temporal
-      if (filters.fecha_entrega) {
-        console.log('Pedidos - Datos recibidos del backend:', res.data.data.length, 'registros');
-      }
     });
   }, [filters, page, pageSize]);
 
@@ -278,14 +268,23 @@ export default function Pedidos() {
   // Maneja los cambios en los filtros de la tabla
   const handleFilter = (e) => {
     const { name, value } = e.target;
-    
-    // Para el filtro de fecha, asegurar formato correcto
     if (name === 'fecha_entrega' && value) {
-      // Validar que sea una fecha válida en formato YYYY-MM-DD
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-      if (dateRegex.test(value)) {
-        setFilters(prev => ({ ...prev, [name]: value }));
+      // Si el valor viene en formato dd/mm/yyyy, convertir a yyyy-mm-dd
+      const dateRegexDMY = /^\d{2}\/\d{2}\/\d{4}$/;
+      if (dateRegexDMY.test(value)) {
+        const [day, month, year] = value.split('/');
+        const isoDate = `${year}-${month}-${day}`;
+        setFilters(prev => ({ ...prev, fecha_entrega: isoDate }));
+        return;
       }
+      // Si ya está en formato yyyy-mm-dd, usar directo
+      const dateRegexYMD = /^\d{4}-\d{2}-\d{2}$/;
+      if (dateRegexYMD.test(value)) {
+        setFilters(prev => ({ ...prev, fecha_entrega: value }));
+        return;
+      }
+      // Si no es válido, limpiar filtro
+      setFilters(prev => ({ ...prev, fecha_entrega: '' }));
     } else {
       setFilters(prev => ({ ...prev, [name]: value }));
     }
