@@ -460,9 +460,15 @@ export default function Pedidos() {
                     }));
                   }}
                   onInputChange={(_, value) => {
-                    if (value && value.length > 2) {
+                    if (value && value.length > 0) {
                       setClientesLoading(true);
-                      API.get('/clientes', { params: { nombre: value, pageSize: 20 } })
+                      // Si el valor es solo números, buscar por código
+                      const isNumeric = /^\d+$/.test(value);
+                      const params = isNumeric 
+                        ? { Codigo: value, pageSize: 20 }
+                        : { nombre: value, pageSize: 20 };
+                      
+                      API.get('/clientes', { params })
                         .then(res => setClientes(res.data.data))
                         .finally(() => setClientesLoading(false));
                     } else {
@@ -471,7 +477,7 @@ export default function Pedidos() {
                   }}
                   loading={clientesLoading}
                   renderInput={params => (
-                    <TextField {...params} placeholder="Buscar cliente..." variant="outlined" fullWidth InputLabelProps={{ shrink: true }} />
+                    <TextField {...params} placeholder="Buscar cliente o código..." variant="outlined" fullWidth InputLabelProps={{ shrink: true }} />
                   )}
                   isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
                   openOnFocus
