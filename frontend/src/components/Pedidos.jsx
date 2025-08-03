@@ -269,15 +269,10 @@ export default function Pedidos() {
   const handleFilter = (e) => {
     const { name, value } = e.target;
     if (name === 'fecha_entrega') {
-      // Si el valor viene en formato yyyy-mm-dd, usarlo tal cual
+      // Solo aceptar formato yyyy-mm-dd (input type date) y enviarlo tal cual
       const dateRegexYMD = /^\d{4}-\d{2}-\d{2}$/;
       if (value && dateRegexYMD.test(value)) {
-        // Crear objeto Date local para evitar desfase de zona horaria
-        const [year, month, day] = value.split('-');
-        const localDate = new Date(Number(year), Number(month) - 1, Number(day));
-        // Formatear a yyyy-mm-dd desde la fecha local
-        const isoLocal = `${localDate.getFullYear()}-${(localDate.getMonth()+1).toString().padStart(2,'0')}-${localDate.getDate().toString().padStart(2,'0')}`;
-        setFilters(prev => ({ ...prev, fecha_entrega: isoLocal }));
+        setFilters(prev => ({ ...prev, fecha_entrega: value }));
       } else {
         setFilters(prev => ({ ...prev, fecha_entrega: '' }));
       }
