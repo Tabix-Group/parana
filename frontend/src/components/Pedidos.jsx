@@ -275,10 +275,29 @@ export default function Pedidos() {
           sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
         />
         <FormControl size="small" sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
-          <Select name="cliente" value={filters.cliente} onChange={handleFilter} displayEmpty>
-            <MenuItem value="">Cliente</MenuItem>
-            {clientes.map(c => <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>)}
-          </Select>
+          <Autocomplete
+            options={clientes}
+            getOptionLabel={option => option.nombre || ''}
+            value={clientes.find(c => String(c.id) === String(filters.cliente)) || null}
+            onChange={(_, value) => {
+              handleFilter({ target: { name: 'cliente', value: value ? value.id : '' } });
+            }}
+            onInputChange={(_, value) => {
+              if (value && value.length > 2) {
+                API.get('/clientes', { params: { nombre: value, pageSize: 20 } })
+                  .then(res => setClientes(res.data.data));
+              } else {
+                setClientes([]);
+              }
+            }}
+            renderInput={params => (
+              <TextField {...params} placeholder="Cliente" variant="outlined" size="small" fullWidth />
+            )}
+            isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
+            openOnFocus
+            autoHighlight
+            disablePortal
+          />
         </FormControl>
         <TextField
           size="small"

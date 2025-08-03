@@ -261,6 +261,14 @@ export default function Devoluciones() {
             onChange={(_, newValue) => {
               setForm({ ...form, cliente_id: newValue ? newValue.id : '' });
             }}
+            onInputChange={(_, value) => {
+              if (value && value.length > 2) {
+                API.get('/clientes', { params: { nombre: value, pageSize: 20 } })
+                  .then(res => setClientes(res.data.data));
+              } else {
+                setClientes([]);
+              }
+            }}
             renderInput={params => (
               <TextField {...params} label="Cliente (opcional)" variant="outlined" fullWidth />
             )}
