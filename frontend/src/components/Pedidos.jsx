@@ -385,11 +385,34 @@ export default function Pedidos() {
           }}
         >
           <TextField label="Comprobante" name="comprobante" value={form.comprobante} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+          {/* Autocomplete para buscar y seleccionar cliente */}
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
             <InputLabel shrink>Cliente</InputLabel>
-            <Select name="cliente_id" value={form.cliente_id} onChange={handleChange} label="Cliente">
-              {clientes.map(c => <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>)}
-            </Select>
+            <Box sx={{ pt: 2, pb: 1 }}>
+              <Autocomplete
+                options={clientes}
+                getOptionLabel={option => option.nombre || ''}
+                value={clientes.find(c => String(c.id) === String(form.cliente_id)) || null}
+                onChange={(_, value) => {
+                  setForm(prev => ({
+                    ...prev,
+                    cliente_id: value ? value.id : '',
+                    direccion: value && value.direccion ? value.direccion : ''
+                  }));
+                }}
+                renderInput={params => (
+                  <TextField {...params} label="Cliente" variant="outlined" fullWidth InputLabelProps={{ shrink: true }} />
+                )}
+                isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
+                filterOptions={(options, state) => {
+                  const input = state.inputValue.toLowerCase();
+                  return options.filter(o => (o.nombre || '').toLowerCase().includes(input));
+                }}
+                openOnFocus
+                autoHighlight
+                disablePortal
+              />
+            </Box>
           </FormControl>
           <TextField label="Dirección" name="direccion" value={form.direccion} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
@@ -400,7 +423,14 @@ export default function Pedidos() {
           </FormControl>
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
             <InputLabel shrink>Tipo Tte</InputLabel>
-            <Select name="tipo_transporte_id" value={form.tipo_transporte_id} onChange={handleChange} label="Tipo Tte">
+            <Select
+              name="tipo_transporte_id"
+              value={form.tipo_transporte_id}
+              onChange={handleChange}
+              label="Tipo Tte"
+              displayEmpty
+            >
+              <MenuItem value=""><em>Sin tipo</em></MenuItem>
               {tiposTransporte.map(t => <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>)}
             </Select>
           </FormControl>

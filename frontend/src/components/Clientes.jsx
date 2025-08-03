@@ -87,7 +87,7 @@ export default function Clientes() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((row, idx) => (
+            {data.filter(row => (row.nombre || '').toLowerCase().includes((filter || '').toLowerCase())).map((row, idx) => (
               <TableRow
                 key={row.id}
                 sx={{
