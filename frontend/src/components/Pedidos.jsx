@@ -268,23 +268,14 @@ export default function Pedidos() {
   // Maneja los cambios en los filtros de la tabla
   const handleFilter = (e) => {
     const { name, value } = e.target;
-    if (name === 'fecha_entrega' && value) {
-      // Si el valor viene en formato dd/mm/yyyy, convertir a yyyy-mm-dd
-      const dateRegexDMY = /^\d{2}\/\d{2}\/\d{4}$/;
-      if (dateRegexDMY.test(value)) {
-        const [day, month, year] = value.split('/');
-        const isoDate = `${year}-${month}-${day}`;
-        setFilters(prev => ({ ...prev, fecha_entrega: isoDate }));
-        return;
-      }
-      // Si ya está en formato yyyy-mm-dd, usar directo
+    if (name === 'fecha_entrega') {
+      // Solo aceptar formato yyyy-mm-dd (input type date)
       const dateRegexYMD = /^\d{4}-\d{2}-\d{2}$/;
-      if (dateRegexYMD.test(value)) {
+      if (value && dateRegexYMD.test(value)) {
         setFilters(prev => ({ ...prev, fecha_entrega: value }));
-        return;
+      } else {
+        setFilters(prev => ({ ...prev, fecha_entrega: '' }));
       }
-      // Si no es válido, limpiar filtro
-      setFilters(prev => ({ ...prev, fecha_entrega: '' }));
     } else {
       setFilters(prev => ({ ...prev, [name]: value }));
     }
