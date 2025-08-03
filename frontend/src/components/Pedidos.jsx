@@ -130,11 +130,10 @@ export default function Pedidos() {
   // Guardar pedido (alta o edición)
   const handleSubmit = async () => {
     try {
-      // Preparar datos con Codigo como número o null
-      const submitData = {
-        ...form,
-        Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null
-      };
+      // Preparar datos sin incluir Codigo ya que no existe en la tabla pedidos
+      const submitData = { ...form };
+      delete submitData.Codigo; // Remover Codigo del envío
+      delete submitData.cliente_nombre; // También remover si no existe en la tabla
       
       if (editRow) {
         await API.put(`/pedidos/${editRow.id}`, submitData);
@@ -157,10 +156,7 @@ export default function Pedidos() {
       });
     } catch (error) {
       console.error('Error al guardar pedido:', error);
-      console.error('Datos enviados:', {
-        ...form,
-        Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null
-      });
+      console.error('Datos enviados:', submitData);
       alert('Error al guardar el pedido: ' + (error.response?.data?.message || error.message));
     }
   };
