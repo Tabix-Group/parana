@@ -130,12 +130,22 @@ export default function Pedidos() {
   // Guardar pedido (alta o edición)
   const handleSubmit = async () => {
     try {
-      // Preparar datos con Codigo como número o null
+      // Preparar datos convirtiendo campos enteros vacíos a null
       const submitData = {
-        ...form,
-        Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null
+        comprobante: form.comprobante || null,
+        cliente_id: form.cliente_id || null,
+        Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null,
+        direccion: form.direccion || null,
+        armador_id: form.armador_id || null,
+        tipo_transporte_id: form.tipo_transporte_id || null,
+        transporte_id: form.transporte_id || null,
+        vendedor_id: form.vendedor_id || null,
+        cant_bultos: form.cant_bultos && form.cant_bultos !== '' ? Number(form.cant_bultos) : null,
+        tipo_bultos: form.tipo_bultos || null,
+        fecha_entrega: form.fecha_entrega || null,
+        estado_id: form.estado_id || null,
+        notas: form.notas || null
       };
-      delete submitData.cliente_nombre; // Remover si no existe en la tabla
       
       if (editRow) {
         await API.put(`/pedidos/${editRow.id}`, submitData);
