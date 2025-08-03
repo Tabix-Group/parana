@@ -32,8 +32,8 @@ router.get('/', async (req, res) => {
     if (fecha_entrega) {
       // Manejo específico para PostgreSQL vs SQLite
       if (db.client.config.client === 'pg') {
-        // PostgreSQL: usar la fecha exacta sin conversión UTC
-        qb.whereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
+        // PostgreSQL: usar comparación directa de fecha
+        qb.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fecha_entrega]);
       } else {
         // SQLite: usar método robusto con múltiples comparaciones
         const fechaFiltro = new Date(fecha_entrega + 'T00:00:00.000Z').toISOString().split('T')[0];

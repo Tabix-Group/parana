@@ -9,30 +9,14 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import API from '../api';
 
-// Función para formatear fechas a dd/mm/yy sin problemas de zona horaria
-const formatDate = (dateString) => {
-  if (!dateString) return '';
-  
-  try {
-    // Si ya está en formato YYYY-MM-DD, parsearlo directamente
-    if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      const [year, month, day] = dateString.split('-');
-      return `${day}/${month}/${year.slice(-2)}`;
-    }
-    
-    // Para otros formatos, usar Date pero evitar zona horaria
-    const date = new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00'));
-    if (isNaN(date.getTime())) return '';
-    
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear().toString().slice(-2);
-    
-    return `${day}/${month}/${year}`;
-  } catch (error) {
-    console.warn('Error formatting date:', dateString, error);
-    return '';
-  }
+// Función para formatear fechas a dd/mm/yy evitando desplazamientos de zona horaria
+const formatDate = (input) => {
+  if (!input) return '';
+  // Obtener parte de fecha YYYY-MM-DD sin hora
+  const datePart = input.toString().split('T')[0];
+  const [year, month, day] = datePart.split('-');
+  if (!year || !month || !day) return '';
+  return `${day}/${month}/${year.slice(-2)}`;
 };
 
 const columns = [
