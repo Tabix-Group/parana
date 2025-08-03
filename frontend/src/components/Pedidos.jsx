@@ -271,13 +271,38 @@ export default function Pedidos() {
 
   // Exportar a PDF
   const handleExportPDF = () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF('landscape', 'mm', 'a4'); // Orientación apaisada
     const exportData = data.map(row => columns.filter(col => col.id !== 'acciones').map(col => row[col.id]));
     doc.autoTable({
       head: [columns.filter(col => col.id !== 'acciones').map(col => col.label)],
       body: exportData,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [34,51,107] }
+      styles: { 
+        fontSize: 7,
+        cellPadding: 2,
+        overflow: 'linebreak'
+      },
+      headStyles: { 
+        fillColor: [34,51,107],
+        fontSize: 8,
+        fontStyle: 'bold'
+      },
+      columnStyles: {
+        0: { cellWidth: 18 }, // Comprobante
+        1: { cellWidth: 12 }, // Código
+        2: { cellWidth: 35 }, // Cliente
+        3: { cellWidth: 30 }, // Dirección
+        4: { cellWidth: 20 }, // Armador
+        5: { cellWidth: 15 }, // Tipo Tte
+        6: { cellWidth: 25 }, // Transporte
+        7: { cellWidth: 20 }, // Vendedor
+        8: { cellWidth: 10 }, // Cant
+        9: { cellWidth: 12 }, // Tipo
+        10: { cellWidth: 18 }, // Fecha Entrega
+        11: { cellWidth: 15 }, // Estado
+        12: { cellWidth: 30 } // Notas
+      },
+      margin: { top: 15, left: 10, right: 10 },
+      tableWidth: 'auto'
     });
     const fecha = new Date().toISOString().slice(0,10);
     doc.save(`PedidosTotales_${fecha}.pdf`);
