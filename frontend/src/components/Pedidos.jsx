@@ -87,7 +87,7 @@ export default function Pedidos() {
   const handleClose = () => {
     setOpen(false);
     setEditRow(null);
-    setForm({ comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_entrega: '', estado_id: '', notas: '' });
+    setForm({ comprobante: '', cliente_id: '', Codigo: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_entrega: '', estado_id: '', notas: '' });
   };
 
   // Manejar cambios en el form
@@ -129,31 +129,40 @@ export default function Pedidos() {
 
   // Guardar pedido (alta o edición)
   const handleSubmit = async () => {
-    // Preparar datos con Codigo como número o null
-    const submitData = {
-      ...form,
-      Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null
-    };
-    
-    if (editRow) {
-      await API.put(`/pedidos/${editRow.id}`, submitData);
-    } else {
-      await API.post('/pedidos', submitData);
-    }
-    setOpen(false);
-    setEditRow(null);
-    setForm({ comprobante: '', cliente_id: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', fecha_entrega: '', estado_id: '', notas: '' });
-    // Refrescar datos
-    API.get('/pedidos', {
-      params: {
-        ...filters,
-        page: page + 1,
-        pageSize
+    try {
+      // Preparar datos con Codigo como número o null
+      const submitData = {
+        ...form,
+        Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null
+      };
+      
+      if (editRow) {
+        await API.put(`/pedidos/${editRow.id}`, submitData);
+      } else {
+        await API.post('/pedidos', submitData);
       }
-    }).then(res => {
-      setData(res.data.data);
-      setTotal(Number(res.data.total) || 0);
-    });
+      setOpen(false);
+      setEditRow(null);
+      setForm({ comprobante: '', cliente_id: '', Codigo: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_entrega: '', estado_id: '', notas: '' });
+      // Refrescar datos
+      API.get('/pedidos', {
+        params: {
+          ...filters,
+          page: page + 1,
+          pageSize
+        }
+      }).then(res => {
+        setData(res.data.data);
+        setTotal(Number(res.data.total) || 0);
+      });
+    } catch (error) {
+      console.error('Error al guardar pedido:', error);
+      console.error('Datos enviados:', {
+        ...form,
+        Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null
+      });
+      alert('Error al guardar el pedido: ' + (error.response?.data?.message || error.message));
+    }
   };
 
   // Eliminar pedido
