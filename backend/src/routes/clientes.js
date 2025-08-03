@@ -33,10 +33,39 @@ router.post('/', async (req, res) => {
     } else {
       newId = await db('clientes').insert(clienteData);
     }
+    console.log('Cliente creado exitosamente con ID:', newId);
     res.status(200).json({ id: newId });
   } catch (err) {
     console.error('Error POST /clientes:', err);
-    res.status(500).json({ error: err.message });
+    
+    // Si es un error de clave primaria duplicada, intentar solucionarlo
+    if (err.code === '23505' && err.constraint === 'clientes_pkey') {
+      console.log('Error de clave primaria duplicada. Intentando reiniciar secuencia...');
+      try {
+        // Reiniciar la secuencia
+        const maxIdResult = await db('clientes').max('id as max_id').first();
+        const maxId = maxIdResult?.max_id || 0;
+        const nextId = maxId + 1;
+        await db.raw(`SELECT setval(pg_get_serial_sequence('clientes', 'id'), ${nextId}, false)`);
+        console.log(`Secuencia reiniciada. Próximo ID: ${nextId}`);
+        
+        // Intentar insertar nuevamente
+        const { id, ...bodyWithoutId } = req.body;
+        const clienteData = {
+          ...bodyWithoutId,
+          Codigo: req.body.Codigo === '' || req.body.Codigo === undefined ? null : parseInt(req.body.Codigo, 10) || null
+        };
+        
+        const newId = (await db('clientes').insert(clienteData).returning('id'))[0].id;
+        console.log('Cliente creado exitosamente después de reiniciar secuencia con ID:', newId);
+        res.status(200).json({ id: newId });
+      } catch (retryErr) {
+        console.error('Error al intentar reiniciar secuencia:', retryErr);
+        res.status(500).json({ error: 'Error al crear cliente. La secuencia de ID está desactualizada.' });
+      }
+    } else {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 

@@ -31,6 +31,19 @@ export async function createTables(db) {
           t.integer('Codigo');
         });
       }
+      
+      // Reiniciar la secuencia de auto-incremento para PostgreSQL
+      if (db.client.config.client === 'pg') {
+        try {
+          const maxIdResult = await db('clientes').max('id as max_id').first();
+          const maxId = maxIdResult?.max_id || 0;
+          const nextId = maxId + 1;
+          await db.raw(`SELECT setval(pg_get_serial_sequence('clientes', 'id'), ${nextId}, false)`);
+          console.log(`Secuencia de clientes reiniciada. Próximo ID: ${nextId}`);
+        } catch (err) {
+          console.log('Error al reiniciar secuencia de clientes:', err.message);
+        }
+      }
     }
   });
   // Armadores
@@ -121,6 +134,19 @@ export async function createTables(db) {
         await db.schema.table('pedidos', t => {
           t.integer('Codigo').nullable().comment('Código del cliente asociado al pedido');
         });
+      }
+      
+      // Reiniciar la secuencia de auto-incremento para PostgreSQL
+      if (db.client.config.client === 'pg') {
+        try {
+          const maxIdResult = await db('pedidos').max('id as max_id').first();
+          const maxId = maxIdResult?.max_id || 0;
+          const nextId = maxId + 1;
+          await db.raw(`SELECT setval(pg_get_serial_sequence('pedidos', 'id'), ${nextId}, false)`);
+          console.log(`Secuencia de pedidos reiniciada. Próximo ID: ${nextId}`);
+        } catch (err) {
+          console.log('Error al reiniciar secuencia de pedidos:', err.message);
+        }
       }
     }
   });
