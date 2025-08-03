@@ -9,6 +9,32 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import API from '../api';
 
+// Función para formatear fechas a dd/mm/yy sin problemas de zona horaria
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  
+  try {
+    // Si ya está en formato YYYY-MM-DD, parsearlo directamente
+    if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split('-');
+      return `${day}/${month}/${year.slice(-2)}`;
+    }
+    
+    // Para otros formatos, usar Date pero evitar zona horaria
+    const date = new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00'));
+    if (isNaN(date.getTime())) return '';
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    
+    return `${day}/${month}/${year}`;
+  } catch (error) {
+    console.warn('Error formatting date:', dateString, error);
+    return '';
+  }
+};
+
 const columns = [
   { id: 'comprobante', label: 'Comprobante' },
   { id: 'cliente_nombre', label: 'Cliente' },
@@ -44,7 +70,7 @@ export default function PedidosParciales() {
     const exportData = data.map(row => {
       const obj = {};
       columns.forEach(col => {
-        obj[col.label] = row[col.id];
+        obj[col.label] = col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id];
       });
       return obj;
     });
@@ -57,14 +83,49 @@ export default function PedidosParciales() {
 
   // Exportar a PDF
   const handleExportPDF = () => {
-    const doc = new jsPDF();
-    const exportData = data.map(row => columns.map(col => row[col.id]));
-    doc.autoTable({
-      head: [columns.map(col => col.label)],
-      body: exportData,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [34,51,107] }
+    const doc = new jsPDF('landscape', 'mm', 'a4');
+    doc.setFontSize(16);
+    doc.text('Pedidos Parciales', 10, 15);
+    
+    const exportData = data.map(row => {
+      return columns.map(col => {
+        if (col.id === 'fecha_entrega') {
+          return formatDate(row[col.id]);
+        }
+        return row[col.id] || '';
+      });
     });
+    
+    const headers = columns.map(col => col.label);
+    
+    doc.autoTable({
+      head: [headers],
+      body: exportData,
+      startY: 25,
+      margin: { left: 10, right: 10 },
+      columnStyles: {
+        0: { cellWidth: 25 }, // ID
+        1: { cellWidth: 35 }, // Fecha
+        2: { cellWidth: 40 }, // Cliente
+        3: { cellWidth: 35 }, // Vendedor
+        4: { cellWidth: 30 }, // Estado
+        5: { cellWidth: 40 }, // Armador
+        6: { cellWidth: 35 }, // Tipo Transporte
+        7: { cellWidth: 35 }, // Transporte
+        8: { cellWidth: 40 }, // Observaciones
+      },
+      styles: {
+        fontSize: 9,
+        cellPadding: 2,
+      },
+      headStyles: {
+        fillColor: [22, 160, 133],
+        textColor: 255,
+        fontSize: 10,
+        fontStyle: 'bold'
+      }
+    });
+    
     const fecha = new Date().toISOString().slice(0,10);
     doc.save(`PedidosParciales_${fecha}.pdf`);
   };
@@ -127,7 +188,9 @@ export default function PedidosParciales() {
             {filteredData.map((row, idx) => (
               <TableRow key={row.comprobante} sx={{ background: idx % 2 === 0 ? '#fff' : '#f8fafc', '&:hover': { background: '#e8f0fe' } }}>
                 {columns.map(col => (
-                  <TableCell key={col.id}>{row[col.id]}</TableCell>
+                  <TableCell key={col.id}>
+                    {col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id]}
+                  </TableCell>
                 ))}
               </TableRow>
             ))}

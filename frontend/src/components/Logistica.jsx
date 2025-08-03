@@ -4,6 +4,62 @@ import React, { useState, useEffect } from 'react';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Box, TablePagination, TextField, FormControl, Select, MenuItem, Button, Autocomplete } from '@mui/material';
 import API from '../api';
 
+// Función robusta para formatear fechas a dd/mm/yy sin problemas de zona horaria
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  
+  try {
+    // Si ya está en formato YYYY-MM-DD, parsearlo directamente
+    if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split('-');
+      return `${day}/${month}/${year.slice(-2)}`;
+    }
+    
+    // Para otros formatos, usar Date pero evitar zona horaria
+    const date = new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00'));
+    if (isNaN(date.getTime())) return '';
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    
+    return `${day}/${month}/${year}`;
+  } catch (error) {
+    console.warn('Error formatting date:', dateString, error);
+    return '';
+  }
+};
+
+// Función robusta para comparar fechas sin problemas de zona horaria
+const compareDates = (dateString, filterDate) => {
+  if (!dateString || !filterDate) return false;
+  
+  try {
+    // Convertir la fecha del pedido a formato YYYY-MM-DD sin zona horaria
+    let pedidoDateStr;
+    
+    // Si ya está en formato YYYY-MM-DD
+    if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      pedidoDateStr = dateString;
+    } else {
+      // Manejar diferentes formatos de fecha evitando problemas de zona horaria
+      const pedidoDate = new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00'));
+      if (isNaN(pedidoDate.getTime())) return false;
+      
+      // Usar getFullYear, getMonth, getDate para evitar zona horaria
+      const year = pedidoDate.getFullYear();
+      const month = (pedidoDate.getMonth() + 1).toString().padStart(2, '0');
+      const day = pedidoDate.getDate().toString().padStart(2, '0');
+      pedidoDateStr = `${year}-${month}-${day}`;
+    }
+    
+    return pedidoDateStr === filterDate;
+  } catch (error) {
+    console.warn('Error comparing dates:', dateString, filterDate, error);
+    return false;
+  }
+};
+
 const columns = [
   { id: 'origen', label: 'Origen' },
   { id: 'comprobante', label: 'Comprobante' },
@@ -22,35 +78,68 @@ const pageSizes = [10, 15, 25, 50];
 const Logistica = ({ pedidos, loading }) => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState({ comprobante: '', cliente: '', fecha_entrega: '', estado: '', transporte: '' });
+  const [filters, setFilters] = useState({ comprobante: '', cliente: '', fecha_entrega: '', estado: '', transporte: '', origen: '' });
   const [clientes, setClientes] = useState([]);
   const [estados, setEstados] = useState([]);
   const [transportes, setTransportes] = useState([]);
 
-  useEffect(() => {
-    API.get('/clientes').then(res => setClientes(res.data.data));
-    API.get('/estados').then(res => setEstados(res.data.data));
-    API.get('/transportes').then(res => setTransportes(res.data.data));
-  }, []);
+  // Ya no necesitamos cargar los catálogos completos para los filtros de texto
+  // useEffect(() => {
+  //   API.get('/clientes').then(res => setClientes(res.data.data));
+  //   API.get('/estados').then(res => setEstados(res.data.data));
+  //   API.get('/transportes').then(res => setTransportes(res.data.data));
+  // }, []);
 
   const handleFilter = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
-    setPage(0);
+    
+    // Para el filtro de fecha, validar formato
+    if (name === 'fecha_entrega' && value) {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (dateRegex.test(value)) {
+        setFilters(prev => ({ ...prev, [name]: value }));
+        setPage(0);
+      }
+    } else {
+      setFilters(prev => ({ ...prev, [name]: value }));
+      setPage(0);
+    }
   };
   const handleClearFilters = () => {
-    setFilters({ comprobante: '', cliente: '', fecha_entrega: '', estado: '', transporte: '' });
+    setFilters({ comprobante: '', cliente: '', fecha_entrega: '', estado: '', transporte: '', origen: '' });
     setPage(0);
   };
 
-  // Filtrado frontend igual a Pedidos
+  // Filtrado frontend corregido para usar los nombres directos en lugar de IDs
   const filteredPedidos = pedidos.filter(p => {
     const matchComprobante = filters.comprobante === '' || (p.comprobante || '').toLowerCase().includes(filters.comprobante.toLowerCase());
-    const matchCliente = filters.cliente === '' || String(p.cliente) === String(filters.cliente);
-    const matchFecha = filters.fecha_entrega === '' || (p.fecha || '').startsWith(filters.fecha_entrega);
-    const matchEstado = filters.estado === '' || String(p.estado) === String(filters.estado);
-    const matchTransporte = filters.transporte === '' || String(p.transporte) === String(filters.transporte);
-    return matchComprobante && matchCliente && matchFecha && matchEstado && matchTransporte;
+    
+    // Para cliente, buscar por nombre ya que el campo 'cliente' contiene el nombre
+    const matchCliente = filters.cliente === '' || (p.cliente || '').toLowerCase().includes(filters.cliente.toLowerCase());
+    
+    // Para fecha, usar la función robusta de comparación
+    const matchFecha = filters.fecha_entrega === '' || compareDates(p.fecha, filters.fecha_entrega);
+    
+    // Debug temporal para verificar fechas
+    if (filters.fecha_entrega && p.fecha) {
+      console.log('Debug fecha:', {
+        filterDate: filters.fecha_entrega,
+        pedidoDate: p.fecha,
+        comprobante: p.comprobante,
+        matchResult: matchFecha
+      });
+    }
+    
+    // Para estado, buscar por nombre ya que el campo 'estado' contiene el nombre
+    const matchEstado = filters.estado === '' || (p.estado || '').toLowerCase().includes(filters.estado.toLowerCase());
+    
+    // Para transporte, buscar por nombre ya que el campo 'transporte' contiene el nombre
+    const matchTransporte = filters.transporte === '' || (p.transporte || '').toLowerCase().includes(filters.transporte.toLowerCase());
+    
+    // Filtro por origen si existe
+    const matchOrigen = !filters.origen || filters.origen === '' || p.origen === filters.origen;
+    
+    return matchComprobante && matchCliente && matchFecha && matchEstado && matchTransporte && matchOrigen;
   });
   const paginatedPedidos = filteredPedidos.slice(page * pageSize, page * pageSize + pageSize);
 
@@ -66,32 +155,14 @@ const Logistica = ({ pedidos, loading }) => {
           placeholder="Comprobante"
           sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
         />
-        <FormControl size="small" sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
-          <Autocomplete
-            options={clientes}
-            getOptionLabel={option => option.nombre || ''}
-            value={clientes.find(c => String(c.id) === String(filters.cliente)) || null}
-            onChange={(_, value) => {
-              setFilters(prev => ({ ...prev, cliente: value ? value.id : '' }));
-              setPage(0);
-            }}
-            onInputChange={(_, value) => {
-              if (value && value.length > 2) {
-                API.get('/clientes', { params: { nombre: value, pageSize: 20 } })
-                  .then(res => setClientes(res.data.data));
-              } else {
-                setClientes([]);
-              }
-            }}
-            renderInput={params => (
-              <TextField {...params} placeholder="Cliente" variant="outlined" size="small" fullWidth />
-            )}
-            isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
-            openOnFocus
-            autoHighlight
-            disablePortal
-          />
-        </FormControl>
+        <TextField
+          size="small"
+          name="cliente"
+          value={filters.cliente}
+          onChange={handleFilter}
+          placeholder="Cliente"
+          sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+        />
         <TextField
           size="small"
           name="fecha_entrega"
@@ -101,18 +172,22 @@ const Logistica = ({ pedidos, loading }) => {
           InputLabelProps={{ shrink: true }}
           sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
         />
-        <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
-          <Select name="estado" value={filters.estado} onChange={handleFilter} displayEmpty>
-            <MenuItem value="">Estado</MenuItem>
-            {estados.map(e => <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>)}
-          </Select>
-        </FormControl>
-        <FormControl size="small" sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
-          <Select name="transporte" value={filters.transporte} onChange={handleFilter} displayEmpty>
-            <MenuItem value="">Transporte</MenuItem>
-            {transportes.map(t => <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>)}
-          </Select>
-        </FormControl>
+        <TextField
+          size="small"
+          name="estado"
+          value={filters.estado}
+          onChange={handleFilter}
+          placeholder="Estado"
+          sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+        />
+        <TextField
+          size="small"
+          name="transporte"
+          value={filters.transporte}
+          onChange={handleFilter}
+          placeholder="Transporte"
+          sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+        />
         <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
           <Select name="origen" value={filters.origen || ''} onChange={e => { setFilters(f => ({ ...f, origen: e.target.value })); setPage(0); }} displayEmpty>
             <MenuItem value="">Todos</MenuItem>
@@ -142,7 +217,9 @@ const Logistica = ({ pedidos, loading }) => {
               paginatedPedidos.map((pedido, idx) => (
                 <TableRow key={pedido.id ? `p-${pedido.id}` : `d-${idx}`} sx={{ background: 'background.paper', '&:hover': { background: '#e8f0fe' } }}>
                   {columns.map(col => (
-                    <TableCell key={col.id}>{pedido[col.id] ?? ''}</TableCell>
+                    <TableCell key={col.id}>
+                      {col.id === 'fecha' ? formatDate(pedido[col.id]) : (pedido[col.id] ?? '')}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))

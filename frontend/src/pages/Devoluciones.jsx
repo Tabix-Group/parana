@@ -11,6 +11,32 @@ import 'jspdf-autotable';
 import { Edit, Delete, Add } from '@mui/icons-material';
 import API from '../api';
 
+// Función para formatear fechas a dd/mm/yy sin problemas de zona horaria
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  
+  try {
+    // Si ya está en formato YYYY-MM-DD, parsearlo directamente
+    if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split('-');
+      return `${day}/${month}/${year.slice(-2)}`;
+    }
+    
+    // Para otros formatos, usar Date pero evitar zona horaria
+    const date = new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00'));
+    if (isNaN(date.getTime())) return '';
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    
+    return `${day}/${month}/${year}`;
+  } catch (error) {
+    console.warn('Error formatting date:', dateString, error);
+    return '';
+  }
+};
+
 const columns = [
   { id: 'pedido_id', label: 'Pedido' },
   { id: 'cliente_id', label: 'Cliente' },
@@ -86,7 +112,11 @@ export default function Devoluciones() {
     const exportData = data.map(row => {
       const obj = {};
       columns.filter(c => c.id !== 'acciones').forEach(col => {
-        obj[col.label] = row[col.id];
+        if (col.id === 'fecha') {
+          obj[col.label] = formatDate(row[col.id]);
+        } else {
+          obj[col.label] = row[col.id];
+        }
       });
       return obj;
     });
@@ -99,16 +129,51 @@ export default function Devoluciones() {
 
   // Exportar a PDF
   const handleExportPDF = () => {
-    const doc = new jsPDF();
-    const exportData = data.map(row =>
-      columns.filter(c => c.id !== 'acciones').map(col => col.id === 'recibido' ? (row[col.id] ? 'Sí' : 'No') : row[col.id])
-    );
-    doc.autoTable({
-      head: [columns.filter(c => c.id !== 'acciones').map(col => col.label)],
-      body: exportData,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [34,51,107] }
+    const doc = new jsPDF('landscape', 'mm', 'a4');
+    doc.setFontSize(16);
+    doc.text('Devoluciones', 10, 15);
+    
+    const exportData = data.map(row => {
+      return columns.filter(c => c.id !== 'acciones').map(col => {
+        if (col.id === 'fecha') {
+          return formatDate(row[col.id]);
+        }
+        if (col.id === 'recibido') {
+          return row[col.id] ? 'Sí' : 'No';
+        }
+        return row[col.id] || '';
+      });
     });
+    
+    const headers = columns.filter(c => c.id !== 'acciones').map(col => col.label);
+    
+    doc.autoTable({
+      head: [headers],
+      body: exportData,
+      startY: 25,
+      margin: { left: 10, right: 10 },
+      columnStyles: {
+        0: { cellWidth: 30 }, // ID
+        1: { cellWidth: 35 }, // Fecha
+        2: { cellWidth: 40 }, // Cliente
+        3: { cellWidth: 40 }, // Vendedor
+        4: { cellWidth: 40 }, // Armador
+        5: { cellWidth: 35 }, // Estado
+        6: { cellWidth: 45 }, // Motivo
+        7: { cellWidth: 40 }, // Observaciones
+      },
+      styles: {
+        fontSize: 9,
+        cellPadding: 2,
+      },
+      headStyles: {
+        fillColor: [22, 160, 133],
+        textColor: 255,
+        fontSize: 10,
+        fontStyle: 'bold'
+      }
+    });
+    
     const fecha = new Date().toISOString().slice(0,10);
     doc.save(`Devoluciones_${fecha}.pdf`);
   };
@@ -207,6 +272,9 @@ export default function Devoluciones() {
                     }
                     if (col.id === 'recibido') {
                       return <TableCell key={col.id} sx={cellSx}>{row.recibido ? 'Sí' : 'No'}</TableCell>;
+                    }
+                    if (col.id === 'fecha') {
+                      return <TableCell key={col.id} sx={cellSx}>{formatDate(row[col.id])}</TableCell>;
                     }
                     return <TableCell key={col.id} sx={cellSx}>{row[col.id]}</TableCell>;
                   })}

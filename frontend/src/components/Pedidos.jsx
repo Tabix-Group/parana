@@ -9,6 +9,32 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import API from '../api';
 
+// Función para formatear fechas a dd/mm/yy sin problemas de zona horaria
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  
+  try {
+    // Si ya está en formato YYYY-MM-DD, parsearlo directamente
+    if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split('-');
+      return `${day}/${month}/${year.slice(-2)}`;
+    }
+    
+    // Para otros formatos, usar Date pero evitar zona horaria
+    const date = new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00'));
+    if (isNaN(date.getTime())) return '';
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    
+    return `${day}/${month}/${year}`;
+  } catch (error) {
+    console.warn('Error formatting date:', dateString, error);
+    return '';
+  }
+};
+
 const columns = [
   { id: 'comprobante', label: 'Comprobante' },
   { id: 'Codigo', label: 'Código' },
@@ -206,6 +232,11 @@ export default function Pedidos() {
 
   // Cargar datos de pedidos con filtros y paginación
   useEffect(() => {
+    // Debug temporal
+    if (filters.fecha_entrega) {
+      console.log('Pedidos - Enviando filtro de fecha al backend:', filters.fecha_entrega);
+    }
+    
     API.get('/pedidos', {
       params: {
         ...filters,
@@ -215,6 +246,11 @@ export default function Pedidos() {
     }).then(res => {
       setData(res.data.data);
       setTotal(Number(res.data.total) || 0);
+      
+      // Debug temporal
+      if (filters.fecha_entrega) {
+        console.log('Pedidos - Datos recibidos del backend:', res.data.data.length, 'registros');
+      }
     });
   }, [filters, page, pageSize]);
 
@@ -242,12 +278,28 @@ export default function Pedidos() {
   // Maneja los cambios en los filtros de la tabla
   const handleFilter = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    
+    // Para el filtro de fecha, asegurar formato correcto
+    if (name === 'fecha_entrega' && value) {
+      // Validar que sea una fecha válida en formato YYYY-MM-DD
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (dateRegex.test(value)) {
+        setFilters(prev => ({ ...prev, [name]: value }));
+      }
+    } else {
+      setFilters(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   // Función para limpiar los filtros
   const handleClearFilters = () => {
     setFilters({ comprobante: '', cliente: '', fecha_entrega: '', estado: '' });
+  };
+
+  // Función de sorting (placeholder por ahora)
+  const handleSort = (columnId) => {
+    // Por ahora solo un console.log, se puede implementar sorting más tarde
+    console.log('Sorting by:', columnId);
   };
   const [data, setData] = useState([]);
   // ...aquí van los hooks y lógica existentes...
@@ -258,7 +310,9 @@ export default function Pedidos() {
     const exportData = data.map(row => {
       const obj = {};
       columns.forEach(col => {
-        if (col.id !== 'acciones') obj[col.label] = row[col.id];
+        if (col.id !== 'acciones') {
+          obj[col.label] = col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id];
+        }
       });
       return obj;
     });
@@ -272,7 +326,9 @@ export default function Pedidos() {
   // Exportar a PDF
   const handleExportPDF = () => {
     const doc = new jsPDF('landscape', 'mm', 'a4'); // Orientación apaisada
-    const exportData = data.map(row => columns.filter(col => col.id !== 'acciones').map(col => row[col.id]));
+    const exportData = data.map(row => columns.filter(col => col.id !== 'acciones').map(col => 
+      col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id]
+    ));
     doc.autoTable({
       head: [columns.filter(col => col.id !== 'acciones').map(col => col.label)],
       body: exportData,
@@ -475,7 +531,9 @@ export default function Pedidos() {
                       </Box>
                     </TableCell>
                   ) : (
-                    <TableCell key={col.id} sx={cellSx}>{row[col.id]}</TableCell>
+                    <TableCell key={col.id} sx={cellSx}>
+                      {col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id]}
+                    </TableCell>
                   );
                 })}
               </TableRow>
