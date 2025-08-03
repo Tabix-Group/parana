@@ -129,10 +129,16 @@ export default function Pedidos() {
 
   // Guardar pedido (alta o edición)
   const handleSubmit = async () => {
+    // Preparar datos con Codigo como número o null
+    const submitData = {
+      ...form,
+      Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null
+    };
+    
     if (editRow) {
-      await API.put(`/pedidos/${editRow.id}`, form);
+      await API.put(`/pedidos/${editRow.id}`, submitData);
     } else {
-      await API.post('/pedidos', form);
+      await API.post('/pedidos', submitData);
     }
     setOpen(false);
     setEditRow(null);
