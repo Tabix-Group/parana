@@ -270,7 +270,6 @@ export default function Pedidos() {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
   };
-  };
 
   // Función para limpiar los filtros
   const handleClearFilters = () => {
