@@ -147,7 +147,35 @@ export default function Clientes() {
         rowsPerPage={pageSize}
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={pageSizes}
-        sx={{ mt: 2 }}
+        showFirstButton={true}
+        showLastButton={true}
+        labelRowsPerPage="Filas por página:"
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`}
+        sx={{ 
+          mt: 2,
+          '& .MuiTablePagination-toolbar': {
+            flexWrap: 'wrap',
+            gap: 1,
+            justifyContent: 'flex-end'
+          },
+          '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            color: '#22336b'
+          },
+          '& .MuiTablePagination-spacer': {
+            flex: 'none'
+          },
+          '& .MuiTablePagination-actions': {
+            marginLeft: 1,
+            '& .MuiIconButton-root': {
+              borderRadius: 2,
+              '&:hover': {
+                backgroundColor: '#e8f0fe'
+              }
+            }
+          }
+        }}
       />
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontWeight: 700, fontSize: 22, mb: 1 }}>{editRow ? 'Editar Cliente' : 'Nuevo Cliente'}</DialogTitle>
