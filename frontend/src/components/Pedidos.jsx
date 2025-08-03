@@ -268,17 +268,8 @@ export default function Pedidos() {
   // Maneja los cambios en los filtros de la tabla
   const handleFilter = (e) => {
     const { name, value } = e.target;
-    if (name === 'fecha_entrega') {
-      // Solo aceptar formato yyyy-mm-dd (input type date) y enviarlo tal cual
-      const dateRegexYMD = /^\d{4}-\d{2}-\d{2}$/;
-      if (value && dateRegexYMD.test(value)) {
-        setFilters(prev => ({ ...prev, fecha_entrega: value }));
-      } else {
-        setFilters(prev => ({ ...prev, fecha_entrega: '' }));
-      }
-    } else {
-      setFilters(prev => ({ ...prev, [name]: value }));
-    }
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
   };
 
   // Función para limpiar los filtros
