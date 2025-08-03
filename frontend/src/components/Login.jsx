@@ -59,9 +59,6 @@ export default function Login({ onLogin }) {
             {loading ? 'Ingresando...' : 'Ingresar'}
           </Button>
         </form>
-        <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2, fontSize: 14 }}>
-          Usuario demo: <b>hernan@tabix.app</b><br />Clave: <b>12345678</b>
-        </Typography>
       </Paper>
       <Box component="footer" sx={{
         width: '100vw',

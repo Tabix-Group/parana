@@ -165,15 +165,15 @@ export default function Pedidos() {
 
   // Catálogos para selects
   const [clientes, setClientes] = useState([]);
+  const [clientesLoading, setClientesLoading] = useState(false);
   const [estados, setEstados] = useState([]);
   const [armadores, setArmadores] = useState([]);
   const [tiposTransporte, setTiposTransporte] = useState([]);
   const [transportes, setTransportes] = useState([]);
   const [vendedores, setVendedores] = useState([]);
 
-  // Cargar catálogos al montar
+  // Cargar catálogos al montar (excepto clientes)
   useEffect(() => {
-    API.get('/clientes').then(res => setClientes(res.data.data));
     API.get('/estados').then(res => setEstados(res.data.data));
     API.get('/armadores').then(res => setArmadores(res.data.data));
     API.get('/tipos-transporte').then(res => setTiposTransporte(res.data.data));
@@ -390,28 +390,35 @@ export default function Pedidos() {
               <InputLabel shrink>Cliente</InputLabel>
               <Box sx={{ pt: 0, pb: 0 }}>
                 <Autocomplete
-                  options={clientes}
-                  getOptionLabel={option => option.nombre || ''}
-                  value={clientes.find(c => String(c.id) === String(form.cliente_id)) || null}
-                  onChange={(_, value) => {
-                    setForm(prev => ({
-                      ...prev,
-                      cliente_id: value ? value.id : '',
-                      direccion: value && value.direccion ? value.direccion : ''
-                    }));
-                  }}
-                  renderInput={params => (
-                    <TextField {...params} placeholder="Buscar cliente..." variant="outlined" fullWidth InputLabelProps={{ shrink: true }} />
-                  )}
-                  isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
-                  filterOptions={(options, state) => {
-                    const input = state.inputValue.toLowerCase();
-                    return options.filter(o => (o.nombre || '').toLowerCase().includes(input));
-                  }}
-                  openOnFocus
-                  autoHighlight
-                  disablePortal
-                />
+                options={clientes}
+                getOptionLabel={option => option.nombre || ''}
+                value={clientes.find(c => String(c.id) === String(form.cliente_id)) || null}
+                onChange={(_, value) => {
+                  setForm(prev => ({
+                    ...prev,
+                    cliente_id: value ? value.id : '',
+                    direccion: value && value.direccion ? value.direccion : ''
+                  }));
+                }}
+                onInputChange={(_, value) => {
+                  if (value && value.length > 2) {
+                    setClientesLoading(true);
+                    API.get('/clientes', { params: { nombre: value, pageSize: 20 } })
+                      .then(res => setClientes(res.data.data))
+                      .finally(() => setClientesLoading(false));
+                  } else {
+                    setClientes([]);
+                  }
+                }}
+                loading={clientesLoading}
+                renderInput={params => (
+                  <TextField {...params} placeholder="Buscar cliente..." variant="outlined" fullWidth InputLabelProps={{ shrink: true }} />
+                )}
+                isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
+                openOnFocus
+                autoHighlight
+                disablePortal
+              />
               </Box>
             </FormControl>
           </Box>
