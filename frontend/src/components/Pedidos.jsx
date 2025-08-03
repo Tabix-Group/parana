@@ -130,10 +130,12 @@ export default function Pedidos() {
   // Guardar pedido (alta o edición)
   const handleSubmit = async () => {
     try {
-      // Preparar datos sin incluir Codigo ya que no existe en la tabla pedidos
-      const submitData = { ...form };
-      delete submitData.Codigo; // Remover Codigo del envío
-      delete submitData.cliente_nombre; // También remover si no existe en la tabla
+      // Preparar datos con Codigo como número o null
+      const submitData = {
+        ...form,
+        Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null
+      };
+      delete submitData.cliente_nombre; // Remover si no existe en la tabla
       
       if (editRow) {
         await API.put(`/pedidos/${editRow.id}`, submitData);
@@ -371,15 +373,27 @@ export default function Pedidos() {
                 let cellSx = {
                   cursor: col.id !== 'acciones' ? 'pointer' : 'default',
                   fontWeight: 700,
-                  fontSize: 16,
+                  fontSize: 13,
                   color: '#22336b',
                   borderBottom: '2px solid #e0e3e7',
                   background: '#f6f8fa',
-                  letterSpacing: 0.2
+                  letterSpacing: 0.1,
+                  py: 0.8
                 };
-                if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
-                if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
-                if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400 };
+                if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
+                if (col.id === 'Codigo') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80 };
+                if (col.id === 'cliente_nombre') cellSx = { ...cellSx, minWidth: 110, width: 120, maxWidth: 140 };
+                if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120 };
+                if (col.id === 'armador_nombre') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
+                if (col.id === 'tipo_transporte_nombre') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80 };
+                if (col.id === 'transporte_nombre') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100 };
+                if (col.id === 'vendedor_nombre') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
+                if (col.id === 'cant_bultos') cellSx = { ...cellSx, minWidth: 45, width: 50, maxWidth: 60 };
+                if (col.id === 'tipo_bultos') cellSx = { ...cellSx, minWidth: 55, width: 65, maxWidth: 75 };
+                if (col.id === 'fecha_entrega') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100 };
+                if (col.id === 'estado_nombre') cellSx = { ...cellSx, minWidth: 65, width: 75, maxWidth: 85 };
+                if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120 };
+                if (col.id === 'acciones') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
                 return (
                   <TableCell
                     key={col.id}
@@ -403,17 +417,26 @@ export default function Pedidos() {
                 }}
               >
                 {columns.map(col => {
-                  let cellSx = { fontSize: 15, color: '#22336b', py: 1.2, px: 1.5 };
-                  if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
-                  if (col.id === 'Codigo') cellSx = { ...cellSx, minWidth: 80, width: 100, maxWidth: 120 };
-                  if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
-                  if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400, whiteSpace: 'pre-line', wordBreak: 'break-word' };
-                  if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
+                  let cellSx = { fontSize: 12, color: '#22336b', py: 0.6, px: 0.8 };
+                  if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
+                  if (col.id === 'Codigo') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'center' };
+                  if (col.id === 'cliente_nombre') cellSx = { ...cellSx, minWidth: 110, width: 120, maxWidth: 140 };
+                  if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+                  if (col.id === 'armador_nombre') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
+                  if (col.id === 'tipo_transporte_nombre') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80 };
+                  if (col.id === 'transporte_nombre') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100 };
+                  if (col.id === 'vendedor_nombre') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
+                  if (col.id === 'cant_bultos') cellSx = { ...cellSx, minWidth: 45, width: 50, maxWidth: 60, textAlign: 'center' };
+                  if (col.id === 'tipo_bultos') cellSx = { ...cellSx, minWidth: 55, width: 65, maxWidth: 75 };
+                  if (col.id === 'fecha_entrega') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100 };
+                  if (col.id === 'estado_nombre') cellSx = { ...cellSx, minWidth: 65, width: 75, maxWidth: 85 };
+                  if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+                  if (col.id === 'acciones') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90, textAlign: 'center' };
                   return col.id === 'acciones' ? (
                     <TableCell key={col.id} sx={cellSx}>
-                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                        <IconButton onClick={() => handleOpen(row)} sx={{ color: '#2563eb', '&:hover': { bgcolor: '#e8f0fe' }, p: 0.7 }} size="small"><Edit fontSize="small" /></IconButton>
-                        <IconButton onClick={() => handleDelete(row.id)} sx={{ color: '#e53935', '&:hover': { bgcolor: '#fdeaea' }, p: 0.7 }} size="small"><Delete fontSize="small" /></IconButton>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0.3 }}>
+                        <IconButton onClick={() => handleOpen(row)} sx={{ color: '#2563eb', '&:hover': { bgcolor: '#e8f0fe' }, p: 0.4 }} size="small"><Edit fontSize="small" /></IconButton>
+                        <IconButton onClick={() => handleDelete(row.id)} sx={{ color: '#e53935', '&:hover': { bgcolor: '#fdeaea' }, p: 0.4 }} size="small"><Delete fontSize="small" /></IconButton>
                       </Box>
                     </TableCell>
                   ) : (
