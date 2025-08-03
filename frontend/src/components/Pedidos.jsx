@@ -182,13 +182,28 @@ export default function Pedidos() {
       setEditRow(null);
       setForm({ comprobante: '', cliente_id: '', Codigo: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_entrega: '', estado_id: '', notas: '' });
       // Refrescar datos
-      API.get('/pedidos', {
-        params: {
-          ...filters,
-          page: page + 1,
-          pageSize
+      const params = {
+        ...filters,
+        page: page + 1,
+        pageSize
+      };
+      
+      // Convertir fecha del formato DD/MM/AAAA al formato YYYY-MM-DD para el backend
+      if (filters.fecha_entrega && filters.fecha_entrega.length === 10) {
+        const fechaParts = filters.fecha_entrega.split('/');
+        if (fechaParts.length === 3) {
+          const [dia, mes, año] = fechaParts;
+          if (dia.length === 2 && mes.length === 2 && año.length === 4) {
+            params.fecha_entrega = `${año}-${mes}-${dia}`;
+          } else {
+            delete params.fecha_entrega;
+          }
         }
-      }).then(res => {
+      } else {
+        delete params.fecha_entrega;
+      }
+      
+      API.get('/pedidos', { params }).then(res => {
         setData(res.data.data);
         setTotal(Number(res.data.total) || 0);
       });
@@ -204,13 +219,28 @@ export default function Pedidos() {
     if (window.confirm('¿Borrar pedido?')) {
       await API.delete(`/pedidos/${id}`);
       // Refrescar datos
-      API.get('/pedidos', {
-        params: {
-          ...filters,
-          page: page + 1,
-          pageSize
+      const params = {
+        ...filters,
+        page: page + 1,
+        pageSize
+      };
+      
+      // Convertir fecha del formato DD/MM/AAAA al formato YYYY-MM-DD para el backend
+      if (filters.fecha_entrega && filters.fecha_entrega.length === 10) {
+        const fechaParts = filters.fecha_entrega.split('/');
+        if (fechaParts.length === 3) {
+          const [dia, mes, año] = fechaParts;
+          if (dia.length === 2 && mes.length === 2 && año.length === 4) {
+            params.fecha_entrega = `${año}-${mes}-${dia}`;
+          } else {
+            delete params.fecha_entrega;
+          }
         }
-      }).then(res => {
+      } else {
+        delete params.fecha_entrega;
+      }
+      
+      API.get('/pedidos', { params }).then(res => {
         setData(res.data.data);
         setTotal(Number(res.data.total) || 0);
       });
@@ -232,13 +262,31 @@ export default function Pedidos() {
 
   // Cargar datos de pedidos con filtros y paginación
   useEffect(() => {
-    API.get('/pedidos', {
-      params: {
-        ...filters,
-        page: page + 1,
-        pageSize
+    const params = {
+      ...filters,
+      page: page + 1,
+      pageSize
+    };
+    
+    // Convertir fecha del formato DD/MM/AAAA al formato YYYY-MM-DD para el backend
+    if (filters.fecha_entrega && filters.fecha_entrega.length === 10) {
+      const fechaParts = filters.fecha_entrega.split('/');
+      if (fechaParts.length === 3) {
+        const [dia, mes, año] = fechaParts;
+        // Validar que sea una fecha válida
+        if (dia.length === 2 && mes.length === 2 && año.length === 4) {
+          params.fecha_entrega = `${año}-${mes}-${dia}`;
+        } else {
+          // Si no está completa, no enviar el filtro
+          delete params.fecha_entrega;
+        }
       }
-    }).then(res => {
+    } else {
+      // Si no está completa, no enviar el filtro
+      delete params.fecha_entrega;
+    }
+    
+    API.get('/pedidos', { params }).then(res => {
       setData(res.data.data);
       setTotal(Number(res.data.total) || 0);
     });
@@ -269,6 +317,30 @@ export default function Pedidos() {
   const handleFilter = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Función específica para manejar el filtro de fecha
+  const handleDateFilter = (e) => {
+    let inputValue = e.target.value;
+    
+    // Solo permitir números y barras
+    inputValue = inputValue.replace(/[^\d/]/g, '');
+    
+    // Agregar barras automáticamente
+    if (inputValue.length >= 2 && inputValue.charAt(2) !== '/') {
+      inputValue = inputValue.slice(0, 2) + '/' + inputValue.slice(2);
+    }
+    if (inputValue.length >= 5 && inputValue.charAt(5) !== '/') {
+      inputValue = inputValue.slice(0, 5) + '/' + inputValue.slice(5);
+    }
+    
+    // Limitar a 10 caracteres (DD/MM/AAAA)
+    if (inputValue.length > 10) {
+      inputValue = inputValue.slice(0, 10);
+    }
+    
+    // Actualizar el estado con el valor formateado
+    setFilters(prev => ({ ...prev, fecha_entrega: inputValue }));
   };
 
   // Función para limpiar los filtros
@@ -423,10 +495,10 @@ export default function Pedidos() {
           size="small"
           name="fecha_entrega"
           value={filters.fecha_entrega}
-          onChange={handleFilter}
-          type="date"
-          InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+          onChange={handleDateFilter}
+          placeholder="DD/MM/AAAA"
+          inputProps={{ maxLength: 10 }}
+          sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
         />
         <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
           <Select name="estado" value={filters.estado} onChange={handleFilter} displayEmpty>
