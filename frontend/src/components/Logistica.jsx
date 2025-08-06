@@ -84,6 +84,20 @@ const Logistica = ({ pedidos, loading }) => {
   const [estados, setEstados] = useState([]);
   const [transportes, setTransportes] = useState([]);
   const [refresh, setRefresh] = useState(false);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    // Cargar pedidos y devoluciones pendientes
+    Promise.all([
+      API.get('/pedidos'),
+      API.get('/devoluciones')
+    ]).then(([pedidosRes, devolucionesRes]) => {
+      // Asume que cada API devuelve { data: [...] }
+      const pedidosPendientes = (pedidosRes.data.data || []).map(p => ({ ...p, origen: 'Pedido' })).filter(p => !p.completado);
+      const devolucionesPendientes = (devolucionesRes.data.data || []).map(d => ({ ...d, origen: 'Devolución' })).filter(d => !d.completado);
+      setData([...pedidosPendientes, ...devolucionesPendientes]);
+    });
+  }, [refresh]);
 
   const handleCompletar = async (item) => {
     if (item.origen === 'Pedido') {
@@ -122,7 +136,9 @@ const Logistica = ({ pedidos, loading }) => {
   };
 
   // Filtrado frontend corregido para usar los nombres directos en lugar de IDs
-  const filteredPedidos = pedidos.filter(p => {
+  // Usar data local si existe, sino usar prop pedidos
+  const pedidosToShow = data.length ? data : pedidos;
+  const filteredPedidos = pedidosToShow.filter(p => {
     const matchComprobante = filters.comprobante === '' || (p.comprobante || '').toLowerCase().includes(filters.comprobante.toLowerCase());
     
     // Para cliente, buscar por nombre ya que el campo 'cliente' contiene el nombre
