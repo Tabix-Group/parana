@@ -71,6 +71,7 @@ const columns = [
   { id: 'fecha', label: 'Fecha' },
   { id: 'estado', label: 'Estado' },
   { id: 'transporte', label: 'Transporte' },
+  { id: 'completado', label: 'Completado' },
 ];
 
 const pageSizes = [10, 15, 25, 50];
@@ -82,6 +83,16 @@ const Logistica = ({ pedidos, loading }) => {
   const [clientes, setClientes] = useState([]);
   const [estados, setEstados] = useState([]);
   const [transportes, setTransportes] = useState([]);
+  const [refresh, setRefresh] = useState(false);
+
+  const handleCompletar = async (item) => {
+    if (item.origen === 'Pedido') {
+      await API.put(`/pedidos/${item.id}/completado`);
+    } else if (item.origen === 'Devolución') {
+      await API.put(`/devoluciones/${item.id}/completado`);
+    }
+    setRefresh(r => !r);
+  };
 
   // Ya no necesitamos cargar los catálogos completos para los filtros de texto
   // useEffect(() => {
@@ -217,9 +228,20 @@ const Logistica = ({ pedidos, loading }) => {
               paginatedPedidos.map((pedido, idx) => (
                 <TableRow key={pedido.id ? `p-${pedido.id}` : `d-${idx}`} sx={{ background: 'background.paper', '&:hover': { background: '#e8f0fe' } }}>
                   {columns.map(col => (
-                    <TableCell key={col.id}>
-                      {col.id === 'fecha' ? formatDate(pedido[col.id]) : (pedido[col.id] ?? '')}
-                    </TableCell>
+                    col.id === 'completado' ? (
+                      <TableCell key={col.id}>
+                        <input
+                          type="checkbox"
+                          checked={pedido.completado}
+                          onChange={() => handleCompletar(pedido)}
+                          disabled={pedido.completado}
+                        />
+                      </TableCell>
+                    ) : (
+                      <TableCell key={col.id}>
+                        {col.id === 'fecha' ? formatDate(pedido[col.id]) : (pedido[col.id] ?? '')}
+                      </TableCell>
+                    )
                   ))}
                 </TableRow>
               ))

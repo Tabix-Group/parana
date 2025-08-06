@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', estado, cliente, comprobante, parcial, fecha_entrega } = req.query;
   // Filtros para ambos queries
-  let baseQuery = db('pedidos');
+  let baseQuery = db('pedidos').where('completado', false);
   if (parcial === 'true') {
     baseQuery = baseQuery.leftJoin('estados', 'pedidos.estado_id', 'estados.id').where('estados.nombre', 'like', '%Parcial%');
   } else if (estado) {
@@ -112,6 +112,12 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
   await db('pedidos').where({ id: req.params.id }).update(req.body);
   res.status(200).json({ success: true });
+
+// Marcar pedido como completado
+router.put('/:id/completado', async (req, res) => {
+  await db('pedidos').where({ id: req.params.id }).update({ completado: true });
+  res.json({ success: true });
+});
 });
 
 // Borrar pedido
