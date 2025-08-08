@@ -7,7 +7,9 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', estado, cliente, comprobante, parcial, fecha_entrega } = req.query;
   // Filtros para ambos queries
-  let baseQuery = db('pedidos').where('completado', false);
+  let baseQuery = db('pedidos').where(function() {
+    this.where('completado', false).orWhereNull('completado');
+  });
   if (parcial === 'true') {
     baseQuery = baseQuery.leftJoin('estados', 'pedidos.estado_id', 'estados.id').where('estados.nombre', 'like', '%Parcial%');
   } else if (estado) {
@@ -22,6 +24,9 @@ router.get('/', async (req, res) => {
 
   // Consulta de conteo (sin joins extra)
   const totalResult = await db('pedidos').modify(qb => {
+    qb.where(function() {
+      this.where('completado', false).orWhereNull('completado');
+    });
     if (parcial === 'true') {
       qb.leftJoin('estados', 'pedidos.estado_id', 'estados.id').where('estados.nombre', 'like', '%Parcial%');
     } else if (estado) {
@@ -49,6 +54,9 @@ router.get('/', async (req, res) => {
 
   // Consulta de datos con joins y paginación
   let query = db('pedidos')
+    .where(function() {
+      this.where('completado', false).orWhereNull('completado');
+    })
     .leftJoin('clientes', 'pedidos.cliente_id', 'clientes.id')
     .leftJoin('armadores', 'pedidos.armador_id', 'armadores.id')
     .leftJoin('tipos_transporte', 'pedidos.tipo_transporte_id', 'tipos_transporte.id')
@@ -88,12 +96,17 @@ router.get('/', async (req, res) => {
 // Crear pedido
 router.post('/', async (req, res) => {
   try {
-    const pedido = req.body;
+    // Asegurar que completado esté definido como false por defecto
+    const pedidoData = {
+      ...req.body,
+      completado: req.body.completado !== undefined ? req.body.completado : false
+    };
+    
     let id;
     if (db.client.config.client === 'pg') {
-      id = (await db('pedidos').insert(pedido).returning('id'))[0].id;
+      id = (await db('pedidos').insert(pedidoData).returning('id'))[0].id;
     } else {
-      id = await db('pedidos').insert(pedido);
+      id = await db('pedidos').insert(pedidoData);
     }
     res.status(200).json({ id });
   } catch (err) {

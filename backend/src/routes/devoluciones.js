@@ -6,10 +6,15 @@ const router = express.Router();
 // Listar devoluciones con paginación y filtro
 router.get('/', async (req, res) => {
   const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', tipo, recibido } = req.query;
-  let query = db('devoluciones').where('completado', false);
+  let query = db('devoluciones').where(function() {
+    this.where('completado', false).orWhereNull('completado');
+  });
   if (tipo) query = query.where('tipo', tipo);
   if (recibido !== undefined) query = query.where('recibido', recibido === 'true');
   const totalResult = await db('devoluciones').modify(qb => {
+    qb.where(function() {
+      this.where('completado', false).orWhereNull('completado');
+    });
     if (tipo) qb.where('tipo', tipo);
     if (recibido !== undefined) qb.where('recibido', recibido === 'true');
   }).count({ count: '*' }).first();
@@ -21,11 +26,17 @@ router.get('/', async (req, res) => {
 // Crear devolucion
 router.post('/', async (req, res) => {
   try {
+    // Asegurar que completado esté definido como false por defecto
+    const devolucionData = {
+      ...req.body,
+      completado: req.body.completado !== undefined ? req.body.completado : false
+    };
+    
     let id;
     if (db.client.config.client === 'pg') {
-      id = (await db('devoluciones').insert(req.body).returning('id'))[0].id;
+      id = (await db('devoluciones').insert(devolucionData).returning('id'))[0].id;
     } else {
-      id = await db('devoluciones').insert(req.body);
+      id = await db('devoluciones').insert(devolucionData);
     }
     res.status(200).json({ id });
   } catch (err) {
