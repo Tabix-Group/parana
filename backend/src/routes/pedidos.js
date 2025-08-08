@@ -54,9 +54,6 @@ router.get('/', async (req, res) => {
 
   // Consulta de datos con joins y paginación
   let query = db('pedidos')
-    .where(function() {
-      this.where('completado', false).orWhereNull('completado');
-    })
     .leftJoin('clientes', 'pedidos.cliente_id', 'clientes.id')
     .leftJoin('armadores', 'pedidos.armador_id', 'armadores.id')
     .leftJoin('tipos_transporte', 'pedidos.tipo_transporte_id', 'tipos_transporte.id')
@@ -96,17 +93,12 @@ router.get('/', async (req, res) => {
 // Crear pedido
 router.post('/', async (req, res) => {
   try {
-    // Asegurar que completado esté definido como false por defecto
-    const pedidoData = {
-      ...req.body,
-      completado: req.body.completado !== undefined ? req.body.completado : false
-    };
-    
+    const pedido = req.body;
     let id;
     if (db.client.config.client === 'pg') {
-      id = (await db('pedidos').insert(pedidoData).returning('id'))[0].id;
+      id = (await db('pedidos').insert(pedido).returning('id'))[0].id;
     } else {
-      id = await db('pedidos').insert(pedidoData);
+      id = await db('pedidos').insert(pedido);
     }
     res.status(200).json({ id });
   } catch (err) {
