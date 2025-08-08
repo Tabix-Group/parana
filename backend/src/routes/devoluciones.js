@@ -6,18 +6,16 @@ const router = express.Router();
 // Listar devoluciones con paginación y filtro
 router.get('/', async (req, res) => {
   const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', tipo, recibido } = req.query;
-  let query = db('devoluciones').where(function() {
-    this.where('completado', false).orWhereNull('completado');
-  });
+  // Para devoluciones, mostrar TODAS (completadas y no completadas)
+  let query = db('devoluciones');
   if (tipo) query = query.where('tipo', tipo);
   if (recibido !== undefined) query = query.where('recibido', recibido === 'true');
+  
   const totalResult = await db('devoluciones').modify(qb => {
-    qb.where(function() {
-      this.where('completado', false).orWhereNull('completado');
-    });
     if (tipo) qb.where('tipo', tipo);
     if (recibido !== undefined) qb.where('recibido', recibido === 'true');
   }).count({ count: '*' }).first();
+  
   const total = totalResult ? totalResult.count : 0;
   const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize).select('*');
   res.json({ data, total });
