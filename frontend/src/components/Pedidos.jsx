@@ -171,7 +171,7 @@ export default function Pedidos() {
   // Guardar pedido (alta o edición)
   const handleSubmit = async () => {
     let submitData = {
-        comprobante: form.comprobante || null,
+        comprobante: form.comprobante || '',
         cliente_id: form.cliente_id || null,
         Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null,
         direccion: form.direccion || null,
