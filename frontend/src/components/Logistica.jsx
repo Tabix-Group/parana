@@ -101,12 +101,27 @@ const Logistica = ({ pedidos, loading }) => {
   }, [refresh]);
 
   const handleCompletar = async (item) => {
-    if (item.origen === 'Pedido') {
-      await API.put(`/pedidos/${item.id}/completado`);
-    } else if (item.origen === 'Devolución') {
-      await API.put(`/devoluciones/${item.id}/completado`);
+    try {
+      if (item.origen === 'Pedido') {
+        // Si ya está completado, lo desmarcamos, si no está completado, lo marcamos
+        if (item.completado) {
+          await API.put(`/pedidos/${item.id}`, { completado: false });
+        } else {
+          await API.put(`/pedidos/${item.id}/completado`);
+        }
+      } else if (item.origen === 'Devolución') {
+        // Si ya está completado, lo desmarcamos, si no está completado, lo marcamos
+        if (item.completado) {
+          await API.put(`/devoluciones/${item.id}`, { completado: false });
+        } else {
+          await API.put(`/devoluciones/${item.id}/completado`);
+        }
+      }
+      setRefresh(r => !r);
+    } catch (error) {
+      console.error('Error al cambiar estado de completado:', error);
+      alert('Error al cambiar el estado: ' + (error.response?.data?.message || error.message));
     }
-    setRefresh(r => !r);
   };
 
   // Ya no necesitamos cargar los catálogos completos para los filtros de texto
@@ -283,7 +298,7 @@ const Logistica = ({ pedidos, loading }) => {
                             type="checkbox"
                             checked={pedido.completado}
                             onChange={() => handleCompletar(pedido)}
-                            disabled={pedido.completado}
+                            title={pedido.completado ? "Marcar como no completado" : "Marcar como completado"}
                           />
                         </TableCell>
                       ) : (
