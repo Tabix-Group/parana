@@ -144,6 +144,20 @@ export async function createTables(db) {
         });
       }
       
+      const hasEnLogistica = await db.schema.hasColumn('pedidos', 'en_logistica');
+      if (!hasEnLogistica) {
+        await db.schema.table('pedidos', t => {
+          t.boolean('en_logistica').defaultTo(false).comment('Si el pedido está enviado a logística');
+        });
+      }
+      
+      const hasCompletado = await db.schema.hasColumn('pedidos', 'completado');
+      if (!hasCompletado) {
+        await db.schema.table('pedidos', t => {
+          t.boolean('completado').defaultTo(false).comment('Si el pedido está completado/entregado');
+        });
+      }
+      
       // Reiniciar la secuencia de auto-incremento para PostgreSQL
       if (db.client.config.client === 'pg') {
         try {
@@ -192,6 +206,20 @@ export async function createTables(db) {
           if (!hasCol) {
             return db.schema.table('devoluciones', t => {
               t.integer('transporte_id').nullable().references('id').inTable('transportes').onDelete('SET NULL');
+            });
+          }
+        }),
+        db.schema.hasColumn('devoluciones', 'en_logistica').then(hasCol => {
+          if (!hasCol) {
+            return db.schema.table('devoluciones', t => {
+              t.boolean('en_logistica').defaultTo(false).comment('Si la devolución está enviada a logística');
+            });
+          }
+        }),
+        db.schema.hasColumn('devoluciones', 'completado').then(hasCol => {
+          if (!hasCol) {
+            return db.schema.table('devoluciones', t => {
+              t.boolean('completado').defaultTo(false).comment('Si la devolución está completada');
             });
           }
         })

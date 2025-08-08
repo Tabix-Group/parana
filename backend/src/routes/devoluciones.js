@@ -61,6 +61,36 @@ router.put('/:id/completado', async (req, res) => {
   res.json({ success: true });
 });
 
+// Obtener devoluciones para logística (las que están marcadas como en_logistica = true)
+router.get('/logistica', async (req, res) => {
+  try {
+    const devoluciones = await db('devoluciones')
+      .select([
+        'devoluciones.*',
+        'clientes.nombre as cliente_nombre',
+        'transportes.nombre as transporte_nombre',
+        'pedidos.comprobante as pedido_comprobante'
+      ])
+      .leftJoin('clientes', 'devoluciones.cliente_id', 'clientes.id')
+      .leftJoin('transportes', 'devoluciones.transporte_id', 'transportes.id')
+      .leftJoin('pedidos', 'devoluciones.pedido_id', 'pedidos.id')
+      .where('devoluciones.en_logistica', true)
+      .orderBy('devoluciones.fecha', 'asc');
+
+    res.json(devoluciones);
+  } catch (error) {
+    console.error('Error al obtener devoluciones de logística:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Marcar/desmarcar devolución para logística
+router.put('/:id/logistica', async (req, res) => {
+  const { en_logistica } = req.body;
+  await db('devoluciones').where({ id: req.params.id }).update({ en_logistica: !!en_logistica });
+  res.json({ success: true });
+});
+
 // Borrar devolucion
 router.delete('/:id', async (req, res) => {
   await db('devoluciones').where({ id: req.params.id }).del();

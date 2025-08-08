@@ -6,10 +6,8 @@ const router = express.Router();
 // Listar pedidos con paginación, filtros y orden
 router.get('/', async (req, res) => {
   const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', estado, cliente, comprobante, parcial, fecha_entrega, fecha_pedido } = req.query;
-  // Filtros para ambos queries
-  let baseQuery = db('pedidos').where(function() {
-    this.where('completado', false).orWhereNull('completado');
-  });
+  // Filtros para ambos queries - mostrar todos los pedidos en la vista principal
+  let baseQuery = db('pedidos');
   if (parcial === 'true') {
     baseQuery = baseQuery.leftJoin('estados', 'pedidos.estado_id', 'estados.id').where('estados.nombre', 'like', '%Parcial%');
   } else if (estado) {
@@ -28,9 +26,6 @@ router.get('/', async (req, res) => {
 
   // Consulta de conteo (sin joins extra)
   const totalResult = await db('pedidos').modify(qb => {
-    qb.where(function() {
-      this.where('completado', false).orWhereNull('completado');
-    });
     if (parcial === 'true') {
       qb.leftJoin('estados', 'pedidos.estado_id', 'estados.id').where('estados.nombre', 'like', '%Parcial%');
     } else if (estado) {
@@ -145,6 +140,44 @@ router.put('/:id', async (req, res) => {
 // Marcar pedido como completado
 router.put('/:id/completado', async (req, res) => {
   await db('pedidos').where({ id: req.params.id }).update({ completado: true });
+  res.json({ success: true });
+});
+
+// Obtener pedidos para logística (los que están marcados como en_logistica = true)
+router.get('/logistica', async (req, res) => {
+  try {
+    const pedidos = await db('pedidos')
+      .select([
+        'pedidos.*',
+        'clientes.nombre as cliente_nombre',
+        'armadores.nombre as armador_nombre',
+        'armadores.apellido as armador_apellido',
+        'estados.nombre as estado_nombre',
+        'tipos_transporte.nombre as tipo_transporte_nombre',
+        'transportes.nombre as transporte_nombre',
+        'vendedores.nombre as vendedor_nombre',
+        'vendedores.apellido as vendedor_apellido'
+      ])
+      .leftJoin('clientes', 'pedidos.cliente_id', 'clientes.id')
+      .leftJoin('armadores', 'pedidos.armador_id', 'armadores.id')
+      .leftJoin('estados', 'pedidos.estado_id', 'estados.id')
+      .leftJoin('tipos_transporte', 'pedidos.tipo_transporte_id', 'tipos_transporte.id')
+      .leftJoin('transportes', 'pedidos.transporte_id', 'transportes.id')
+      .leftJoin('vendedores', 'pedidos.vendedor_id', 'vendedores.id')
+      .where('pedidos.en_logistica', true)
+      .orderBy('pedidos.fecha_entrega', 'asc');
+
+    res.json(pedidos);
+  } catch (error) {
+    console.error('Error al obtener pedidos de logística:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Marcar/desmarcar pedido para logística
+router.put('/:id/logistica', async (req, res) => {
+  const { en_logistica } = req.body;
+  await db('pedidos').where({ id: req.params.id }).update({ en_logistica: !!en_logistica });
   res.json({ success: true });
 });
 
