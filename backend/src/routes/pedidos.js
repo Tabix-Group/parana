@@ -125,24 +125,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Obtener pedido por id
-router.get('/:id', async (req, res) => {
-  const pedido = await db('pedidos').where({ id: req.params.id }).first();
-  res.json(pedido);
-});
-
-// Editar pedido
-router.put('/:id', async (req, res) => {
-  await db('pedidos').where({ id: req.params.id }).update(req.body);
-  res.status(200).json({ success: true });
-});
-
-// Marcar pedido como completado
-router.put('/:id/completado', async (req, res) => {
-  await db('pedidos').where({ id: req.params.id }).update({ completado: true });
-  res.json({ success: true });
-});
-
 // Obtener pedidos para logística (los que están marcados como en_logistica = true)
 router.get('/logistica', async (req, res) => {
   try {
@@ -174,11 +156,29 @@ router.get('/logistica', async (req, res) => {
   }
 });
 
+// Obtener pedido por id
+router.get('/:id', async (req, res) => {
+  const pedido = await db('pedidos').where({ id: req.params.id }).first();
+  res.json(pedido);
+});
+
 // Marcar/desmarcar pedido para logística
 router.put('/:id/logistica', async (req, res) => {
   const { en_logistica } = req.body;
   await db('pedidos').where({ id: req.params.id }).update({ en_logistica: !!en_logistica });
   res.json({ success: true });
+});
+
+// Marcar pedido como completado
+router.put('/:id/completado', async (req, res) => {
+  await db('pedidos').where({ id: req.params.id }).update({ completado: true });
+  res.json({ success: true });
+});
+
+// Editar pedido
+router.put('/:id', async (req, res) => {
+  await db('pedidos').where({ id: req.params.id }).update(req.body);
+  res.status(200).json({ success: true });
 });
 
 // Borrar pedido

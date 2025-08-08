@@ -43,24 +43,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Obtener devolucion por id
-router.get('/:id', async (req, res) => {
-  const devolucion = await db('devoluciones').where({ id: req.params.id }).first();
-  res.json(devolucion);
-});
-
-// Editar devolucion
-router.put('/:id', async (req, res) => {
-  await db('devoluciones').where({ id: req.params.id }).update(req.body);
-  res.status(200).json({ success: true });
-});
-
-// Marcar devolución como completada
-router.put('/:id/completado', async (req, res) => {
-  await db('devoluciones').where({ id: req.params.id }).update({ completado: true });
-  res.json({ success: true });
-});
-
 // Obtener devoluciones para logística (las que están marcadas como en_logistica = true)
 router.get('/logistica', async (req, res) => {
   try {
@@ -84,11 +66,29 @@ router.get('/logistica', async (req, res) => {
   }
 });
 
+// Obtener devolucion por id
+router.get('/:id', async (req, res) => {
+  const devolucion = await db('devoluciones').where({ id: req.params.id }).first();
+  res.json(devolucion);
+});
+
 // Marcar/desmarcar devolución para logística
 router.put('/:id/logistica', async (req, res) => {
   const { en_logistica } = req.body;
   await db('devoluciones').where({ id: req.params.id }).update({ en_logistica: !!en_logistica });
   res.json({ success: true });
+});
+
+// Marcar devolución como completada
+router.put('/:id/completado', async (req, res) => {
+  await db('devoluciones').where({ id: req.params.id }).update({ completado: true });
+  res.json({ success: true });
+});
+
+// Editar devolucion
+router.put('/:id', async (req, res) => {
+  await db('devoluciones').where({ id: req.params.id }).update(req.body);
+  res.status(200).json({ success: true });
 });
 
 // Borrar devolucion
