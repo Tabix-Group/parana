@@ -226,7 +226,7 @@ const Logistica = ({ pedidos, loading }) => {
       (filters.completado === 'pendiente' && !p.completado) ||
       (filters.completado === 'completado' && p.completado);
     
-    return matchComprobante && matchCliente && matchFecha && matchFechaPedido && matchEstado && matchTransporte && matchOrigen && matchCompletado;
+    return matchComprobante && matchCliente && matchFecha && matchFechaPedido && matchTransporte && matchOrigen && matchCompletado;
   });
   const paginatedPedidos = filteredPedidos.slice(page * pageSize, page * pageSize + pageSize);
 
