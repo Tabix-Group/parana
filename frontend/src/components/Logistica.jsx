@@ -80,7 +80,16 @@ const pageSizes = [10, 15, 25, 50];
 const Logistica = ({ pedidos, loading }) => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState({ comprobante: '', cliente: '', fecha_pedido: '', fecha_entrega: '', estado: '', transporte: '', origen: '' });
+  const [filters, setFilters] = useState({ 
+    comprobante: '', 
+    cliente: '', 
+    fecha_pedido: '', 
+    fecha_entrega: '', 
+    estado: '', 
+    transporte: '', 
+    origen: '',
+    completado: 'pendiente' // Default: mostrar solo pendientes
+  });
   const [clientes, setClientes] = useState([]);
   const [estados, setEstados] = useState([]);
   const [transportes, setTransportes] = useState([]);
@@ -160,7 +169,16 @@ const Logistica = ({ pedidos, loading }) => {
     }
   };
   const handleClearFilters = () => {
-    setFilters({ comprobante: '', cliente: '', fecha_pedido: '', fecha_entrega: '', estado: '', transporte: '', origen: '' });
+    setFilters({ 
+      comprobante: '', 
+      cliente: '', 
+      fecha_pedido: '', 
+      fecha_entrega: '', 
+      estado: '', 
+      transporte: '', 
+      origen: '',
+      completado: 'pendiente' // Mantener pendiente como default al limpiar
+    });
     setPage(0);
   };
 
@@ -207,7 +225,13 @@ const Logistica = ({ pedidos, loading }) => {
     // Filtro por origen si existe
     const matchOrigen = !filters.origen || filters.origen === '' || p.origen === filters.origen;
     
-    return matchComprobante && matchCliente && matchFecha && matchFechaPedido && matchEstado && matchTransporte && matchOrigen;
+    // Filtro por estado de completado
+    const matchCompletado = 
+      filters.completado === '' || 
+      (filters.completado === 'pendiente' && !p.completado) ||
+      (filters.completado === 'completado' && p.completado);
+    
+    return matchComprobante && matchCliente && matchFecha && matchFechaPedido && matchEstado && matchTransporte && matchOrigen && matchCompletado;
   });
   const paginatedPedidos = filteredPedidos.slice(page * pageSize, page * pageSize + pageSize);
 
@@ -272,6 +296,13 @@ const Logistica = ({ pedidos, loading }) => {
             <MenuItem value="">Todos</MenuItem>
             <MenuItem value="Pedido">Pedido</MenuItem>
             <MenuItem value="Devolución">Devolución</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
+          <Select name="completado" value={filters.completado || 'pendiente'} onChange={e => { setFilters(f => ({ ...f, completado: e.target.value })); setPage(0); }} displayEmpty>
+            <MenuItem value="">Todos</MenuItem>
+            <MenuItem value="pendiente">Pendientes</MenuItem>
+            <MenuItem value="completado">Completados</MenuItem>
           </Select>
         </FormControl>
         <Button onClick={handleClearFilters} sx={{ fontWeight: 500, px: 2, py: 1.2, borderRadius: 2 }}>Limpiar filtros</Button>
