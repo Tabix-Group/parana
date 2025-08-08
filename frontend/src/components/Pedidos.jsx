@@ -510,21 +510,21 @@ export default function Pedidos() {
                   letterSpacing: 0.1,
                   py: 0.6
                 };
-                if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80 };
-                if (col.id === 'Codigo') cellSx = { ...cellSx, minWidth: 50, width: 60, maxWidth: 70 };
-                if (col.id === 'cliente_nombre') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120 };
-                if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100 };
-                if (col.id === 'armador_nombre') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80 };
-                if (col.id === 'tipo_transporte_nombre') cellSx = { ...cellSx, minWidth: 50, width: 60, maxWidth: 70 };
-                if (col.id === 'transporte_nombre') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
-                if (col.id === 'vendedor_nombre') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80 };
-                if (col.id === 'cant_bultos') cellSx = { ...cellSx, minWidth: 35, width: 40, maxWidth: 50 };
-                if (col.id === 'tipo_bultos') cellSx = { ...cellSx, minWidth: 45, width: 55, maxWidth: 65 };
-                if (col.id === 'fecha_pedido') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
-                if (col.id === 'fecha_entrega') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
-                if (col.id === 'estado_nombre') cellSx = { ...cellSx, minWidth: 55, width: 65, maxWidth: 75 };
-                if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 100 };
-                if (col.id === 'acciones') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80 };
+                if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'left' };
+                if (col.id === 'Codigo') cellSx = { ...cellSx, minWidth: 50, width: 60, maxWidth: 70, textAlign: 'left' };
+                if (col.id === 'cliente_nombre') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120, textAlign: 'left' };
+                if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, textAlign: 'left' };
+                if (col.id === 'armador_nombre') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'left' };
+                if (col.id === 'tipo_transporte_nombre') cellSx = { ...cellSx, minWidth: 50, width: 60, maxWidth: 70, textAlign: 'left' };
+                if (col.id === 'transporte_nombre') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90, textAlign: 'left' };
+                if (col.id === 'vendedor_nombre') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'left' };
+                if (col.id === 'cant_bultos') cellSx = { ...cellSx, minWidth: 35, width: 40, maxWidth: 50, textAlign: 'left' };
+                if (col.id === 'tipo_bultos') cellSx = { ...cellSx, minWidth: 45, width: 55, maxWidth: 65, textAlign: 'left' };
+                if (col.id === 'fecha_pedido') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90, textAlign: 'left' };
+                if (col.id === 'fecha_entrega') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90, textAlign: 'left' };
+                if (col.id === 'estado_nombre') cellSx = { ...cellSx, minWidth: 55, width: 65, maxWidth: 75, textAlign: 'left' };
+                if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 100, textAlign: 'left' };
+                if (col.id === 'acciones') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'center' };
                 if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90, textAlign: 'center' };
                 return (
                   <TableCell
@@ -553,20 +553,20 @@ export default function Pedidos() {
                   if (col.id === 'tipo_bultos') return null;
                   
                   let cellSx = { fontSize: 10, color: '#22336b', py: 0.4, px: 0.6 };
-                  if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80 };
-                  if (col.id === 'Codigo') cellSx = { ...cellSx, minWidth: 50, width: 60, maxWidth: 70, textAlign: 'center' };
-                  if (col.id === 'cliente_nombre') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120 };
-                  if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
-                  if (col.id === 'armador_nombre') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80 };
-                  if (col.id === 'tipo_transporte_nombre') cellSx = { ...cellSx, minWidth: 50, width: 60, maxWidth: 70 };
-                  if (col.id === 'transporte_nombre') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
-                  if (col.id === 'vendedor_nombre') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80 };
-                  if (col.id === 'cant_bultos') cellSx = { ...cellSx, minWidth: 35, width: 40, maxWidth: 50, textAlign: 'center' };
-                  if (col.id === 'tipo_bultos') cellSx = { ...cellSx, minWidth: 45, width: 55, maxWidth: 65 };
-                  if (col.id === 'fecha_pedido') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
-                  if (col.id === 'fecha_entrega') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
-                  if (col.id === 'estado_nombre') cellSx = { ...cellSx, minWidth: 55, width: 65, maxWidth: 75 };
-                  if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 100, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+                  if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'left' };
+                  if (col.id === 'Codigo') cellSx = { ...cellSx, minWidth: 50, width: 60, maxWidth: 70, textAlign: 'left' };
+                  if (col.id === 'cliente_nombre') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120, textAlign: 'left' };
+                  if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' };
+                  if (col.id === 'armador_nombre') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'left' };
+                  if (col.id === 'tipo_transporte_nombre') cellSx = { ...cellSx, minWidth: 50, width: 60, maxWidth: 70, textAlign: 'left' };
+                  if (col.id === 'transporte_nombre') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90, textAlign: 'left' };
+                  if (col.id === 'vendedor_nombre') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'left' };
+                  if (col.id === 'cant_bultos') cellSx = { ...cellSx, minWidth: 35, width: 40, maxWidth: 50, textAlign: 'left' };
+                  if (col.id === 'tipo_bultos') cellSx = { ...cellSx, minWidth: 45, width: 55, maxWidth: 65, textAlign: 'left' };
+                  if (col.id === 'fecha_pedido') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90, textAlign: 'left' };
+                  if (col.id === 'fecha_entrega') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90, textAlign: 'left' };
+                  if (col.id === 'estado_nombre') cellSx = { ...cellSx, minWidth: 55, width: 65, maxWidth: 75, textAlign: 'left' };
+                  if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 100, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' };
                   if (col.id === 'acciones') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'center' };
                   if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, textAlign: 'center' };
                   

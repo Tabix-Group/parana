@@ -236,7 +236,8 @@ export default function Devoluciones() {
                   borderBottom: '2px solid #e0e3e7',
                   background: '#f6f8fa',
                   letterSpacing: 0.2,
-                  py: 0.6
+                  py: 0.6,
+                  textAlign: 'left'
                 };
                 if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 100 };
                 if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 120, width: 150, maxWidth: 200 };
@@ -261,12 +262,12 @@ export default function Devoluciones() {
                   }}
                 >
                   {columns.map(col => {
-                    let cellSx = { fontSize: 10, color: '#22336b', py: 0.4, px: 0.6 };
+                    let cellSx = { fontSize: 10, color: '#22336b', py: 0.4, px: 0.6, textAlign: 'left' };
                     if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 100 };
                     if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 120, width: 150, maxWidth: 200 };
                     if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 120, width: 180, maxWidth: 250, whiteSpace: 'pre-line', wordBreak: 'break-word' };
                     if (col.id === 'texto') cellSx = { ...cellSx, minWidth: 300, width: 400, maxWidth: 600, whiteSpace: 'pre-line', wordBreak: 'break-word' };
-                    if (col.id === 'acciones') cellSx = { minWidth: 70, textAlign: 'center' };
+                    if (col.id === 'acciones') cellSx = { ...cellSx, minWidth: 70, textAlign: 'center' };
                     if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'center' };
                     if (col.id === 'pedido_id') {
                       // Buscar el comprobante del pedido

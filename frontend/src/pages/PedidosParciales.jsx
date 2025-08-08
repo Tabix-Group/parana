@@ -175,7 +175,8 @@ export default function PedidosParciales() {
                   borderBottom: '2px solid #e0e3e7',
                   background: '#f6f8fa',
                   letterSpacing: 0.2,
-                  py: 0.6
+                  py: 0.6,
+                  textAlign: 'left'
                 };
                 return (
                   <TableCell key={col.id} sx={cellSx}>{col.label}</TableCell>
@@ -187,7 +188,7 @@ export default function PedidosParciales() {
             {filteredData.map((row, idx) => (
               <TableRow key={row.comprobante} sx={{ background: idx % 2 === 0 ? '#fff' : '#f8fafc', '&:hover': { background: '#e8f0fe' } }}>
                 {columns.map(col => (
-                  <TableCell key={col.id} sx={{ fontSize: 10, py: 0.4, px: 0.6 }}>
+                  <TableCell key={col.id} sx={{ fontSize: 10, py: 0.4, px: 0.6, textAlign: 'left' }}>
                     {col.id === 'fecha_entrega' || col.id === 'fecha_pedido' ? formatDate(row[col.id]) : row[col.id]}
                   </TableCell>
                 ))}
