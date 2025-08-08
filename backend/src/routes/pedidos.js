@@ -5,7 +5,7 @@ const router = express.Router();
 
 // Listar pedidos con paginación, filtros y orden
 router.get('/', async (req, res) => {
-  const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', estado, cliente, comprobante, parcial, fecha_entrega } = req.query;
+  const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', estado, cliente, comprobante, parcial, fecha_entrega, fecha_pedido } = req.query;
   // Filtros para ambos queries
   let baseQuery = db('pedidos').where(function() {
     this.where('completado', false).orWhereNull('completado');
@@ -20,6 +20,10 @@ router.get('/', async (req, res) => {
   if (fecha_entrega) {
     // Usar comparación directa de fecha sin conversiones UTC problemáticas
     baseQuery = baseQuery.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fecha_entrega]);
+  }
+  if (fecha_pedido) {
+    // Usar comparación directa de fecha sin conversiones UTC problemáticas
+    baseQuery = baseQuery.whereRaw('DATE(pedidos.fecha_pedido) = ?', [fecha_pedido]);
   }
 
   // Consulta de conteo (sin joins extra)
@@ -46,6 +50,21 @@ router.get('/', async (req, res) => {
           this.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fechaFiltro])
               .orWhereRaw('pedidos.fecha_entrega = ?', [fechaFiltro])
               .orWhereRaw('DATE(pedidos.fecha_entrega) = DATE(?)', [fecha_entrega]);
+        });
+      }
+    }
+    if (fecha_pedido) {
+      // Manejo específico para PostgreSQL vs SQLite
+      if (db.client.config.client === 'pg') {
+        // PostgreSQL: usar comparación directa de fecha
+        qb.whereRaw('DATE(pedidos.fecha_pedido) = ?', [fecha_pedido]);
+      } else {
+        // SQLite: usar método robusto con múltiples comparaciones
+        const fechaFiltro = new Date(fecha_pedido + 'T00:00:00.000Z').toISOString().split('T')[0];
+        qb.where(function() {
+          this.whereRaw('DATE(pedidos.fecha_pedido) = ?', [fechaFiltro])
+              .orWhereRaw('pedidos.fecha_pedido = ?', [fechaFiltro])
+              .orWhereRaw('DATE(pedidos.fecha_pedido) = DATE(?)', [fecha_pedido]);
         });
       }
     }
@@ -85,6 +104,10 @@ router.get('/', async (req, res) => {
   if (fecha_entrega) {
     // Usar comparación directa de fecha sin conversiones UTC problemáticas
     query = query.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fecha_entrega]);
+  }
+  if (fecha_pedido) {
+    // Usar comparación directa de fecha sin conversiones UTC problemáticas
+    query = query.whereRaw('DATE(pedidos.fecha_pedido) = ?', [fecha_pedido]);
   }
   const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
   res.json({ data, total });

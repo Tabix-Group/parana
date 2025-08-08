@@ -269,6 +269,7 @@ export default function Pedidos() {
   const [filters, setFilters] = useState({
     comprobante: '',
     cliente: '',
+    fecha_pedido: '',
     fecha_entrega: '',
     estado: ''
   });
@@ -317,7 +318,7 @@ export default function Pedidos() {
 
   // Función para limpiar los filtros
   const handleClearFilters = () => {
-    setFilters({ comprobante: '', cliente: '', fecha_entrega: '', estado: '' });
+    setFilters({ comprobante: '', cliente: '', fecha_pedido: '', fecha_entrega: '', estado: '' });
   };
 
   // Función de sorting (placeholder por ahora)
@@ -465,10 +466,21 @@ export default function Pedidos() {
         </FormControl>
         <TextField
           size="small"
+          name="fecha_pedido"
+          value={filters.fecha_pedido}
+          onChange={handleFilter}
+          type="date"
+          label="Fecha Pedido"
+          InputLabelProps={{ shrink: true }}
+          sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+        />
+        <TextField
+          size="small"
           name="fecha_entrega"
           value={filters.fecha_entrega}
           onChange={handleFilter}
           type="date"
+          label="Fecha Entrega"
           InputLabelProps={{ shrink: true }}
           sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
         />
