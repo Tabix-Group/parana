@@ -1,3 +1,44 @@
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+  // Exportar a Excel
+  const handleExportExcel = () => {
+    const exportData = filteredPedidos.map(p => {
+      const row = {};
+      columns.forEach(col => {
+        if (col.id !== 'tipo' && col.id !== 'tipo_devolucion') {
+          if (col.id === 'fecha' || col.id === 'fecha_pedido') {
+            row[col.label] = formatDate(p[col.id]);
+          } else if (col.id === 'completado') {
+            row[col.label] = p.completado ? 'Sí' : 'No';
+          } else {
+            row[col.label] = p[col.id] ?? '';
+          }
+        }
+      });
+      return row;
+    });
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Logistica');
+    XLSX.writeFile(wb, 'logistica.xlsx');
+  };
+
+  // Exportar a PDF
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const tableColumn = columns.filter(col => col.id !== 'tipo' && col.id !== 'tipo_devolucion').map(col => col.label);
+    const tableRows = filteredPedidos.map(p =>
+      tableColumn.map(label => {
+        const col = columns.find(c => c.label === label);
+        if (col.id === 'fecha' || col.id === 'fecha_pedido') return formatDate(p[col.id]);
+        if (col.id === 'completado') return p.completado ? 'Sí' : 'No';
+        return p[col.id] ?? '';
+      })
+    );
+    doc.autoTable({ head: [tableColumn], body: tableRows });
+    doc.save('logistica.pdf');
+  };
   const handleChangePage = (_, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
 import React, { useState, useEffect } from 'react';
@@ -232,8 +273,14 @@ const Logistica = ({ pedidos, loading }) => {
 
   return (
     <>
-      {/* Filtros en una sola fila arriba de la tabla */}
+      {/* Filtros y exportar */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'nowrap', overflowX: 'auto', alignItems: 'center' }}>
+        <Button onClick={handleExportExcel} variant="outlined" sx={{ fontWeight: 500, px: 2, py: 1, borderRadius: 2 }}>
+          Exportar Excel
+        </Button>
+        <Button onClick={handleExportPDF} variant="outlined" sx={{ fontWeight: 500, px: 2, py: 1, borderRadius: 2 }}>
+          Exportar PDF
+        </Button>
 
         <TextField
           size="small"
@@ -279,7 +326,6 @@ const Logistica = ({ pedidos, loading }) => {
           onChange={handleFilter}
           placeholder="Transporte"
           sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
-        />
         />
         <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
           <Select name="origen" value={filters.origen || ''} onChange={e => { setFilters(f => ({ ...f, origen: e.target.value })); setPage(0); }} displayEmpty>
