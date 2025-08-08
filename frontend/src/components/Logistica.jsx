@@ -88,34 +88,47 @@ const Logistica = ({ pedidos, loading }) => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    // Cargar pedidos y devoluciones pendientes
+    // Cargar solo pedidos y devoluciones que están en logística
     Promise.all([
-      API.get('/pedidos'),
-      API.get('/devoluciones')
+      API.get('/pedidos/logistica'),
+      API.get('/devoluciones/logistica')
     ]).then(([pedidosRes, devolucionesRes]) => {
-      // Asume que cada API devuelve { data: [...] }
-      const pedidosPendientes = (pedidosRes.data.data || []).map(p => ({ ...p, origen: 'Pedido' })).filter(p => !p.completado);
-      const devolucionesPendientes = (devolucionesRes.data.data || []).map(d => ({ ...d, origen: 'Devolución' })).filter(d => !d.completado);
-      setData([...pedidosPendientes, ...devolucionesPendientes]);
+      // Mapear pedidos en logística
+      const pedidosEnLogistica = (pedidosRes.data || []).map(p => ({ 
+        ...p, 
+        origen: 'Pedido',
+        cliente: p.cliente_nombre,
+        transporte: p.transporte_nombre,
+        fecha: p.fecha_entrega,
+        direccion: p.direccion,
+        cantidad: p.cant_bultos
+      }));
+      
+      // Mapear devoluciones en logística
+      const devolucionesEnLogistica = (devolucionesRes.data || []).map(d => ({ 
+        ...d, 
+        origen: 'Devolución',
+        cliente: d.cliente_nombre,
+        transporte: d.transporte_nombre,
+        comprobante: d.pedido_comprobante || '',
+        direccion: d.direccion || '',
+        cantidad: ''
+      }));
+      
+      setData([...pedidosEnLogistica, ...devolucionesEnLogistica]);
+    }).catch(error => {
+      console.error('Error al cargar datos de logística:', error);
     });
   }, [refresh]);
 
   const handleCompletar = async (item) => {
     try {
       if (item.origen === 'Pedido') {
-        // Si ya está completado, lo desmarcamos, si no está completado, lo marcamos
-        if (item.completado) {
-          await API.put(`/pedidos/${item.id}`, { completado: false });
-        } else {
-          await API.put(`/pedidos/${item.id}/completado`);
-        }
+        // Alternar el estado de completado
+        await API.put(`/pedidos/${item.id}/completado`);
       } else if (item.origen === 'Devolución') {
-        // Si ya está completado, lo desmarcamos, si no está completado, lo marcamos
-        if (item.completado) {
-          await API.put(`/devoluciones/${item.id}`, { completado: false });
-        } else {
-          await API.put(`/devoluciones/${item.id}/completado`);
-        }
+        // Alternar el estado de completado
+        await API.put(`/devoluciones/${item.id}/completado`);
       }
       setRefresh(r => !r);
     } catch (error) {
@@ -296,7 +309,7 @@ const Logistica = ({ pedidos, loading }) => {
                         <TableCell key={col.id} sx={{ fontSize: 10, py: 0.4, px: 0.6, textAlign: 'center' }}>
                           <input
                             type="checkbox"
-                            checked={pedido.completado}
+                            checked={!!pedido.completado}
                             onChange={() => handleCompletar(pedido)}
                             title={pedido.completado ? "Marcar como no completado" : "Marcar como completado"}
                           />

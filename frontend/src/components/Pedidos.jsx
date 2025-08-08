@@ -237,13 +237,9 @@ export default function Pedidos() {
   // Manejar cambio de estado en logística
   const handleLogisticaToggle = async (id, enLogistica) => {
     try {
-      if (enLogistica) {
-        // Si está marcado para logística, asegurar que no esté completado
-        await API.put(`/pedidos/${id}`, { completado: false });
-      } else {
-        // Si no está marcado para logística, marcarlo como completado para quitarlo
-        await API.put(`/pedidos/${id}/completado`);
-      }
+      // Usar el nuevo endpoint específico para logística
+      await API.put(`/pedidos/${id}/logistica`, { en_logistica: enLogistica });
+      
       // Refrescar datos
       API.get('/pedidos', {
         params: {
@@ -583,7 +579,7 @@ export default function Pedidos() {
                     return (
                       <TableCell key={col.id} sx={cellSx}>
                         <Checkbox
-                          checked={!row.completado}
+                          checked={row.en_logistica || false}
                           onChange={(e) => handleLogisticaToggle(row.id, e.target.checked)}
                           size="small"
                           sx={{ 
@@ -591,7 +587,7 @@ export default function Pedidos() {
                             '&.Mui-checked': { color: '#2563eb' },
                             '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.04)' }
                           }}
-                          title={!row.completado ? "Quitar de logística" : "Enviar a logística"}
+                          title={row.en_logistica ? "Quitar de logística" : "Enviar a logística"}
                         />
                       </TableCell>
                     );
