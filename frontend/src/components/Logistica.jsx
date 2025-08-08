@@ -1,6 +1,21 @@
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import React, { useState, useEffect } from 'react';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Box, TablePagination, TextField, FormControl, Select, MenuItem, Button, Autocomplete, Menu, ListItemIcon, ListItemText } from '@mui/material';
+import DownloadIcon from '@mui/icons-material/Download';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import TableViewIcon from '@mui/icons-material/TableView';
+  // Dropdown exportación
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  const handleExportClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleExportClose = () => {
+    setAnchorEl(null);
+  };
+
   // Exportar a Excel
   const handleExportExcel = () => {
     const exportData = filteredPedidos.map(p => {
@@ -22,6 +37,7 @@ import 'jspdf-autotable';
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Logistica');
     XLSX.writeFile(wb, 'logistica.xlsx');
+    handleExportClose();
   };
 
   // Exportar a PDF
@@ -38,6 +54,7 @@ import 'jspdf-autotable';
     );
     doc.autoTable({ head: [tableColumn], body: tableRows });
     doc.save('logistica.pdf');
+    handleExportClose();
   };
   const handleChangePage = (_, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
@@ -275,12 +292,24 @@ const Logistica = ({ pedidos, loading }) => {
     <>
       {/* Filtros y exportar */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'nowrap', overflowX: 'auto', alignItems: 'center' }}>
-        <Button onClick={handleExportExcel} variant="outlined" sx={{ fontWeight: 500, px: 2, py: 1, borderRadius: 2 }}>
-          Exportar Excel
+        <Button
+          variant="outlined"
+          onClick={handleExportClick}
+          startIcon={<DownloadIcon />}
+          sx={{ fontWeight: 500, px: 2, py: 1, borderRadius: 2 }}
+        >
+          Exportar
         </Button>
-        <Button onClick={handleExportPDF} variant="outlined" sx={{ fontWeight: 500, px: 2, py: 1, borderRadius: 2 }}>
-          Exportar PDF
-        </Button>
+        <Menu anchorEl={anchorEl} open={open} onClose={handleExportClose}>
+          <MenuItem onClick={handleExportExcel}>
+            <ListItemIcon><TableViewIcon fontSize="small" /></ListItemIcon>
+            <ListItemText>Excel</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={handleExportPDF}>
+            <ListItemIcon><PictureAsPdfIcon fontSize="small" /></ListItemIcon>
+            <ListItemText>PDF</ListItemText>
+          </MenuItem>
+        </Menu>
 
         <TextField
           size="small"
