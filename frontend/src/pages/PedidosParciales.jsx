@@ -39,6 +39,7 @@ const columns = [
   { id: 'comprobante', label: 'Comprobante' },
   { id: 'cliente_nombre', label: 'Cliente' },
   { id: 'direccion', label: 'Dirección' },
+  { id: 'fecha_pedido', label: 'Fecha Pedido' },
   { id: 'fecha_entrega', label: 'Fecha Entrega' },
   { id: 'notas', label: 'Notas' }
 ];
@@ -70,7 +71,7 @@ export default function PedidosParciales() {
     const exportData = data.map(row => {
       const obj = {};
       columns.forEach(col => {
-        obj[col.label] = col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id];
+        obj[col.label] = col.id === 'fecha_entrega' || col.id === 'fecha_pedido' ? formatDate(row[col.id]) : row[col.id];
       });
       return obj;
     });
@@ -89,7 +90,7 @@ export default function PedidosParciales() {
     
     const exportData = data.map(row => {
       return columns.map(col => {
-        if (col.id === 'fecha_entrega') {
+        if (col.id === 'fecha_entrega' || col.id === 'fecha_pedido') {
           return formatDate(row[col.id]);
         }
         return row[col.id] || '';
@@ -104,15 +105,12 @@ export default function PedidosParciales() {
       startY: 25,
       margin: { left: 10, right: 10 },
       columnStyles: {
-        0: { cellWidth: 25 }, // ID
-        1: { cellWidth: 35 }, // Fecha
-        2: { cellWidth: 40 }, // Cliente
-        3: { cellWidth: 35 }, // Vendedor
-        4: { cellWidth: 30 }, // Estado
-        5: { cellWidth: 40 }, // Armador
-        6: { cellWidth: 35 }, // Tipo Transporte
-        7: { cellWidth: 35 }, // Transporte
-        8: { cellWidth: 40 }, // Observaciones
+        0: { cellWidth: 25 }, // Comprobante
+        1: { cellWidth: 35 }, // Cliente
+        2: { cellWidth: 35 }, // Dirección
+        3: { cellWidth: 20 }, // Fecha Pedido
+        4: { cellWidth: 20 }, // Fecha Entrega
+        5: { cellWidth: 40 }, // Notas
       },
       styles: {
         fontSize: 9,
@@ -189,7 +187,7 @@ export default function PedidosParciales() {
               <TableRow key={row.comprobante} sx={{ background: idx % 2 === 0 ? '#fff' : '#f8fafc', '&:hover': { background: '#e8f0fe' } }}>
                 {columns.map(col => (
                   <TableCell key={col.id}>
-                    {col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id]}
+                    {col.id === 'fecha_entrega' || col.id === 'fecha_pedido' ? formatDate(row[col.id]) : row[col.id]}
                   </TableCell>
                 ))}
               </TableRow>

@@ -68,7 +68,8 @@ const columns = [
   { id: 'cantidad', label: 'Cantidad' },
   { id: 'tipo', label: 'Tipo' },
   { id: 'tipo_devolucion', label: 'Tipo de Devolución' },
-  { id: 'fecha', label: 'Fecha' },
+  { id: 'fecha_pedido', label: 'Fecha Pedido' },
+  { id: 'fecha', label: 'Fecha Entrega' },
   { id: 'estado', label: 'Estado' },
   { id: 'transporte', label: 'Transporte' },
   { id: 'completado', label: 'Completado' },
@@ -264,7 +265,7 @@ const Logistica = ({ pedidos, loading }) => {
                         </TableCell>
                       ) : (
                         <TableCell key={col.id}>
-                          {col.id === 'fecha' ? formatDate(pedido[col.id]) : (pedido[col.id] ?? '')}
+                          {col.id === 'fecha' || col.id === 'fecha_pedido' ? formatDate(pedido[col.id]) : (pedido[col.id] ?? '')}
                         </TableCell>
                       )
                     );
