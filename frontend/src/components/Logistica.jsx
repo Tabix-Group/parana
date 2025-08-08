@@ -234,14 +234,14 @@ const Logistica = ({ pedidos, loading }) => {
     <>
       {/* Filtros en una sola fila arriba de la tabla */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'nowrap', overflowX: 'auto', alignItems: 'center' }}>
-        <TextField
+
           size="small"
           name="comprobante"
           value={filters.comprobante}
           onChange={handleFilter}
           placeholder="Comprobante"
           sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
-        />
+
         <TextField
           size="small"
           name="cliente"
@@ -270,11 +270,7 @@ const Logistica = ({ pedidos, loading }) => {
           InputLabelProps={{ shrink: true }}
           sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
         />
-        <TextField
-          size="small"
         {/* Estado removido */}
-        <TextField
-          size="small"
           name="transporte"
           value={filters.transporte}
           onChange={handleFilter}
