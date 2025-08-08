@@ -228,42 +228,52 @@ const Logistica = ({ pedidos, loading }) => {
         <Table size="small" stickyHeader>
           <TableHead>
             <TableRow>
-              {columns.map(col => (
-                <TableCell key={col.id} sx={{ fontWeight: 700, fontSize: 16 }}>{col.label}</TableCell>
-              ))}
+              {columns.map(col => {
+                // Ocultar las columnas tipo y tipo_devolucion
+                if (col.id === 'tipo' || col.id === 'tipo_devolucion') return null;
+                
+                return (
+                  <TableCell key={col.id} sx={{ fontWeight: 700, fontSize: 16 }}>{col.label}</TableCell>
+                );
+              })}
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} align="center" sx={{ py: 4, color: 'text.disabled' }}>
+                <TableCell colSpan={columns.filter(col => col.id !== 'tipo' && col.id !== 'tipo_devolucion').length} align="center" sx={{ py: 4, color: 'text.disabled' }}>
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : paginatedPedidos && paginatedPedidos.length > 0 ? (
               paginatedPedidos.map((pedido, idx) => (
                 <TableRow key={pedido.id ? `p-${pedido.id}` : `d-${idx}`} sx={{ background: 'background.paper', '&:hover': { background: '#e8f0fe' } }}>
-                  {columns.map(col => (
-                    col.id === 'completado' ? (
-                      <TableCell key={col.id}>
-                        <input
-                          type="checkbox"
-                          checked={pedido.completado}
-                          onChange={() => handleCompletar(pedido)}
-                          disabled={pedido.completado}
-                        />
-                      </TableCell>
-                    ) : (
-                      <TableCell key={col.id}>
-                        {col.id === 'fecha' ? formatDate(pedido[col.id]) : (pedido[col.id] ?? '')}
-                      </TableCell>
-                    )
-                  ))}
+                  {columns.map(col => {
+                    // Ocultar las columnas tipo y tipo_devolucion
+                    if (col.id === 'tipo' || col.id === 'tipo_devolucion') return null;
+                    
+                    return (
+                      col.id === 'completado' ? (
+                        <TableCell key={col.id}>
+                          <input
+                            type="checkbox"
+                            checked={pedido.completado}
+                            onChange={() => handleCompletar(pedido)}
+                            disabled={pedido.completado}
+                          />
+                        </TableCell>
+                      ) : (
+                        <TableCell key={col.id}>
+                          {col.id === 'fecha' ? formatDate(pedido[col.id]) : (pedido[col.id] ?? '')}
+                        </TableCell>
+                      )
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} align="center" sx={{ py: 4, color: 'text.disabled' }}>
+                <TableCell colSpan={columns.filter(col => col.id !== 'tipo' && col.id !== 'tipo_devolucion').length} align="center" sx={{ py: 4, color: 'text.disabled' }}>
                   No hay pedidos para mostrar.
                 </TableCell>
               </TableRow>
