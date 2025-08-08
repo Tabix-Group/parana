@@ -326,22 +326,29 @@ export default function Pedidos() {
 
   // Exportar a Excel
   const handleExportExcel = () => {
+    // Generar datos para exportar
     const exportData = data.map(row => {
       const obj = {};
       columns.forEach(col => {
         if (col.id !== 'acciones' && col.id !== 'tipo_bultos' && col.id !== 'en_logistica') {
-          obj[col.label] = col.id === 'fecha_entrega' || col.id === 'fecha_pedido' ? formatDate(row[col.id]) : row[col.id];
+          obj[col.label] = (col.id === 'fecha_entrega' || col.id === 'fecha_pedido')
+            ? formatDate(row[col.id])
+            : row[col.id];
         }
       });
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'PedidosTotales');
-      const fecha = new Date().toISOString().slice(0,10);
-      XLSX.writeFile(wb, `PedidosTotales_${fecha}.xlsx`);
-    };
+      return obj;
+    });
+    // Crear libro y hoja de cálculo
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'PedidosTotales');
+    // Guardar archivo con fecha
+    const fecha = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `PedidosTotales_${fecha}.xlsx`);
+  };
 
-    // Exportar a PDF
-    const handleExportPDF = () => {
+  // Exportar a PDF
+  const handleExportPDF = () => {
       const doc = new jsPDF('landscape', 'mm', 'a4'); // Orientación apaisada
       const exportData = data.map(row => columns.filter(col => col.id !== 'acciones' && col.id !== 'tipo_bultos' && col.id !== 'en_logistica').map(col => 
         col.id === 'fecha_entrega' || col.id === 'fecha_pedido' ? formatDate(row[col.id]) : row[col.id]
