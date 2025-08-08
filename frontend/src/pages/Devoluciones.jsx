@@ -231,17 +231,18 @@ export default function Devoluciones() {
               {columns.map(col => {
                 let cellSx = {
                   fontWeight: 700,
-                  fontSize: 16,
+                  fontSize: 11,
                   color: '#22336b',
                   borderBottom: '2px solid #e0e3e7',
                   background: '#f6f8fa',
-                  letterSpacing: 0.2
+                  letterSpacing: 0.2,
+                  py: 0.6
                 };
-                if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
-                if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
-                if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400 };
-                if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
-                if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, textAlign: 'center' };
+                if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 100 };
+                if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 120, width: 150, maxWidth: 200 };
+                if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 120, width: 180, maxWidth: 250 };
+                if (col.id === 'acciones') cellSx = { minWidth: 70, textAlign: 'center' };
+                if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'center' };
                 return (
                   <TableCell key={col.id} sx={cellSx}>{col.label}</TableCell>
                 );
@@ -260,13 +261,13 @@ export default function Devoluciones() {
                   }}
                 >
                   {columns.map(col => {
-                    let cellSx = { fontSize: 15, color: '#22336b', py: 1.2, px: 1.5 };
-                    if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 120 };
-                    if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
-                    if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400, whiteSpace: 'pre-line', wordBreak: 'break-word' };
-                    if (col.id === 'texto') cellSx = { ...cellSx, minWidth: 540, width: 600, maxWidth: 900, whiteSpace: 'pre-line', wordBreak: 'break-word' };
-                    if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
-                    if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, textAlign: 'center' };
+                    let cellSx = { fontSize: 10, color: '#22336b', py: 0.4, px: 0.6 };
+                    if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 0, width: '1%', whiteSpace: 'nowrap', maxWidth: 100 };
+                    if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 120, width: 150, maxWidth: 200 };
+                    if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 120, width: 180, maxWidth: 250, whiteSpace: 'pre-line', wordBreak: 'break-word' };
+                    if (col.id === 'texto') cellSx = { ...cellSx, minWidth: 300, width: 400, maxWidth: 600, whiteSpace: 'pre-line', wordBreak: 'break-word' };
+                    if (col.id === 'acciones') cellSx = { minWidth: 70, textAlign: 'center' };
+                    if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'center' };
                     if (col.id === 'pedido_id') {
                       // Buscar el comprobante del pedido
                       const pedido = pedidos.find(p => p.id === row.pedido_id);

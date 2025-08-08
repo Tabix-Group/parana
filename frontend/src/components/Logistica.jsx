@@ -257,7 +257,7 @@ const Logistica = ({ pedidos, loading }) => {
                 if (col.id === 'tipo' || col.id === 'tipo_devolucion') return null;
                 
                 return (
-                  <TableCell key={col.id} sx={{ fontWeight: 700, fontSize: 16 }}>{col.label}</TableCell>
+                  <TableCell key={col.id} sx={{ fontWeight: 700, fontSize: 11, py: 0.6 }}>{col.label}</TableCell>
                 );
               })}
             </TableRow>
@@ -278,7 +278,7 @@ const Logistica = ({ pedidos, loading }) => {
                     
                     return (
                       col.id === 'completado' ? (
-                        <TableCell key={col.id}>
+                        <TableCell key={col.id} sx={{ fontSize: 10, py: 0.4, px: 0.6, textAlign: 'center' }}>
                           <input
                             type="checkbox"
                             checked={pedido.completado}
@@ -287,7 +287,7 @@ const Logistica = ({ pedidos, loading }) => {
                           />
                         </TableCell>
                       ) : (
-                        <TableCell key={col.id}>
+                        <TableCell key={col.id} sx={{ fontSize: 10, py: 0.4, px: 0.6 }}>
                           {col.id === 'fecha' || col.id === 'fecha_pedido' ? formatDate(pedido[col.id]) : (pedido[col.id] ?? '')}
                         </TableCell>
                       )
