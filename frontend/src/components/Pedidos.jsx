@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination,
-  IconButton, Button, TextField, Select, MenuItem, InputLabel, FormControl, Dialog, DialogTitle, DialogContent, DialogActions, Menu, Box, Autocomplete, Checkbox
+  IconButton, Button, TextField, Select, MenuItem, InputLabel, FormControl, Dialog, DialogTitle, DialogContent, DialogActions, Menu, Box, Autocomplete, Checkbox, Typography
 } from '@mui/material';
 import { Edit, Delete, Add, FileDownload } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
@@ -98,6 +98,7 @@ export default function Pedidos() {
   const handleClose = () => {
     setOpen(false);
     setEditRow(null);
+    setClientes([]); // Limpiar lista de clientes
     setForm({ comprobante: '', cliente_id: '', Codigo: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_entrega: '', estado_id: '', notas: '' });
   };
 
@@ -105,24 +106,49 @@ export default function Pedidos() {
   const handleChange = e => {
     const { name, value } = e.target;
     if (name === 'Codigo') {
-      // Buscar por código y autocompletar cliente y dirección
+      // Actualizar el campo código inmediatamente
       setForm(prev => ({ ...prev, Codigo: value }));
-      if (value && value.length > 0 && /^[0-9]{1,5}$/.test(value)) {
+      
+      // Si el valor tiene contenido y es numérico, buscar cliente
+      if (value && value.trim() !== '' && /^[0-9]+$/.test(value)) {
         setClientesLoading(true);
-        API.get('/clientes', { params: { Codigo: value, pageSize: 1 } })
+        API.get('/clientes', { params: { Codigo: value, pageSize: 5 } })
           .then(res => {
-            const cliente = res.data.data[0];
+            const cliente = res.data.data && res.data.data.length > 0 ? res.data.data[0] : null;
             if (cliente) {
+              // Autocompletar todos los datos del cliente
               setForm(prev => ({
                 ...prev,
                 cliente_id: cliente.id,
-                Codigo: cliente.Codigo || '',
+                Codigo: cliente.Codigo || value, // Mantener el código ingresado o usar el del cliente
                 direccion: cliente.direccion || '',
                 cliente_nombre: cliente.nombre || ''
               }));
+              // También agregar el cliente a la lista para el autocomplete
+              setClientes([cliente]);
+            } else {
+              // Si no se encuentra cliente, limpiar los campos relacionados pero mantener el código
+              setForm(prev => ({
+                ...prev,
+                cliente_id: '',
+                direccion: '',
+                cliente_nombre: ''
+              }));
             }
           })
+          .catch(error => {
+            console.error('Error buscando cliente:', error);
+          })
           .finally(() => setClientesLoading(false));
+      } else if (value === '') {
+        // Si se borra el código, limpiar también los datos del cliente
+        setForm(prev => ({
+          ...prev,
+          cliente_id: '',
+          direccion: '',
+          cliente_nombre: ''
+        }));
+        setClientes([]);
       }
     } else if (name === 'cliente_id') {
       const cliente = clientes.find(c => String(c.id) === String(value));
@@ -165,6 +191,7 @@ export default function Pedidos() {
       }
       setOpen(false);
       setEditRow(null);
+      setClientes([]); // Limpiar lista de clientes
       setForm({ comprobante: '', cliente_id: '', Codigo: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_entrega: '', estado_id: '', notas: '' });
       // Refrescar datos
       API.get('/pedidos', {
@@ -589,7 +616,23 @@ export default function Pedidos() {
           {/* Fila 1: Información básica del pedido */}
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
             <TextField label="Comprobante" name="comprobante" value={form.comprobante} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }} />
-            <TextField label="Código" name="Codigo" value={form.Codigo} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }} />
+            <TextField 
+              label="Código" 
+              name="Codigo" 
+              value={form.Codigo} 
+              onChange={handleChange} 
+              fullWidth 
+              InputLabelProps={{ shrink: true }} 
+              sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
+              helperText={clientesLoading ? "Buscando cliente..." : (form.cliente_nombre ? `Cliente: ${form.cliente_nombre}` : "")}
+              InputProps={{
+                endAdornment: clientesLoading ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', pr: 1 }}>
+                    <Typography variant="caption" color="primary">Buscando...</Typography>
+                  </Box>
+                ) : null
+              }}
+            />
             <TextField label="Fecha Entrega" name="fecha_entrega" type="date" value={form.fecha_entrega} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }} />
           </Box>
 

@@ -4,12 +4,20 @@ import { db } from '../index.js';
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', nombre } = req.query;
+  const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', nombre, Codigo } = req.query;
   let query = db('clientes');
+  
+  // Filtro por nombre (búsqueda parcial)
   if (nombre) query = query.where('nombre', 'like', `%${nombre}%`);
+  
+  // Filtro por código (búsqueda exacta)
+  if (Codigo) query = query.where('Codigo', Codigo);
+  
   const totalResult = await db('clientes').modify(qb => {
     if (nombre) qb.where('nombre', 'like', `%${nombre}%`);
+    if (Codigo) qb.where('Codigo', Codigo);
   }).count({ count: '*' }).first();
+  
   const total = totalResult ? totalResult.count : 0;
   const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
   res.json({ data, total });
