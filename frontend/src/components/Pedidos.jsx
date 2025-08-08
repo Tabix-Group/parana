@@ -30,6 +30,7 @@ const columns = [
   { id: 'vendedor_nombre', label: 'Vendedor' },
   { id: 'cant_bultos', label: 'Cant' },
   { id: 'tipo_bultos', label: 'Tipo' },
+  { id: 'fecha_pedido', label: 'Fecha Pedido' },
   { id: 'fecha_entrega', label: 'Fecha Entrega' },
   { id: 'estado_nombre', label: 'Estado' },
   { id: 'notas', label: 'Notas' },
@@ -54,6 +55,7 @@ export default function Pedidos() {
     vendedor_id: '',
     cant_bultos: '',
     tipo_bultos: '',
+    fecha_pedido: '',
     fecha_entrega: '',
     estado_id: '',
     notas: ''
@@ -73,6 +75,7 @@ export default function Pedidos() {
     vendedor_id: row.vendedor_id || '',
     cant_bultos: row.cant_bultos || '',
     tipo_bultos: row.tipo_bultos || '',
+    fecha_pedido: row.fecha_pedido || '',
     fecha_entrega: row.fecha_entrega || '',
     estado_id: row.estado_id || '',
     notas: row.notas || ''
@@ -87,6 +90,7 @@ export default function Pedidos() {
     vendedor_id: '',
     cant_bultos: '',
     tipo_bultos: '',
+    fecha_pedido: '',
     fecha_entrega: '',
     estado_id: '',
     notas: ''
@@ -99,7 +103,7 @@ export default function Pedidos() {
     setOpen(false);
     setEditRow(null);
     setClientes([]); // Limpiar lista de clientes
-    setForm({ comprobante: '', cliente_id: '', Codigo: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_entrega: '', estado_id: '', notas: '' });
+    setForm({ comprobante: '', cliente_id: '', Codigo: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_pedido: '', fecha_entrega: '', estado_id: '', notas: '' });
   };
 
   // Manejar cambios en el form
@@ -179,6 +183,7 @@ export default function Pedidos() {
         vendedor_id: form.vendedor_id || null,
         cant_bultos: form.cant_bultos && form.cant_bultos !== '' ? Number(form.cant_bultos) : null,
         tipo_bultos: form.tipo_bultos || null,
+        fecha_pedido: form.fecha_pedido || null,
         fecha_entrega: form.fecha_entrega || null,
         estado_id: form.estado_id || null,
         notas: form.notas || null
@@ -192,7 +197,7 @@ export default function Pedidos() {
       setOpen(false);
       setEditRow(null);
       setClientes([]); // Limpiar lista de clientes
-      setForm({ comprobante: '', cliente_id: '', Codigo: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_entrega: '', estado_id: '', notas: '' });
+      setForm({ comprobante: '', cliente_id: '', Codigo: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_pedido: '', fecha_entrega: '', estado_id: '', notas: '' });
       // Refrescar datos
       API.get('/pedidos', {
         params: {
@@ -330,7 +335,7 @@ export default function Pedidos() {
       const obj = {};
       columns.forEach(col => {
         if (col.id !== 'acciones' && col.id !== 'tipo_bultos' && col.id !== 'en_logistica') {
-          obj[col.label] = col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id];
+          obj[col.label] = col.id === 'fecha_entrega' || col.id === 'fecha_pedido' ? formatDate(row[col.id]) : row[col.id];
         }
       });
       return obj;
@@ -346,7 +351,7 @@ export default function Pedidos() {
   const handleExportPDF = () => {
     const doc = new jsPDF('landscape', 'mm', 'a4'); // Orientación apaisada
     const exportData = data.map(row => columns.filter(col => col.id !== 'acciones' && col.id !== 'tipo_bultos' && col.id !== 'en_logistica').map(col => 
-      col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id]
+      col.id === 'fecha_entrega' || col.id === 'fecha_pedido' ? formatDate(row[col.id]) : row[col.id]
     ));
     doc.autoTable({
       head: [columns.filter(col => col.id !== 'acciones' && col.id !== 'tipo_bultos' && col.id !== 'en_logistica').map(col => col.label)],
@@ -371,9 +376,10 @@ export default function Pedidos() {
         6: { cellWidth: 25 }, // Transporte
         7: { cellWidth: 20 }, // Vendedor
         8: { cellWidth: 10 }, // Cant
-        9: { cellWidth: 18 }, // Fecha Entrega (ajustado porque se removió tipo_bultos)
-        10: { cellWidth: 15 }, // Estado
-        11: { cellWidth: 30 } // Notas
+        9: { cellWidth: 18 }, // Fecha Pedido
+        10: { cellWidth: 18 }, // Fecha Entrega
+        11: { cellWidth: 15 }, // Estado
+        12: { cellWidth: 30 } // Notas
       },
       margin: { top: 15, left: 10, right: 10 },
       tableWidth: 'auto'
@@ -502,6 +508,7 @@ export default function Pedidos() {
                 if (col.id === 'vendedor_nombre') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
                 if (col.id === 'cant_bultos') cellSx = { ...cellSx, minWidth: 45, width: 50, maxWidth: 60 };
                 if (col.id === 'tipo_bultos') cellSx = { ...cellSx, minWidth: 55, width: 65, maxWidth: 75 };
+                if (col.id === 'fecha_pedido') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100 };
                 if (col.id === 'fecha_entrega') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100 };
                 if (col.id === 'estado_nombre') cellSx = { ...cellSx, minWidth: 65, width: 75, maxWidth: 85 };
                 if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120 };
@@ -544,6 +551,7 @@ export default function Pedidos() {
                   if (col.id === 'vendedor_nombre') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
                   if (col.id === 'cant_bultos') cellSx = { ...cellSx, minWidth: 45, width: 50, maxWidth: 60, textAlign: 'center' };
                   if (col.id === 'tipo_bultos') cellSx = { ...cellSx, minWidth: 55, width: 65, maxWidth: 75 };
+                  if (col.id === 'fecha_pedido') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100 };
                   if (col.id === 'fecha_entrega') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100 };
                   if (col.id === 'estado_nombre') cellSx = { ...cellSx, minWidth: 65, width: 75, maxWidth: 85 };
                   if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
@@ -578,7 +586,7 @@ export default function Pedidos() {
                   } else {
                     return (
                       <TableCell key={col.id} sx={cellSx}>
-                        {col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id]}
+                        {col.id === 'fecha_entrega' || col.id === 'fecha_pedido' ? formatDate(row[col.id]) : row[col.id]}
                       </TableCell>
                     );
                   }
@@ -614,7 +622,7 @@ export default function Pedidos() {
           }}
         >
           {/* Fila 1: Información básica del pedido */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
             <TextField label="Comprobante" name="comprobante" value={form.comprobante} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }} />
             <TextField 
               label="Código" 
@@ -633,6 +641,7 @@ export default function Pedidos() {
                 ) : null
               }}
             />
+            <TextField label="Fecha Pedido" name="fecha_pedido" type="date" value={form.fecha_pedido} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }} />
             <TextField label="Fecha Entrega" name="fecha_entrega" type="date" value={form.fecha_entrega} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }} />
           </Box>
 

@@ -110,6 +110,7 @@ export async function createTables(db) {
         t.integer('vendedor_id').nullable().references('id').inTable('vendedores').onDelete('SET NULL');
         t.integer('cant_bultos');
         t.string('tipo_bultos', 100);
+        t.date('fecha_pedido').nullable().comment('Fecha en que se realizó el pedido');
         t.date('fecha_entrega');
         t.integer('estado_id').nullable().references('id').inTable('estados').onDelete('SET NULL');
         t.text('notas');
@@ -133,6 +134,13 @@ export async function createTables(db) {
       if (!hasCodigo) {
         await db.schema.table('pedidos', t => {
           t.integer('Codigo').nullable().comment('Código del cliente asociado al pedido');
+        });
+      }
+      
+      const hasFechaPedido = await db.schema.hasColumn('pedidos', 'fecha_pedido');
+      if (!hasFechaPedido) {
+        await db.schema.table('pedidos', t => {
+          t.date('fecha_pedido').nullable().comment('Fecha en que se realizó el pedido');
         });
       }
       
