@@ -70,7 +70,6 @@ const columns = [
   { id: 'tipo_devolucion', label: 'Tipo de Devolución' },
   { id: 'fecha_pedido', label: 'Fecha Pedido' },
   { id: 'fecha', label: 'Fecha Entrega' },
-  { id: 'estado', label: 'Estado' },
   { id: 'transporte', label: 'Transporte' },
   { id: 'completado', label: 'Completado' },
 ];
@@ -85,7 +84,6 @@ const Logistica = ({ pedidos, loading }) => {
     cliente: '', 
     fecha_pedido: '', 
     fecha_entrega: '', 
-    estado: '', 
     transporte: '', 
     origen: '',
     completado: 'pendiente' // Default: mostrar solo pendientes
@@ -174,7 +172,6 @@ const Logistica = ({ pedidos, loading }) => {
       cliente: '', 
       fecha_pedido: '', 
       fecha_entrega: '', 
-      estado: '', 
       transporte: '', 
       origen: '',
       completado: 'pendiente' // Mantener pendiente como default al limpiar
@@ -216,8 +213,6 @@ const Logistica = ({ pedidos, loading }) => {
       });
     }
     
-    // Para estado, buscar por nombre ya que el campo 'estado' contiene el nombre
-    const matchEstado = filters.estado === '' || (p.estado || '').toLowerCase().includes(filters.estado.toLowerCase());
     
     // Para transporte, buscar por nombre ya que el campo 'transporte' contiene el nombre
     const matchTransporte = filters.transporte === '' || (p.transporte || '').toLowerCase().includes(filters.transporte.toLowerCase());
@@ -277,12 +272,7 @@ const Logistica = ({ pedidos, loading }) => {
         />
         <TextField
           size="small"
-          name="estado"
-          value={filters.estado}
-          onChange={handleFilter}
-          placeholder="Estado"
-          sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
-        />
+        {/* Estado removido */}
         <TextField
           size="small"
           name="transporte"
