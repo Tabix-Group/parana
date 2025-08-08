@@ -6,60 +6,6 @@ import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow
 import DownloadIcon from '@mui/icons-material/Download';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import TableViewIcon from '@mui/icons-material/TableView';
-  // Dropdown exportación
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
-  const handleExportClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleExportClose = () => {
-    setAnchorEl(null);
-  };
-
-  // Exportar a Excel
-  const handleExportExcel = () => {
-    const exportData = filteredPedidos.map(p => {
-      const row = {};
-      columns.forEach(col => {
-        if (col.id !== 'tipo' && col.id !== 'tipo_devolucion') {
-          if (col.id === 'fecha' || col.id === 'fecha_pedido') {
-            row[col.label] = formatDate(p[col.id]);
-          } else if (col.id === 'completado') {
-            row[col.label] = p.completado ? 'Sí' : 'No';
-          } else {
-            row[col.label] = p[col.id] ?? '';
-          }
-        }
-      });
-      return row;
-    });
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Logistica');
-    XLSX.writeFile(wb, 'logistica.xlsx');
-    handleExportClose();
-  };
-
-  // Exportar a PDF
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-    const tableColumn = columns.filter(col => col.id !== 'tipo' && col.id !== 'tipo_devolucion').map(col => col.label);
-    const tableRows = filteredPedidos.map(p =>
-      tableColumn.map(label => {
-        const col = columns.find(c => c.label === label);
-        if (col.id === 'fecha' || col.id === 'fecha_pedido') return formatDate(p[col.id]);
-        if (col.id === 'completado') return p.completado ? 'Sí' : 'No';
-        return p[col.id] ?? '';
-      })
-    );
-    doc.autoTable({ head: [tableColumn], body: tableRows });
-    doc.save('logistica.pdf');
-    handleExportClose();
-  };
-  const handleChangePage = (_, newPage) => setPage(newPage);
-  const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
-import React, { useState, useEffect } from 'react';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Box, TablePagination, TextField, FormControl, Select, MenuItem, Button, Autocomplete } from '@mui/material';
 import API from '../api';
 
 // Función robusta para formatear fechas a dd/mm/yy sin problemas de zona horaria
@@ -151,6 +97,56 @@ const Logistica = ({ pedidos, loading }) => {
   const [transportes, setTransportes] = useState([]);
   const [refresh, setRefresh] = useState(false);
   const [data, setData] = useState([]);
+  // Dropdown exportación
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  const handleExportClick = (event) => setAnchorEl(event.currentTarget);
+  const handleExportClose = () => setAnchorEl(null);
+  
+  // Pagination handlers
+  const handleChangePage = (_, newPage) => setPage(newPage);
+  const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
+  
+  // Exportar a Excel
+  const handleExportExcel = () => {
+    const exportData = filteredPedidos.map(p => {
+      const row = {};
+      columns.forEach(col => {
+        if (col.id !== 'tipo' && col.id !== 'tipo_devolucion') {
+          if (col.id === 'fecha' || col.id === 'fecha_pedido') {
+            row[col.label] = formatDate(p[col.id]);
+          } else if (col.id === 'completado') {
+            row[col.label] = p.completado ? 'Sí' : 'No';
+          } else {
+            row[col.label] = p[col.id] ?? '';
+          }
+        }
+      });
+      return row;
+    });
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Logistica');
+    XLSX.writeFile(wb, 'logistica.xlsx');
+    handleExportClose();
+  };
+  
+  // Exportar a PDF
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const tableColumn = columns.filter(col => col.id !== 'tipo' && col.id !== 'tipo_devolucion').map(col => col.label);
+    const tableRows = filteredPedidos.map(p =>
+      tableColumn.map(label => {
+        const col = columns.find(c => c.label === label);
+        if (col.id === 'fecha' || col.id === 'fecha_pedido') return formatDate(p[col.id]);
+        if (col.id === 'completado') return p.completado ? 'Sí' : 'No';
+        return p[col.id] ?? '';
+      })
+    );
+    doc.autoTable({ head: [tableColumn], body: tableRows });
+    doc.save('logistica.pdf');
+    handleExportClose();
+  };
 
   useEffect(() => {
     // Cargar solo pedidos y devoluciones que están en logística
