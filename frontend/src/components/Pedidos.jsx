@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination,
-  IconButton, Button, TextField, Select, MenuItem, InputLabel, FormControl, Dialog, DialogTitle, DialogContent, DialogActions, Menu, Box, Autocomplete
+  IconButton, Button, TextField, Select, MenuItem, InputLabel, FormControl, Dialog, DialogTitle, DialogContent, DialogActions, Menu, Box, Autocomplete, Checkbox
 } from '@mui/material';
 import { Edit, Delete, Add, FileDownload } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
@@ -33,7 +33,8 @@ const columns = [
   { id: 'fecha_entrega', label: 'Fecha Entrega' },
   { id: 'estado_nombre', label: 'Estado' },
   { id: 'notas', label: 'Notas' },
-  { id: 'acciones', label: 'Acciones' }
+  { id: 'acciones', label: 'Acciones' },
+  { id: 'en_logistica', label: 'En Logística' }
 ];
 
 const pageSizes = [10, 15, 25, 50];
@@ -200,6 +201,33 @@ export default function Pedidos() {
       });
     }
   };
+
+  // Manejar cambio de estado en logística
+  const handleLogisticaToggle = async (id, enLogistica) => {
+    try {
+      if (enLogistica) {
+        // Si está marcado para logística, asegurar que no esté completado
+        await API.put(`/pedidos/${id}`, { completado: false });
+      } else {
+        // Si no está marcado para logística, marcarlo como completado para quitarlo
+        await API.put(`/pedidos/${id}/completado`);
+      }
+      // Refrescar datos
+      API.get('/pedidos', {
+        params: {
+          ...filters,
+          page: page + 1,
+          pageSize
+        }
+      }).then(res => {
+        setData(res.data.data);
+        setTotal(Number(res.data.total) || 0);
+      });
+    } catch (error) {
+      console.error('Error al cambiar estado de logística:', error);
+      alert('Error al cambiar el estado: ' + (error.response?.data?.message || error.message));
+    }
+  };
   // Estados para paginación
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
@@ -274,7 +302,7 @@ export default function Pedidos() {
     const exportData = data.map(row => {
       const obj = {};
       columns.forEach(col => {
-        if (col.id !== 'acciones') {
+        if (col.id !== 'acciones' && col.id !== 'tipo_bultos' && col.id !== 'en_logistica') {
           obj[col.label] = col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id];
         }
       });
@@ -290,11 +318,11 @@ export default function Pedidos() {
   // Exportar a PDF
   const handleExportPDF = () => {
     const doc = new jsPDF('landscape', 'mm', 'a4'); // Orientación apaisada
-    const exportData = data.map(row => columns.filter(col => col.id !== 'acciones').map(col => 
+    const exportData = data.map(row => columns.filter(col => col.id !== 'acciones' && col.id !== 'tipo_bultos' && col.id !== 'en_logistica').map(col => 
       col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id]
     ));
     doc.autoTable({
-      head: [columns.filter(col => col.id !== 'acciones').map(col => col.label)],
+      head: [columns.filter(col => col.id !== 'acciones' && col.id !== 'tipo_bultos' && col.id !== 'en_logistica').map(col => col.label)],
       body: exportData,
       styles: { 
         fontSize: 7,
@@ -316,10 +344,9 @@ export default function Pedidos() {
         6: { cellWidth: 25 }, // Transporte
         7: { cellWidth: 20 }, // Vendedor
         8: { cellWidth: 10 }, // Cant
-        9: { cellWidth: 12 }, // Tipo
-        10: { cellWidth: 18 }, // Fecha Entrega
-        11: { cellWidth: 15 }, // Estado
-        12: { cellWidth: 30 } // Notas
+        9: { cellWidth: 18 }, // Fecha Entrega (ajustado porque se removió tipo_bultos)
+        10: { cellWidth: 15 }, // Estado
+        11: { cellWidth: 30 } // Notas
       },
       margin: { top: 15, left: 10, right: 10 },
       tableWidth: 'auto'
@@ -425,6 +452,9 @@ export default function Pedidos() {
           <TableHead>
             <TableRow sx={{ background: '#f6f8fa' }}>
               {columns.map(col => {
+                // Ocultar la columna tipo_bultos
+                if (col.id === 'tipo_bultos') return null;
+                
                 let cellSx = {
                   cursor: col.id !== 'acciones' ? 'pointer' : 'default',
                   fontWeight: 700,
@@ -449,10 +479,11 @@ export default function Pedidos() {
                 if (col.id === 'estado_nombre') cellSx = { ...cellSx, minWidth: 65, width: 75, maxWidth: 85 };
                 if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120 };
                 if (col.id === 'acciones') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
+                if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, textAlign: 'center' };
                 return (
                   <TableCell
                     key={col.id}
-                    onClick={() => col.id !== 'acciones' ? handleSort(col.id) : undefined}
+                    onClick={() => col.id !== 'acciones' && col.id !== 'en_logistica' ? handleSort(col.id) : undefined}
                     sx={cellSx}
                   >
                     {col.label}
@@ -472,6 +503,9 @@ export default function Pedidos() {
                 }}
               >
                 {columns.map(col => {
+                  // Ocultar la columna tipo_bultos
+                  if (col.id === 'tipo_bultos') return null;
+                  
                   let cellSx = { fontSize: 12, color: '#22336b', py: 0.6, px: 0.8 };
                   if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90 };
                   if (col.id === 'Codigo') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'center' };
@@ -487,18 +521,40 @@ export default function Pedidos() {
                   if (col.id === 'estado_nombre') cellSx = { ...cellSx, minWidth: 65, width: 75, maxWidth: 85 };
                   if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
                   if (col.id === 'acciones') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90, textAlign: 'center' };
-                  return col.id === 'acciones' ? (
-                    <TableCell key={col.id} sx={cellSx}>
-                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0.3 }}>
-                        <IconButton onClick={() => handleOpen(row)} sx={{ color: '#2563eb', '&:hover': { bgcolor: '#e8f0fe' }, p: 0.4 }} size="small"><Edit fontSize="small" /></IconButton>
-                        <IconButton onClick={() => handleDelete(row.id)} sx={{ color: '#e53935', '&:hover': { bgcolor: '#fdeaea' }, p: 0.4 }} size="small"><Delete fontSize="small" /></IconButton>
-                      </Box>
-                    </TableCell>
-                  ) : (
-                    <TableCell key={col.id} sx={cellSx}>
-                      {col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id]}
-                    </TableCell>
-                  );
+                  if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, textAlign: 'center' };
+                  
+                  if (col.id === 'acciones') {
+                    return (
+                      <TableCell key={col.id} sx={cellSx}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0.3 }}>
+                          <IconButton onClick={() => handleOpen(row)} sx={{ color: '#2563eb', '&:hover': { bgcolor: '#e8f0fe' }, p: 0.4 }} size="small"><Edit fontSize="small" /></IconButton>
+                          <IconButton onClick={() => handleDelete(row.id)} sx={{ color: '#e53935', '&:hover': { bgcolor: '#fdeaea' }, p: 0.4 }} size="small"><Delete fontSize="small" /></IconButton>
+                        </Box>
+                      </TableCell>
+                    );
+                  } else if (col.id === 'en_logistica') {
+                    return (
+                      <TableCell key={col.id} sx={cellSx}>
+                        <Checkbox
+                          checked={!row.completado}
+                          onChange={(e) => handleLogisticaToggle(row.id, e.target.checked)}
+                          size="small"
+                          sx={{ 
+                            color: '#2563eb', 
+                            '&.Mui-checked': { color: '#2563eb' },
+                            '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.04)' }
+                          }}
+                          title={!row.completado ? "Quitar de logística" : "Enviar a logística"}
+                        />
+                      </TableCell>
+                    );
+                  } else {
+                    return (
+                      <TableCell key={col.id} sx={cellSx}>
+                        {col.id === 'fecha_entrega' ? formatDate(row[col.id]) : row[col.id]}
+                      </TableCell>
+                    );
+                  }
                 })}
               </TableRow>
             ))}

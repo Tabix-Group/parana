@@ -44,12 +44,12 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
   await db('devoluciones').where({ id: req.params.id }).update(req.body);
   res.status(200).json({ success: true });
+});
 
 // Marcar devolución como completada
 router.put('/:id/completado', async (req, res) => {
   await db('devoluciones').where({ id: req.params.id }).update({ completado: true });
   res.json({ success: true });
-});
 });
 
 // Borrar devolucion

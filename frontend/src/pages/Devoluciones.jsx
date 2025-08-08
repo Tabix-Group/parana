@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Autocomplete } from '@mui/material';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination,
-  IconButton, Button, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Box, Menu, Typography
+  IconButton, Button, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Box, Menu, Typography, Checkbox
 } from '@mui/material';
 import { FileDownload } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
@@ -45,7 +45,8 @@ const columns = [
   { id: 'recibido', label: 'Recibido' },
   { id: 'fecha', label: 'Fecha' },
   { id: 'texto', label: 'Observaciones', sx: { minWidth: 540, width: 600, maxWidth: 900 } },
-  { id: 'acciones', label: 'Acciones' }
+  { id: 'acciones', label: 'Acciones' },
+  { id: 'en_logistica', label: 'En Logística' }
 ];
 
 const pageSizes = [10, 15, 25, 50];
@@ -107,11 +108,29 @@ export default function Devoluciones() {
   };
   const handleDelete = async id => { if (window.confirm('¿Borrar devolución?')) { await API.delete(`/devoluciones/${id}`); fetchData(); } };
 
+  // Manejar cambio de estado en logística para devoluciones
+  const handleLogisticaToggle = async (id, enLogistica) => {
+    try {
+      if (enLogistica) {
+        // Si está marcado para logística, asegurar que no esté completado
+        await API.put(`/devoluciones/${id}`, { completado: false });
+      } else {
+        // Si no está marcado para logística, marcarlo como completado para quitarlo
+        await API.put(`/devoluciones/${id}/completado`);
+      }
+      // Refrescar datos
+      fetchData();
+    } catch (error) {
+      console.error('Error al cambiar estado de logística:', error);
+      alert('Error al cambiar el estado: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
   // Exportar a Excel
   const handleExportExcel = () => {
     const exportData = data.map(row => {
       const obj = {};
-      columns.filter(c => c.id !== 'acciones').forEach(col => {
+      columns.filter(c => c.id !== 'acciones' && c.id !== 'en_logistica').forEach(col => {
         if (col.id === 'fecha') {
           obj[col.label] = formatDate(row[col.id]);
         } else {
@@ -134,7 +153,7 @@ export default function Devoluciones() {
     doc.text('Devoluciones', 10, 15);
     
     const exportData = data.map(row => {
-      return columns.filter(c => c.id !== 'acciones').map(col => {
+      return columns.filter(c => c.id !== 'acciones' && c.id !== 'en_logistica').map(col => {
         if (col.id === 'fecha') {
           return formatDate(row[col.id]);
         }
@@ -145,7 +164,7 @@ export default function Devoluciones() {
       });
     });
     
-    const headers = columns.filter(c => c.id !== 'acciones').map(col => col.label);
+    const headers = columns.filter(c => c.id !== 'acciones' && c.id !== 'en_logistica').map(col => col.label);
     
     doc.autoTable({
       head: [headers],
@@ -222,6 +241,7 @@ export default function Devoluciones() {
                 if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 180, width: 220, maxWidth: 300 };
                 if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400 };
                 if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
+                if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, textAlign: 'center' };
                 return (
                   <TableCell key={col.id} sx={cellSx}>{col.label}</TableCell>
                 );
@@ -246,6 +266,7 @@ export default function Devoluciones() {
                     if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 180, width: 260, maxWidth: 400, whiteSpace: 'pre-line', wordBreak: 'break-word' };
                     if (col.id === 'texto') cellSx = { ...cellSx, minWidth: 540, width: 600, maxWidth: 900, whiteSpace: 'pre-line', wordBreak: 'break-word' };
                     if (col.id === 'acciones') cellSx = { minWidth: 90, textAlign: 'center' };
+                    if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, textAlign: 'center' };
                     if (col.id === 'pedido_id') {
                       // Buscar el comprobante del pedido
                       const pedido = pedidos.find(p => p.id === row.pedido_id);
@@ -275,6 +296,23 @@ export default function Devoluciones() {
                     }
                     if (col.id === 'fecha') {
                       return <TableCell key={col.id} sx={cellSx}>{formatDate(row[col.id])}</TableCell>;
+                    }
+                    if (col.id === 'en_logistica') {
+                      return (
+                        <TableCell key={col.id} sx={cellSx}>
+                          <Checkbox
+                            checked={!row.completado}
+                            onChange={(e) => handleLogisticaToggle(row.id, e.target.checked)}
+                            size="small"
+                            sx={{ 
+                              color: '#2563eb', 
+                              '&.Mui-checked': { color: '#2563eb' },
+                              '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.04)' }
+                            }}
+                            title={!row.completado ? "Quitar de logística" : "Enviar a logística"}
+                          />
+                        </TableCell>
+                      );
                     }
                     return <TableCell key={col.id} sx={cellSx}>{row[col.id]}</TableCell>;
                   })}
