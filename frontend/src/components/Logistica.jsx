@@ -80,7 +80,7 @@ const pageSizes = [10, 15, 25, 50];
 const Logistica = ({ pedidos, loading }) => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState({ comprobante: '', cliente: '', fecha_entrega: '', estado: '', transporte: '', origen: '' });
+  const [filters, setFilters] = useState({ comprobante: '', cliente: '', fecha_pedido: '', fecha_entrega: '', estado: '', transporte: '', origen: '' });
   const [clientes, setClientes] = useState([]);
   const [estados, setEstados] = useState([]);
   const [transportes, setTransportes] = useState([]);
@@ -119,8 +119,8 @@ const Logistica = ({ pedidos, loading }) => {
   const handleFilter = (e) => {
     const { name, value } = e.target;
     
-    // Para el filtro de fecha, validar formato
-    if (name === 'fecha_entrega' && value) {
+    // Para los filtros de fecha, validar formato
+    if ((name === 'fecha_entrega' || name === 'fecha_pedido') && value) {
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (dateRegex.test(value)) {
         setFilters(prev => ({ ...prev, [name]: value }));
@@ -132,7 +132,7 @@ const Logistica = ({ pedidos, loading }) => {
     }
   };
   const handleClearFilters = () => {
-    setFilters({ comprobante: '', cliente: '', fecha_entrega: '', estado: '', transporte: '', origen: '' });
+    setFilters({ comprobante: '', cliente: '', fecha_pedido: '', fecha_entrega: '', estado: '', transporte: '', origen: '' });
     setPage(0);
   };
 
@@ -148,13 +148,25 @@ const Logistica = ({ pedidos, loading }) => {
     // Para fecha, usar la función robusta de comparación
     const matchFecha = filters.fecha_entrega === '' || compareDates(p.fecha, filters.fecha_entrega);
     
+    // Para fecha de pedido, usar la función robusta de comparación
+    const matchFechaPedido = filters.fecha_pedido === '' || compareDates(p.fecha_pedido, filters.fecha_pedido);
+    
     // Debug temporal para verificar fechas
     if (filters.fecha_entrega && p.fecha) {
-      console.log('Debug fecha:', {
+      console.log('Debug fecha entrega:', {
         filterDate: filters.fecha_entrega,
         pedidoDate: p.fecha,
         comprobante: p.comprobante,
         matchResult: matchFecha
+      });
+    }
+    
+    if (filters.fecha_pedido && p.fecha_pedido) {
+      console.log('Debug fecha pedido:', {
+        filterDate: filters.fecha_pedido,
+        pedidoDate: p.fecha_pedido,
+        comprobante: p.comprobante,
+        matchResult: matchFechaPedido
       });
     }
     
@@ -167,7 +179,7 @@ const Logistica = ({ pedidos, loading }) => {
     // Filtro por origen si existe
     const matchOrigen = !filters.origen || filters.origen === '' || p.origen === filters.origen;
     
-    return matchComprobante && matchCliente && matchFecha && matchEstado && matchTransporte && matchOrigen;
+    return matchComprobante && matchCliente && matchFecha && matchFechaPedido && matchEstado && matchTransporte && matchOrigen;
   });
   const paginatedPedidos = filteredPedidos.slice(page * pageSize, page * pageSize + pageSize);
 
@@ -193,10 +205,21 @@ const Logistica = ({ pedidos, loading }) => {
         />
         <TextField
           size="small"
+          name="fecha_pedido"
+          value={filters.fecha_pedido}
+          onChange={handleFilter}
+          type="date"
+          label="Fecha Pedido"
+          InputLabelProps={{ shrink: true }}
+          sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+        />
+        <TextField
+          size="small"
           name="fecha_entrega"
           value={filters.fecha_entrega}
           onChange={handleFilter}
           type="date"
+          label="Fecha Entrega"
           InputLabelProps={{ shrink: true }}
           sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
         />
