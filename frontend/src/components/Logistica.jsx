@@ -159,7 +159,7 @@ const Logistica = ({ pedidos, loading }) => {
       const pedidosEnLogistica = (pedidosRes.data || []).map(p => ({ 
         ...p, 
         origen: 'Pedido',
-        codigo: p.cliente_codigo || p.Codigo || '',
+        codigo: p.Codigo || '',
         cliente: p.cliente_nombre || '',
         direccion: p.cliente_direccion || p.direccion || '',
         transporte: p.transporte_nombre,
@@ -171,7 +171,7 @@ const Logistica = ({ pedidos, loading }) => {
       const devolucionesEnLogistica = (devolucionesRes.data || []).map(d => ({ 
         ...d, 
         origen: 'Devolución',
-        codigo: d.cliente_codigo || d.Codigo || '',
+        codigo: d.Codigo || '',
         cliente: d.cliente_nombre || '',
         direccion: d.cliente_direccion || '',
         transporte: d.transporte_nombre,
