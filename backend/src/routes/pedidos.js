@@ -132,6 +132,8 @@ router.get('/logistica', async (req, res) => {
       .select([
         'pedidos.*',
         'clientes.nombre as cliente_nombre',
+        'clientes.Codigo as cliente_codigo',
+        'clientes.direccion as cliente_direccion',
         'armadores.nombre as armador_nombre',
         'armadores.apellido as armador_apellido',
         'estados.nombre as estado_nombre',

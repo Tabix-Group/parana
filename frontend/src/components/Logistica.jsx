@@ -159,11 +159,11 @@ const Logistica = ({ pedidos, loading }) => {
       const pedidosEnLogistica = (pedidosRes.data || []).map(p => ({ 
         ...p, 
         origen: 'Pedido',
-        codigo: p.Codigo || p.codigo || '',
+        codigo: p.cliente_codigo || p.Codigo || '',
         cliente: p.cliente_nombre || '',
+        direccion: p.cliente_direccion || p.direccion || '',
         transporte: p.transporte_nombre,
         fecha: p.fecha_entrega,
-        direccion: p.direccion,
         cantidad: p.cant_bultos
       }));
 
