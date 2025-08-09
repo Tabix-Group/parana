@@ -67,7 +67,7 @@ const compareDates = (dateString, filterDate) => {
 const columns = [
   { id: 'origen', label: 'Origen' },
   { id: 'comprobante', label: 'Comprobante' },
-  { id: 'cliente_codigo', label: 'Código' },
+  { id: 'codigo', label: 'Código' },
   { id: 'cliente', label: 'Cliente' },
   { id: 'direccion', label: 'Dirección' },
   { id: 'cantidad', label: 'Cantidad' },
@@ -159,19 +159,20 @@ const Logistica = ({ pedidos, loading }) => {
       const pedidosEnLogistica = (pedidosRes.data || []).map(p => ({ 
         ...p, 
         origen: 'Pedido',
-        cliente: p.cliente_nombre,
+        codigo: p.Codigo || p.codigo || '',
+        cliente: p.cliente_nombre || '',
         transporte: p.transporte_nombre,
         fecha: p.fecha_entrega,
         direccion: p.direccion,
         cantidad: p.cant_bultos
       }));
-      
+
       // Mapear devoluciones en logística
       const devolucionesEnLogistica = (devolucionesRes.data || []).map(d => ({ 
         ...d, 
         origen: 'Devolución',
-        cliente: d.cliente_nombre,
-        cliente_codigo: d.cliente_codigo || d.Codigo || '',
+        codigo: d.cliente_codigo || d.Codigo || '',
+        cliente: d.cliente_nombre || '',
         direccion: d.cliente_direccion || '',
         transporte: d.transporte_nombre,
         comprobante: d.pedido_comprobante || '',
