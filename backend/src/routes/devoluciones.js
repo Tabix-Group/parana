@@ -50,6 +50,8 @@ router.get('/logistica', async (req, res) => {
       .select([
         'devoluciones.*',
         'clientes.nombre as cliente_nombre',
+        'clientes.Codigo as cliente_codigo',
+        'clientes.direccion as cliente_direccion',
         'transportes.nombre as transporte_nombre',
         'pedidos.comprobante as pedido_comprobante'
       ])

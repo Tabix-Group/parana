@@ -67,6 +67,7 @@ const compareDates = (dateString, filterDate) => {
 const columns = [
   { id: 'origen', label: 'Origen' },
   { id: 'comprobante', label: 'Comprobante' },
+  { id: 'cliente_codigo', label: 'Código' },
   { id: 'cliente', label: 'Cliente' },
   { id: 'direccion', label: 'Dirección' },
   { id: 'cantidad', label: 'Cantidad' },
@@ -170,12 +171,12 @@ const Logistica = ({ pedidos, loading }) => {
         ...d, 
         origen: 'Devolución',
         cliente: d.cliente_nombre,
+        cliente_codigo: d.cliente_codigo || d.Codigo || '',
+        direccion: d.cliente_direccion || '',
         transporte: d.transporte_nombre,
         comprobante: d.pedido_comprobante || '',
-        direccion: d.direccion || '',
-        cantidad: ''
+        cantidad: '',
       }));
-      
       setData([...pedidosEnLogistica, ...devolucionesEnLogistica]);
     }).catch(error => {
       console.error('Error al cargar datos de logística:', error);
