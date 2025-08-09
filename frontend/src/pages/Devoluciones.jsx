@@ -91,7 +91,7 @@ export default function Devoluciones() {
   const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
   const handleOpen = (row = null) => {
     setEditRow(row);
-    setForm(row ? { ...row } : { pedido_id: '', Codigo: '', cliente_id: '', transporte_id: '', tipo: '', recibido: false, fecha: '', texto: '' });
+    setForm(row ? { ...row } : { pedido_id: '', Codigo: '', cliente_id: '', transporte_id: '', tipo: '', recibido: false, fecha: '', texto: '', en_logistica: false });
     setOpen(true);
   };
   const handleClose = () => setOpen(false);
@@ -154,16 +154,9 @@ export default function Devoluciones() {
   const handleDelete = async id => { if (window.confirm('¿Borrar devolución?')) { await API.delete(`/devoluciones/${id}`); fetchData(); } };
 
   // Manejar cambio de estado en logística para devoluciones
-  const handleLogisticaToggle = async (id, enLogistica) => {
+  const handleLogisticaToggle = async (id, checked) => {
     try {
-      if (enLogistica) {
-        // Si está marcado para logística, asegurar que no esté completado
-        await API.put(`/devoluciones/${id}`, { completado: false });
-      } else {
-        // Si no está marcado para logística, marcarlo como completado para quitarlo
-        await API.put(`/devoluciones/${id}/completado`);
-      }
-      // Refrescar datos
+      await API.put(`/devoluciones/${id}/logistica`, { en_logistica: checked });
       fetchData();
     } catch (error) {
       console.error('Error al cambiar estado de logística:', error);
@@ -351,7 +344,7 @@ export default function Devoluciones() {
                       return (
                         <TableCell key={col.id} sx={cellSx}>
                           <Checkbox
-                            checked={!row.completado}
+                            checked={!!row.en_logistica}
                             onChange={(e) => handleLogisticaToggle(row.id, e.target.checked)}
                             size="small"
                             sx={{ 
@@ -359,7 +352,7 @@ export default function Devoluciones() {
                               '&.Mui-checked': { color: '#2563eb' },
                               '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.04)' }
                             }}
-                            title={!row.completado ? "Quitar de logística" : "Enviar a logística"}
+                            title={row.en_logistica ? "Quitar de logística" : "Enviar a logística"}
                           />
                         </TableCell>
                       );
