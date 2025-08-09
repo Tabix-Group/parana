@@ -39,6 +39,7 @@ const formatDate = (dateString) => {
 
 const columns = [
   { id: 'pedido_id', label: 'Pedido' },
+  { id: 'Codigo', label: 'Código' },
   { id: 'cliente_id', label: 'Cliente' },
   { id: 'transporte_id', label: 'Transporte' },
   { id: 'tipo', label: 'Tipo' },
@@ -57,12 +58,13 @@ export default function Devoluciones() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [editRow, setEditRow] = useState(null);
-  const [form, setForm] = useState({ pedido_id: '', cliente_id: '', transporte_id: '', tipo: '', recibido: false, fecha: '', texto: '' });
+  const [form, setForm] = useState({ pedido_id: '', Codigo: '', cliente_id: '', transporte_id: '', tipo: '', recibido: false, fecha: '', texto: '' });
   const [pedidos, setPedidos] = useState([]);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
   const [clientes, setClientes] = useState([]);
   const [transportes, setTransportes] = useState([]);
+  const [clientesLoading, setClientesLoading] = useState(false);
 
   useEffect(() => { fetchData(); fetchPedidos(); fetchClientes(); fetchTransportes(); }, [page, pageSize, filter]);
   const fetchTransportes = async () => {
@@ -87,14 +89,57 @@ export default function Devoluciones() {
   };
   const handleChangePage = (_, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
-  const handleOpen = (row = null) => { setEditRow(row); setForm(row ? { ...row } : { pedido_id: '', cliente_id: '', transporte_id: '', tipo: '', recibido: false, fecha: '', texto: '' }); setOpen(true); };
+  const handleOpen = (row = null) => {
+    setEditRow(row);
+    setForm(row ? { ...row } : { pedido_id: '', Codigo: '', cliente_id: '', transporte_id: '', tipo: '', recibido: false, fecha: '', texto: '' });
+    setOpen(true);
+  };
   const handleClose = () => setOpen(false);
-  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = e => {
+    const { name, value } = e.target;
+    if (name === 'Codigo') {
+      setForm(prev => ({ ...prev, Codigo: value }));
+      if (value && value.trim() !== '' && /^[0-9]+$/.test(value)) {
+        setClientesLoading(true);
+        API.get('/clientes', { params: { Codigo: value, pageSize: 5 } })
+          .then(res => {
+            const cliente = res.data.data && res.data.data.length > 0 ? res.data.data[0] : null;
+            if (cliente) {
+              setForm(prev => ({
+                ...prev,
+                cliente_id: cliente.id,
+                Codigo: cliente.Codigo || value,
+              }));
+              setClientes([cliente]);
+            } else {
+              setForm(prev => ({ ...prev, cliente_id: '' }));
+            }
+          })
+          .catch(error => {
+            console.error('Error buscando cliente:', error);
+          })
+          .finally(() => setClientesLoading(false));
+      } else if (value === '') {
+        setForm(prev => ({ ...prev, cliente_id: '' }));
+        setClientes([]);
+      }
+    } else if (name === 'cliente_id') {
+      const cliente = clientes.find(c => String(c.id) === String(value));
+      setForm(prev => ({
+        ...prev,
+        cliente_id: value,
+        Codigo: cliente && cliente.Codigo ? cliente.Codigo : '',
+      }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
+  };
   const handleSubmit = async () => {
     // Ajustar para que los campos numéricos opcionales vayan como null si están vacíos
     const dataToSend = {
       ...form,
       pedido_id: form.pedido_id === '' ? null : form.pedido_id,
+      Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null,
       cliente_id: form.cliente_id === '' ? null : form.cliente_id,
       transporte_id: form.transporte_id === '' ? null : form.transporte_id
     };
@@ -274,6 +319,9 @@ export default function Devoluciones() {
                       const pedido = pedidos.find(p => p.id === row.pedido_id);
                       return <TableCell key={col.id} sx={cellSx}>{pedido ? pedido.comprobante : ''}</TableCell>;
                     }
+                    if (col.id === 'Codigo') {
+                      return <TableCell key={col.id} sx={cellSx}>{row.Codigo || ''}</TableCell>;
+                    }
                     if (col.id === 'cliente_id') {
                       // Buscar el nombre del cliente
                       const cliente = clientes.find(c => c.id === row.cliente_id);
@@ -349,6 +397,16 @@ export default function Devoluciones() {
             mt: 0,
           }}
         >
+          <TextField 
+            label="Código (opcional)" 
+            name="Codigo" 
+            value={form.Codigo} 
+            onChange={handleChange} 
+            fullWidth 
+            InputLabelProps={{ shrink: true }} 
+            sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
+            helperText={clientesLoading ? "Buscando cliente..." : (form.cliente_id ? `Cliente seleccionado` : "")}
+          />
           <Autocomplete
             options={pedidos}
             getOptionLabel={option => option.comprobante || ''}

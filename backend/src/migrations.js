@@ -173,7 +173,7 @@ export async function createTables(db) {
     }
   });
   // Devoluciones
-  await db.schema.hasTable('devoluciones').then(exists => {
+  await db.schema.hasTable('devoluciones').then(async exists => {
     if (!exists) {
       return db.schema.createTable('devoluciones', t => {
         t.increments('id').primary();
@@ -184,6 +184,7 @@ export async function createTables(db) {
         t.boolean('recibido');
         t.date('fecha');
         t.text('texto'); // Observaciones
+        t.integer('Codigo').nullable().comment('Código del cliente asociado a la devolución');
       });
     } else {
       // Si las columnas no existen, agregarlas
@@ -206,6 +207,13 @@ export async function createTables(db) {
           if (!hasCol) {
             return db.schema.table('devoluciones', t => {
               t.integer('transporte_id').nullable().references('id').inTable('transportes').onDelete('SET NULL');
+            });
+          }
+        }),
+        db.schema.hasColumn('devoluciones', 'Codigo').then(hasCol => {
+          if (!hasCol) {
+            return db.schema.table('devoluciones', t => {
+              t.integer('Codigo').nullable().comment('Código del cliente asociado a la devolución');
             });
           }
         }),
