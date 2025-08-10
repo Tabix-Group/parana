@@ -230,6 +230,13 @@ export async function createTables(db) {
               t.boolean('completado').defaultTo(false).comment('Si la devolución está completada');
             });
           }
+        }),
+        db.schema.hasColumn('devoluciones', 'fecha_pedido').then(hasCol => {
+          if (!hasCol) {
+            return db.schema.table('devoluciones', t => {
+              t.date('fecha_pedido').nullable().comment('Fecha en que se realizó el pedido asociado a la devolución');
+            });
+          }
         })
       ]);
     }

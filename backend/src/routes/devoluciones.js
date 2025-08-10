@@ -53,7 +53,9 @@ router.get('/logistica', async (req, res) => {
         'clientes.Codigo as cliente_codigo',
         'clientes.direccion as cliente_direccion',
         'transportes.nombre as transporte_nombre',
-        'pedidos.comprobante as pedido_comprobante'
+        'pedidos.comprobante as pedido_comprobante',
+        'devoluciones.fecha_pedido as fecha_pedido',
+        'devoluciones.fecha as fecha_entrega'
       ])
       .leftJoin('clientes', 'devoluciones.cliente_id', 'clientes.id')
       .leftJoin('transportes', 'devoluciones.transporte_id', 'transportes.id')

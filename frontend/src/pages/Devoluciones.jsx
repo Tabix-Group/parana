@@ -44,7 +44,8 @@ const columns = [
   { id: 'transporte_id', label: 'Transporte' },
   { id: 'tipo', label: 'Tipo' },
   { id: 'recibido', label: 'Recibido' },
-  { id: 'fecha', label: 'Fecha' },
+  { id: 'fecha_pedido', label: 'Fecha Pedido' },
+  { id: 'fecha', label: 'Fecha Entrega' },
   { id: 'texto', label: 'Observaciones', sx: { minWidth: 540, width: 600, maxWidth: 900 } },
   { id: 'acciones', label: 'Acciones' },
   { id: 'en_logistica', label: 'En Logística' }
@@ -337,8 +338,11 @@ export default function Devoluciones() {
                     if (col.id === 'recibido') {
                       return <TableCell key={col.id} sx={cellSx}>{row.recibido ? 'Sí' : 'No'}</TableCell>;
                     }
+                    if (col.id === 'fecha_pedido') {
+                      return <TableCell key={col.id} sx={cellSx}>{formatDate(row.fecha_pedido)}</TableCell>;
+                    }
                     if (col.id === 'fecha') {
-                      return <TableCell key={col.id} sx={cellSx}>{formatDate(row[col.id])}</TableCell>;
+                      return <TableCell key={col.id} sx={cellSx}>{formatDate(row.fecha)}</TableCell>;
                     }
                     if (col.id === 'en_logistica') {
                       return (
@@ -463,7 +467,8 @@ export default function Devoluciones() {
               <MenuItem value={false}>No</MenuItem>
             </Select>
           </FormControl>
-          <TextField label="Fecha" name="fecha" type="date" value={form.fecha} onChange={handleChange} InputLabelProps={{ shrink: true }} fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+          <TextField label="Fecha Pedido" name="fecha_pedido" type="date" value={form.fecha_pedido || ''} onChange={handleChange} InputLabelProps={{ shrink: true }} fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+          <TextField label="Fecha Entrega" name="fecha" type="date" value={form.fecha || ''} onChange={handleChange} InputLabelProps={{ shrink: true }} fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
           <TextField label="Observaciones" name="texto" value={form.texto} onChange={handleChange} fullWidth multiline minRows={2} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2, pt: 1, justifyContent: 'flex-end' }}>
