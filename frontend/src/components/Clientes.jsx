@@ -24,16 +24,18 @@ export default function Clientes() {
   const [sortBy, setSortBy] = useState('id');
   const [order, setOrder] = useState('desc');
   const [filter, setFilter] = useState('');
+  const [codigoFilter, setCodigoFilter] = useState('');
   const [open, setOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
   const [form, setForm] = useState({ nombre: '', direccion: '', localidad: '', telefono: '', Codigo: '' });
 
-  useEffect(() => { fetchData(); }, [page, pageSize, sortBy, order, filter]);
+  useEffect(() => { fetchData(); }, [page, pageSize, sortBy, order, filter, codigoFilter]);
 
   const fetchData = async () => {
-    const res = await API.get('/clientes', {
-      params: { page: page + 1, pageSize, sortBy, order, nombre: filter }
-    });
+    const params = { page: page + 1, pageSize, sortBy, order };
+    if (filter) params.nombre = filter;
+    if (codigoFilter) params.Codigo = codigoFilter;
+    const res = await API.get('/clientes', { params });
     setData(res.data.data);
     setTotal(Number(res.data.total));
   };
@@ -80,6 +82,14 @@ export default function Clientes() {
         >
           Nuevo Cliente
         </Button>
+        <TextField
+          size="small"
+          value={codigoFilter}
+          onChange={e => setCodigoFilter(e.target.value.replace(/[^0-9]/g, ''))}
+          placeholder="Buscar por código..."
+          sx={{ bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)', minWidth: 120 }}
+          inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+        />
         <TextField size="small" value={filter} onChange={e => setFilter(e.target.value)} placeholder="Buscar por nombre..." sx={{ bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }} />
       </Box>
       <TableContainer sx={{ borderRadius: 2, boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)', border: '1px solid #e0e3e7', background: '#fff' }}>
