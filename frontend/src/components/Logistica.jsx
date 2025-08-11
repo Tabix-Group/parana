@@ -19,9 +19,14 @@ import {
   DialogTitle, 
   DialogContent, 
   DialogActions, 
-  IconButton 
+  IconButton,
+  Checkbox,
+  Typography
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
+import { Edit, FileDownload } from '@mui/icons-material';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import api from '../api';
 
 const formatDate = (dateString) => {
@@ -91,7 +96,8 @@ function Logistica() {
   const [filterVendedor, setFilterVendedor] = useState('');
   const [filterCliente, setFilterCliente] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
-  const [filterDate, setFilterDate] = useState('');
+  const [filterFechaPedido, setFilterFechaPedido] = useState('');
+  const [filterFechaEntrega, setFilterFechaEntrega] = useState('');
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [editingTransporte, setEditingTransporte] = useState('');
@@ -138,23 +144,37 @@ function Logistica() {
       ...pedidos.map(p => ({
         ...p,
         tipo: 'Pedido',
+        nro_comprobante: p.comprobante || 'Sin comprobante',
+        cliente: p.cliente_nombre || 'No disponible',
+        direccion: p.direccion || 'Sin dirección',
+        cantidad: p.cant_bultos || 0,
+        fecha_pedido: p.fecha_pedido || p.fecha,
+        fecha_entrega: p.fecha_entrega || '',
         armador: p.cliente_nombre || 'No disponible',
         tipo_transporte: p.tipo_transporte_nombre || 'No disponible',
-        transporte: p.transporte_nombre || 'No disponible'
+        transporte: p.transporte_nombre || 'No disponible',
+        completado: false
       })),
       ...devoluciones.map(d => ({
         ...d,
         tipo: 'Devolución',
+        nro_comprobante: d.comprobante || 'Sin comprobante',
+        cliente: d.cliente_nombre || 'No disponible',
+        direccion: d.direccion || 'Sin dirección',
+        cantidad: d.cant_bultos || 0,
+        fecha_pedido: d.fecha_pedido || d.fecha,
+        fecha_entrega: d.fecha_entrega || '',
         armador: d.cliente_nombre || 'No disponible',
         tipo_transporte: d.tipo_transporte_nombre || 'No disponible',
-        transporte: d.transporte_nombre || 'No disponible'
+        transporte: d.transporte_nombre || 'No disponible',
+        completado: false
       }))
     ];
     setCombinedData(combined);
   }, [pedidos, devoluciones]);
 
   useEffect(() => {
-    let filtered = combinedData;
+    let filtered = combinedData.filter(item => !item.completado);
 
     if (filterVendedor && Array.isArray(vendedores)) {
       filtered = filtered.filter(item => 
@@ -164,7 +184,7 @@ function Logistica() {
 
     if (filterCliente) {
       filtered = filtered.filter(item => 
-        item.armador?.toLowerCase().includes(filterCliente.toLowerCase())
+        item.cliente?.toLowerCase().includes(filterCliente.toLowerCase())
       );
     }
 
@@ -174,12 +194,16 @@ function Logistica() {
       );
     }
 
-    if (filterDate) {
-      filtered = filtered.filter(item => compareDates(item.fecha, filterDate));
+    if (filterFechaPedido) {
+      filtered = filtered.filter(item => compareDates(item.fecha_pedido, filterFechaPedido));
+    }
+
+    if (filterFechaEntrega) {
+      filtered = filtered.filter(item => compareDates(item.fecha_entrega, filterFechaEntrega));
     }
 
     setFilteredData(filtered);
-  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterDate, vendedores, estados]);
+  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterFechaPedido, filterFechaEntrega, vendedores, estados]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -220,19 +244,122 @@ function Logistica() {
     setEditingTipoTransporte('');
   };
 
+  const handleCompleted = async (item) => {
+    try {
+      const endpoint = item.tipo === 'Pedido' ? '/pedidos' : '/devoluciones';
+      await api.put(`${endpoint}/${item.id}`, {
+        ...item,
+        completado: true,
+        estado_id: estados.find(e => e.nombre?.toLowerCase().includes('completado'))?.id || item.estado_id
+      });
+      
+      // Actualizar el estado local
+      setCombinedData(prev => prev.map(row => 
+        row.id === item.id && row.tipo === item.tipo 
+          ? { ...row, completado: true }
+          : row
+      ));
+    } catch (error) {
+      console.error('Error marking as completed:', error);
+    }
+  };
+
+  // Exportar a Excel
+  const handleExportExcel = () => {
+    const exportData = filteredData.map(row => ({
+      'Nro Comprobante': row.nro_comprobante,
+      'Tipo': row.tipo,
+      'Cliente': row.cliente,
+      'Dirección': row.direccion,
+      'Cantidad': row.cantidad,
+      'Fecha Pedido': formatDate(row.fecha_pedido),
+      'Fecha Entrega': formatDate(row.fecha_entrega),
+      'Vendedor': Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
+      'Estado': Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado',
+      'Tipo Tte': row.tipo_transporte,
+      'Transporte': row.transporte
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Logistica');
+    const fecha = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `Logistica_${fecha}.xlsx`);
+  };
+
+  // Exportar a PDF
+  const handleExportPDF = () => {
+    const doc = new jsPDF('landscape', 'mm', 'a4');
+    const exportData = filteredData.map(row => [
+      row.nro_comprobante,
+      row.tipo,
+      row.cliente,
+      row.direccion,
+      row.cantidad,
+      formatDate(row.fecha_pedido),
+      formatDate(row.fecha_entrega),
+      Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
+      Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado',
+      row.tipo_transporte,
+      row.transporte
+    ]);
+
+    doc.autoTable({
+      head: [['Nro Comprobante', 'Tipo', 'Cliente', 'Dirección', 'Cantidad', 'Fecha Pedido', 'Fecha Entrega', 'Vendedor', 'Estado', 'Tipo Tte', 'Transporte']],
+      body: exportData,
+      styles: { 
+        fontSize: 6,
+        cellPadding: 1,
+        overflow: 'linebreak'
+      },
+      headStyles: { 
+        fillColor: [34,51,107],
+        fontSize: 7,
+        fontStyle: 'bold'
+      },
+      columnStyles: {
+        0: { cellWidth: 20 }, // Nro Comprobante
+        1: { cellWidth: 15 }, // Tipo
+        2: { cellWidth: 30 }, // Cliente
+        3: { cellWidth: 25 }, // Dirección
+        4: { cellWidth: 12 }, // Cantidad
+        5: { cellWidth: 18 }, // Fecha Pedido
+        6: { cellWidth: 18 }, // Fecha Entrega
+        7: { cellWidth: 20 }, // Vendedor
+        8: { cellWidth: 15 }, // Estado
+        9: { cellWidth: 15 }, // Tipo Tte
+        10: { cellWidth: 20 } // Transporte
+      }
+    });
+
+    const fecha = new Date().toISOString().slice(0,10);
+    doc.save(`Logistica_${fecha}.pdf`);
+  };
+
   const columns = [
-    { id: 'fecha', label: 'Fecha', minWidth: 100 },
-    { id: 'tipo', label: 'Tipo', minWidth: 100 },
-    { id: 'vendedor', label: 'Vendedor', minWidth: 150 },
-    { id: 'armador', label: 'Armador', minWidth: 150 },
-    { id: 'estado', label: 'Estado', minWidth: 120 },
-    { id: 'tipo_tte', label: 'Tipo Tte', minWidth: 120 },
-    { id: 'transporte', label: 'Transporte', minWidth: 150 },
-    { id: 'accion', label: 'Acción', minWidth: 80 }
+    { id: 'nro_comprobante', label: 'Nro Comprobante', minWidth: 120 },
+    { id: 'tipo', label: 'Tipo', minWidth: 80 },
+    { id: 'cliente', label: 'Cliente', minWidth: 120 },
+    { id: 'direccion', label: 'Dirección', minWidth: 120 },
+    { id: 'cantidad', label: 'Cantidad', minWidth: 70 },
+    { id: 'fecha_pedido', label: 'Fecha Pedido', minWidth: 90 },
+    { id: 'fecha_entrega', label: 'Fecha Entrega', minWidth: 90 },
+    { id: 'vendedor', label: 'Vendedor', minWidth: 100 },
+    { id: 'estado', label: 'Estado', minWidth: 80 },
+    { id: 'tipo_tte', label: 'Tipo Tte', minWidth: 80 },
+    { id: 'transporte', label: 'Transporte', minWidth: 100 },
+    { id: 'accion', label: 'Acción', minWidth: 60 },
+    { id: 'completado', label: 'Completado', minWidth: 80 }
   ];
 
   return (
     <Box sx={{ p: 3 }}>
+      {/* Título */}
+      <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold' }}>
+        Vista Logística
+      </Typography>
+
+      {/* Filtros */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
         <Autocomplete
           options={Array.isArray(vendedores) ? vendedores : []}
@@ -240,7 +367,7 @@ function Logistica() {
           value={Array.isArray(vendedores) ? vendedores.find(v => v.nombre?.toLowerCase().includes(filterVendedor.toLowerCase())) || null : null}
           onChange={(event, value) => setFilterVendedor(value ? value.nombre : '')}
           renderInput={(params) => <TextField {...params} label="Filtrar por Vendedor" size="small" />}
-          sx={{ minWidth: 200 }}
+          sx={{ minWidth: 180 }}
         />
         
         <TextField
@@ -248,10 +375,10 @@ function Logistica() {
           value={filterCliente}
           onChange={(e) => setFilterCliente(e.target.value)}
           size="small"
-          sx={{ minWidth: 200 }}
+          sx={{ minWidth: 180 }}
         />
         
-        <FormControl size="small" sx={{ minWidth: 150 }}>
+        <FormControl size="small" sx={{ minWidth: 130 }}>
           <Select
             value={filterEstado}
             onChange={(e) => setFilterEstado(e.target.value)}
@@ -267,13 +394,23 @@ function Logistica() {
         </FormControl>
 
         <TextField
-          label="Filtrar por Fecha"
+          label="Fecha Pedido"
           type="date"
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
+          value={filterFechaPedido}
+          onChange={(e) => setFilterFechaPedido(e.target.value)}
           InputLabelProps={{ shrink: true }}
           size="small"
-          sx={{ minWidth: 150 }}
+          sx={{ minWidth: 130 }}
+        />
+
+        <TextField
+          label="Fecha Entrega"
+          type="date"
+          value={filterFechaEntrega}
+          onChange={(e) => setFilterFechaEntrega(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          size="small"
+          sx={{ minWidth: 130 }}
         />
 
         <Button 
@@ -282,7 +419,8 @@ function Logistica() {
             setFilterVendedor('');
             setFilterCliente('');
             setFilterEstado('');
-            setFilterDate('');
+            setFilterFechaPedido('');
+            setFilterFechaEntrega('');
           }}
           size="small"
         >
@@ -290,12 +428,35 @@ function Logistica() {
         </Button>
       </Box>
 
+      {/* Botones de exportación */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Button
+          variant="contained"
+          startIcon={<FileDownload />}
+          onClick={handleExportExcel}
+          sx={{ backgroundColor: '#1976d2' }}
+        >
+          Exportar Excel
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<FileDownload />}
+          onClick={handleExportPDF}
+          sx={{ backgroundColor: '#d32f2f' }}
+        >
+          Exportar PDF
+        </Button>
+      </Box>
+
       <TableContainer component={Paper}>
-        <Table>
+        <Table size="small" sx={{ '& .MuiTableCell-root': { fontSize: '0.75rem', padding: '6px 8px' } }}>
           <TableHead>
-            <TableRow>
+            <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
               {columns.map((column) => (
-                <TableCell key={column.id} style={{ minWidth: column.minWidth }}>
+                <TableCell 
+                  key={column.id} 
+                  style={{ minWidth: column.minWidth, fontWeight: 'bold', fontSize: '0.8rem' }}
+                >
                   {column.label}
                 </TableCell>
               ))}
@@ -305,26 +466,39 @@ function Logistica() {
             {filteredData
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((row, index) => (
-                <TableRow key={`${row.tipo}-${row.id}-${index}`}>
-                  <TableCell>{formatDate(row.fecha)}</TableCell>
-                  <TableCell>{row.tipo}</TableCell>
-                  <TableCell>
+                <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}>
+                  <TableCell sx={{ fontSize: '0.75rem' }}>{row.nro_comprobante}</TableCell>
+                  <TableCell sx={{ fontSize: '0.75rem' }}>{row.tipo}</TableCell>
+                  <TableCell sx={{ fontSize: '0.75rem' }}>{row.cliente}</TableCell>
+                  <TableCell sx={{ fontSize: '0.75rem' }}>{row.direccion}</TableCell>
+                  <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center' }}>{row.cantidad}</TableCell>
+                  <TableCell sx={{ fontSize: '0.75rem' }}>{formatDate(row.fecha_pedido)}</TableCell>
+                  <TableCell sx={{ fontSize: '0.75rem' }}>{formatDate(row.fecha_entrega)}</TableCell>
+                  <TableCell sx={{ fontSize: '0.75rem' }}>
                     {Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor'}
                   </TableCell>
-                  <TableCell>{row.armador}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ fontSize: '0.75rem' }}>
                     {Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado'}
                   </TableCell>
-                  <TableCell>{row.tipo_transporte}</TableCell>
-                  <TableCell>{row.transporte}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ fontSize: '0.75rem' }}>{row.tipo_transporte}</TableCell>
+                  <TableCell sx={{ fontSize: '0.75rem' }}>{row.transporte}</TableCell>
+                  <TableCell sx={{ padding: '4px' }}>
                     <IconButton
                       size="small"
                       onClick={() => handleEdit(row)}
                       color="primary"
+                      sx={{ padding: '4px' }}
                     >
-                      <EditIcon />
+                      <Edit fontSize="small" />
                     </IconButton>
+                  </TableCell>
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    <Checkbox
+                      size="small"
+                      checked={row.completado || false}
+                      onChange={() => handleCompleted(row)}
+                      color="success"
+                    />
                   </TableCell>
                 </TableRow>
               ))}
