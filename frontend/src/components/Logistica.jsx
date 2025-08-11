@@ -170,12 +170,14 @@ const Logistica = ({ pedidos, loading }) => {
           }
         }
       });
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Logistica');
-      XLSX.writeFile(wb, 'logistica.xlsx');
-      handleExportClose();
-    };
+      return row;
+    });
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Logistica');
+    XLSX.writeFile(wb, 'logistica.xlsx');
+    handleExportClose();
+  };
     
     // Exportar a PDF
     const handleExportPDF = () => {
