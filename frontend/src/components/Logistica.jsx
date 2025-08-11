@@ -80,18 +80,24 @@ const columns = [
   { id: 'fecha', label: 'Fecha Entrega' },
   { id: 'completado', label: 'Completado' },
   { id: 'accion', label: 'Acción' },
+];
+
+const pageSizes = [10, 15, 25, 50];
+
+const Logistica = ({ pedidos, loading }) => {
   // Estado para modal de edición
   const [editOpen, setEditOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
   const [editTipoTte, setEditTipoTte] = useState('');
   const [editTransporte, setEditTransporte] = useState('');
   const [tiposTransporte, setTiposTransporte] = useState([]);
-  const [transportes, setTransportes] = useState([]);
+  const [transportesEdit, setTransportesEdit] = useState([]);
+
   // Cargar catálogos para el modal de edición
   useEffect(() => {
     if (editOpen) {
       API.get('/tipos-transporte').then(res => setTiposTransporte(res.data.data || []));
-      API.get('/transportes').then(res => setTransportes(res.data.data || []));
+      API.get('/transportes').then(res => setTransportesEdit(res.data.data || []));
     }
   }, [editOpen]);
 
@@ -123,11 +129,6 @@ const columns = [
       alert('Error al guardar: ' + (err.response?.data?.message || err.message));
     }
   };
-];
-
-const pageSizes = [10, 15, 25, 50];
-
-const Logistica = ({ pedidos, loading }) => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState({ 
@@ -491,16 +492,16 @@ const Logistica = ({ pedidos, loading }) => {
           </FormControl>
           <FormControl fullWidth sx={{ mt: 1 }}>
             <Typography variant="caption" sx={{ mb: 0.5 }}>Transporte</Typography>
-            <Select
-              value={editTransporte}
-              onChange={e => setEditTransporte(e.target.value)}
-              displayEmpty
-            >
-              <MenuItem value=""><em>Sin transporte</em></MenuItem>
-              {transportes.map(t => (
-                <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>
-              ))}
-            </Select>
+                          <Select
+                            value={editTransporte}
+                            onChange={e => setEditTransporte(e.target.value)}
+                            displayEmpty
+                          >
+                            <MenuItem value=""><em>Sin transporte</em></MenuItem>
+                            {transportesEdit.map(t => (
+                              <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>
+                            ))}
+                          </Select>
           </FormControl>
         </DialogContent>
         <DialogActions>
