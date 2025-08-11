@@ -65,19 +65,18 @@ const compareDates = (dateString, filterDate) => {
 };
 
 const columns = [
-  { id: 'origen', label: 'Origen' },
   { id: 'comprobante', label: 'Comprobante' },
-  { id: 'codigo', label: 'Código' },
   { id: 'cliente', label: 'Cliente' },
   { id: 'direccion', label: 'Dirección' },
   { id: 'cantidad', label: 'Cantidad' },
   { id: 'armador', label: 'Armador' },
   { id: 'estado', label: 'Estado' },
+  { id: 'tipo_transporte', label: 'Tipo Tte' },
+  { id: 'transporte', label: 'Transporte' },
   { id: 'tipo', label: 'Tipo' },
   { id: 'tipo_devolucion', label: 'Tipo de Devolución' },
   { id: 'fecha_pedido', label: 'Fecha Pedido' },
   { id: 'fecha', label: 'Fecha Entrega' },
-  { id: 'transporte', label: 'Transporte' },
   { id: 'completado', label: 'Completado' },
 ];
 
@@ -160,11 +159,10 @@ const Logistica = ({ pedidos, loading }) => {
       // Mapear pedidos en logística
       const pedidosEnLogistica = (pedidosRes.data || []).map(p => ({ 
         ...p, 
-        origen: 'Pedido',
-        codigo: p.Codigo !== undefined && p.Codigo !== null ? String(p.Codigo) : '',
         cliente: p.cliente_nombre || '',
         direccion: p.cliente_direccion || p.direccion || '',
-        transporte: p.transporte_nombre,
+        tipo_transporte: p.tipo_transporte_nombre || '',
+        transporte: p.transporte_nombre || '',
         fecha: p.fecha_entrega,
         cantidad: p.cant_bultos,
         comprobante: p.comprobante || '',
@@ -175,11 +173,10 @@ const Logistica = ({ pedidos, loading }) => {
       // Mapear devoluciones en logística
       const devolucionesEnLogistica = (devolucionesRes.data || []).map(d => ({ 
         ...d, 
-        origen: 'Devolución',
-        codigo: d.Codigo !== undefined && d.Codigo !== null ? String(d.Codigo) : '',
         cliente: d.cliente_nombre || '',
         direccion: d.cliente_direccion || '',
-        transporte: d.transporte_nombre,
+        tipo_transporte: d.tipo_transporte_nombre || d.tipo_transporte || '',
+        transporte: d.transporte_nombre || d.transporte || '',
         comprobante: d.pedido_comprobante || '',
         cantidad: '',
         armador: (d.armador_nombre ? d.armador_nombre : '') + (d.armador_apellido ? ' ' + d.armador_apellido : ''),
@@ -382,9 +379,8 @@ const Logistica = ({ pedidos, loading }) => {
           <TableHead>
             <TableRow>
               {columns.map(col => {
-                // Ocultar las columnas tipo y tipo_devolucion
-                if (col.id === 'tipo' || col.id === 'tipo_devolucion') return null;
-                
+                // Ocultar las columnas tipo, tipo_devolucion, origen y codigo
+                if (col.id === 'tipo' || col.id === 'tipo_devolucion' || col.id === 'origen' || col.id === 'codigo') return null;
                 return (
                   <TableCell key={col.id} sx={{ fontWeight: 700, fontSize: 11, py: 0.6, textAlign: 'left' }}>{col.label}</TableCell>
                 );
@@ -402,9 +398,8 @@ const Logistica = ({ pedidos, loading }) => {
               paginatedPedidos.map((pedido, idx) => (
                 <TableRow key={pedido.id ? `p-${pedido.id}` : `d-${idx}`} sx={{ background: 'background.paper', '&:hover': { background: '#e8f0fe' } }}>
                   {columns.map(col => {
-                    // Ocultar las columnas tipo y tipo_devolucion
-                    if (col.id === 'tipo' || col.id === 'tipo_devolucion') return null;
-                    
+                    // Ocultar las columnas tipo, tipo_devolucion, origen y codigo
+                    if (col.id === 'tipo' || col.id === 'tipo_devolucion' || col.id === 'origen' || col.id === 'codigo') return null;
                     return (
                       col.id === 'completado' ? (
                         <TableCell key={col.id} sx={{ fontSize: 10, py: 0.4, px: 0.6, textAlign: 'center' }}>
