@@ -170,14 +170,12 @@ const Logistica = ({ pedidos, loading }) => {
           }
         }
       });
-      return row;
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Logistica');
+      XLSX.writeFile(wb, 'logistica.xlsx');
+      handleExportClose();
     });
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Logistica');
-    XLSX.writeFile(wb, 'logistica.xlsx');
-    handleExportClose();
-  };
     
     // Exportar a PDF
     const handleExportPDF = () => {
@@ -213,7 +211,8 @@ const Logistica = ({ pedidos, loading }) => {
         cantidad: p.cant_bultos,
         comprobante: p.comprobante || '',
         armador: (p.armador_nombre ? p.armador_nombre : '') + (p.armador_apellido ? ' ' + p.armador_apellido : ''),
-        estado: p.estado_nombre || p.estado || ''
+        estado: p.estado_nombre || p.estado || '',
+        origen: 'Pedido'
       }));
 
       // Mapear devoluciones en logística
@@ -226,7 +225,8 @@ const Logistica = ({ pedidos, loading }) => {
         comprobante: d.pedido_comprobante || '',
         cantidad: '',
         armador: (d.armador_nombre ? d.armador_nombre : '') + (d.armador_apellido ? ' ' + d.armador_apellido : ''),
-        estado: d.estado_nombre || ''
+        estado: d.estado_nombre || '',
+        origen: 'Devolución'
       }));
       setData([...pedidosEnLogistica, ...devolucionesEnLogistica]);
     }).catch(error => {
