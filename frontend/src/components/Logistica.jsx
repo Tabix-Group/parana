@@ -104,24 +104,32 @@ function Logistica() {
   const fetchData = async () => {
     try {
       const [pedidosRes, devolucionesRes, vendedoresRes, clientesRes, transportesRes, tiposTransporteRes, estadosRes] = await Promise.all([
-        api.get('/pedidos'),
-        api.get('/devoluciones'),
-        api.get('/vendedores'),
-        api.get('/clientes'),
-        api.get('/transportes'),
-        api.get('/tipos-transporte'),
-        api.get('/estados')
+        api.get('/pedidos?pageSize=1000'),
+        api.get('/devoluciones?pageSize=1000'),
+        api.get('/vendedores?pageSize=1000'),
+        api.get('/clientes?pageSize=1000'),
+        api.get('/transportes?pageSize=1000'),
+        api.get('/tipos-transporte?pageSize=1000'),
+        api.get('/estados?pageSize=1000')
       ]);
 
-      setPedidos(pedidosRes.data);
-      setDevoluciones(devolucionesRes.data);
-      setVendedores(vendedoresRes.data);
-      setClientes(clientesRes.data);
-      setTransportes(transportesRes.data);
-      setTiposTransporte(tiposTransporteRes.data);
-      setEstados(estadosRes.data);
+      setPedidos(pedidosRes.data?.data || []);
+      setDevoluciones(devolucionesRes.data?.data || []);
+      setVendedores(vendedoresRes.data?.data || []);
+      setClientes(clientesRes.data?.data || []);
+      setTransportes(transportesRes.data?.data || []);
+      setTiposTransporte(tiposTransporteRes.data?.data || []);
+      setEstados(estadosRes.data?.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
+      // En caso de error, asegurar que todos los states sean arrays vacíos
+      setPedidos([]);
+      setDevoluciones([]);
+      setVendedores([]);
+      setClientes([]);
+      setTransportes([]);
+      setTiposTransporte([]);
+      setEstados([]);
     }
   };
 
@@ -148,7 +156,7 @@ function Logistica() {
   useEffect(() => {
     let filtered = combinedData;
 
-    if (filterVendedor) {
+    if (filterVendedor && Array.isArray(vendedores)) {
       filtered = filtered.filter(item => 
         vendedores.find(v => v.id === item.vendedor_id)?.nombre?.toLowerCase().includes(filterVendedor.toLowerCase())
       );
@@ -160,7 +168,7 @@ function Logistica() {
       );
     }
 
-    if (filterEstado) {
+    if (filterEstado && Array.isArray(estados)) {
       filtered = filtered.filter(item => 
         item.estado_id === parseInt(filterEstado)
       );
@@ -171,7 +179,7 @@ function Logistica() {
     }
 
     setFilteredData(filtered);
-  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterDate, vendedores]);
+  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterDate, vendedores, estados]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -227,9 +235,9 @@ function Logistica() {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
         <Autocomplete
-          options={vendedores}
+          options={Array.isArray(vendedores) ? vendedores : []}
           getOptionLabel={(option) => option.nombre || ''}
-          value={vendedores.find(v => v.nombre?.toLowerCase().includes(filterVendedor.toLowerCase())) || null}
+          value={Array.isArray(vendedores) ? vendedores.find(v => v.nombre?.toLowerCase().includes(filterVendedor.toLowerCase())) || null : null}
           onChange={(event, value) => setFilterVendedor(value ? value.nombre : '')}
           renderInput={(params) => <TextField {...params} label="Filtrar por Vendedor" size="small" />}
           sx={{ minWidth: 200 }}
@@ -250,7 +258,7 @@ function Logistica() {
             displayEmpty
           >
             <MenuItem value="">Todos los Estados</MenuItem>
-            {estados.map((estado) => (
+            {Array.isArray(estados) && estados.map((estado) => (
               <MenuItem key={estado.id} value={estado.id}>
                 {estado.nombre}
               </MenuItem>
@@ -301,11 +309,11 @@ function Logistica() {
                   <TableCell>{formatDate(row.fecha)}</TableCell>
                   <TableCell>{row.tipo}</TableCell>
                   <TableCell>
-                    {vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor'}
+                    {Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor'}
                   </TableCell>
                   <TableCell>{row.armador}</TableCell>
                   <TableCell>
-                    {estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado'}
+                    {Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado'}
                   </TableCell>
                   <TableCell>{row.tipo_transporte}</TableCell>
                   <TableCell>{row.transporte}</TableCell>
@@ -344,7 +352,7 @@ function Logistica() {
               displayEmpty
             >
               <MenuItem value="">Seleccionar Tipo de Transporte</MenuItem>
-              {tiposTransporte.map((tipo) => (
+              {Array.isArray(tiposTransporte) && tiposTransporte.map((tipo) => (
                 <MenuItem key={tipo.id} value={tipo.id}>
                   {tipo.nombre}
                 </MenuItem>
@@ -358,7 +366,7 @@ function Logistica() {
               displayEmpty
             >
               <MenuItem value="">Seleccionar Transporte</MenuItem>
-              {transportes.map((transporte) => (
+              {Array.isArray(transportes) && transportes.map((transporte) => (
                 <MenuItem key={transporte.id} value={transporte.id}>
                   {transporte.nombre}
                 </MenuItem>
