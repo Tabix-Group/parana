@@ -19,6 +19,18 @@ const formatDate = (input) => {
   return `${day}/${month}/${year.slice(-2)}`;
 };
 
+// Función para convertir fechas de la BD al formato correcto para inputs type="date"
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  // Si ya es YYYY-MM-DD, retornarlo tal como está
+  if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return dateString;
+  }
+  // Si viene con timestamp, extraer solo la parte de fecha
+  const datePart = dateString.toString().split('T')[0];
+  return datePart;
+};
+
 const columns = [
   { id: 'comprobante', label: 'Comprobante' },
   { id: 'Codigo', label: 'Código' },
@@ -75,8 +87,8 @@ export default function Pedidos() {
     vendedor_id: row.vendedor_id || '',
     cant_bultos: row.cant_bultos || '',
     tipo_bultos: row.tipo_bultos || '',
-    fecha_pedido: row.fecha_pedido || '',
-    fecha_entrega: row.fecha_entrega || '',
+    fecha_pedido: formatDateForInput(row.fecha_pedido) || '',
+    fecha_entrega: formatDateForInput(row.fecha_entrega) || '',
     estado_id: row.estado_id || '',
     notas: row.notas || ''
   } : {
