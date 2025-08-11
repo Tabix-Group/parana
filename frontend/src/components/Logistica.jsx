@@ -472,5 +472,4 @@ const Logistica = ({ pedidos, loading }) => {
     </>
   );
 }
-
 export default Logistica;
