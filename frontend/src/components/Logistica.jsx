@@ -141,40 +141,44 @@ function Logistica() {
 
   useEffect(() => {
     const combined = [
-      ...pedidos.map(p => ({
-        ...p,
-        tipo: 'Pedido',
-        nro_comprobante: p.comprobante || 'Sin comprobante',
-        cliente: p.cliente_nombre || 'No disponible',
-        direccion: p.direccion || 'Sin dirección',
-        cantidad: p.cant_bultos || 0,
-        fecha_pedido: p.fecha_pedido || p.fecha,
-        fecha_entrega: p.fecha_entrega || '',
-        armador: p.cliente_nombre || 'No disponible',
-        tipo_transporte: p.tipo_transporte_nombre || 'No disponible',
-        transporte: p.transporte_nombre || 'No disponible',
-        completado: false
-      })),
-      ...devoluciones.map(d => ({
-        ...d,
-        tipo: 'Devolución',
-        nro_comprobante: d.comprobante || 'Sin comprobante',
-        cliente: d.cliente_nombre || 'No disponible',
-        direccion: d.direccion || 'Sin dirección',
-        cantidad: d.cant_bultos || 0,
-        fecha_pedido: d.fecha_pedido || d.fecha,
-        fecha_entrega: d.fecha_entrega || '',
-        armador: d.cliente_nombre || 'No disponible',
-        tipo_transporte: d.tipo_transporte_nombre || 'No disponible',
-        transporte: d.transporte_nombre || 'No disponible',
-        completado: false
-      }))
+      ...pedidos
+        .filter(p => p.en_logistica === true) // Solo pedidos marcados para logística
+        .map(p => ({
+          ...p,
+          tipo: 'Pedido',
+          nro_comprobante: p.comprobante || 'Sin comprobante',
+          cliente: p.cliente_nombre || 'No disponible',
+          direccion: p.direccion || 'Sin dirección',
+          cantidad: p.cant_bultos || 0,
+          fecha_pedido: p.fecha_pedido || p.fecha,
+          fecha_entrega: p.fecha_entrega || '',
+          armador: p.cliente_nombre || 'No disponible',
+          tipo_transporte: p.tipo_transporte_nombre || 'No disponible',
+          transporte: p.transporte_nombre || 'No disponible',
+          completado: p.completado || false
+        })),
+      ...devoluciones
+        .filter(d => d.en_logistica === true) // Solo devoluciones marcadas para logística
+        .map(d => ({
+          ...d,
+          tipo: 'Devolución',
+          nro_comprobante: d.comprobante || 'Sin comprobante',
+          cliente: d.cliente_nombre || 'No disponible',
+          direccion: d.direccion || 'Sin dirección',
+          cantidad: d.cant_bultos || 0,
+          fecha_pedido: d.fecha_pedido || d.fecha,
+          fecha_entrega: d.fecha_entrega || '',
+          armador: d.cliente_nombre || 'No disponible',
+          tipo_transporte: d.tipo_transporte_nombre || 'No disponible',
+          transporte: d.transporte_nombre || 'No disponible',
+          completado: d.completado || false
+        }))
     ];
     setCombinedData(combined);
   }, [pedidos, devoluciones]);
 
   useEffect(() => {
-    let filtered = combinedData.filter(item => !item.completado);
+    let filtered = combinedData; // Mostrar todos, incluyendo completados
 
     if (filterVendedor && Array.isArray(vendedores)) {
       filtered = filtered.filter(item => 
@@ -247,20 +251,26 @@ function Logistica() {
   const handleCompleted = async (item) => {
     try {
       const endpoint = item.tipo === 'Pedido' ? '/pedidos' : '/devoluciones';
-      await api.put(`${endpoint}/${item.id}`, {
-        ...item,
-        completado: true,
-        estado_id: estados.find(e => e.nombre?.toLowerCase().includes('completado'))?.id || item.estado_id
-      });
+      const newCompletedState = !item.completado; // Toggle del estado
+      
+      if (newCompletedState) {
+        // Marcar como completado usando el endpoint específico
+        await api.put(`${endpoint}/${item.id}/completado`);
+      } else {
+        // Desmarcar como completado usando el endpoint general
+        await api.put(`${endpoint}/${item.id}`, {
+          completado: false
+        });
+      }
       
       // Actualizar el estado local
       setCombinedData(prev => prev.map(row => 
         row.id === item.id && row.tipo === item.tipo 
-          ? { ...row, completado: true }
+          ? { ...row, completado: newCompletedState }
           : row
       ));
     } catch (error) {
-      console.error('Error marking as completed:', error);
+      console.error('Error toggling completed state:', error);
     }
   };
 
@@ -354,10 +364,30 @@ function Logistica() {
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Título */}
-      <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold' }}>
-        Vista Logística
-      </Typography>
+      {/* Título y contadores */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+          Vista Logística
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Typography variant="body2" sx={{ 
+            backgroundColor: '#e3f2fd', 
+            padding: '4px 12px', 
+            borderRadius: '16px',
+            color: '#1976d2'
+          }}>
+            Pendientes: {filteredData.filter(item => !item.completado).length}
+          </Typography>
+          <Typography variant="body2" sx={{ 
+            backgroundColor: '#f3e5f5', 
+            padding: '4px 12px', 
+            borderRadius: '16px',
+            color: '#7b1fa2'
+          }}>
+            Completados: {filteredData.filter(item => item.completado).length}
+          </Typography>
+        </Box>
+      </Box>
 
       {/* Filtros */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
@@ -465,43 +495,75 @@ function Logistica() {
           <TableBody>
             {filteredData
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row, index) => (
-                <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}>
-                  <TableCell sx={{ fontSize: '0.75rem' }}>{row.nro_comprobante}</TableCell>
-                  <TableCell sx={{ fontSize: '0.75rem' }}>{row.tipo}</TableCell>
-                  <TableCell sx={{ fontSize: '0.75rem' }}>{row.cliente}</TableCell>
-                  <TableCell sx={{ fontSize: '0.75rem' }}>{row.direccion}</TableCell>
-                  <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center' }}>{row.cantidad}</TableCell>
-                  <TableCell sx={{ fontSize: '0.75rem' }}>{formatDate(row.fecha_pedido)}</TableCell>
-                  <TableCell sx={{ fontSize: '0.75rem' }}>{formatDate(row.fecha_entrega)}</TableCell>
-                  <TableCell sx={{ fontSize: '0.75rem' }}>
-                    {Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor'}
-                  </TableCell>
-                  <TableCell sx={{ fontSize: '0.75rem' }}>
-                    {Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado'}
-                  </TableCell>
-                  <TableCell sx={{ fontSize: '0.75rem' }}>{row.tipo_transporte}</TableCell>
-                  <TableCell sx={{ fontSize: '0.75rem' }}>{row.transporte}</TableCell>
-                  <TableCell sx={{ padding: '4px' }}>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleEdit(row)}
-                      color="primary"
-                      sx={{ padding: '4px' }}
-                    >
-                      <Edit fontSize="small" />
-                    </IconButton>
-                  </TableCell>
-                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                    <Checkbox
-                      size="small"
-                      checked={row.completado || false}
-                      onChange={() => handleCompleted(row)}
-                      color="success"
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+              .map((row, index) => {
+                const isCompleted = row.completado;
+                const rowStyle = isCompleted 
+                  ? { backgroundColor: '#f5f5f5', opacity: 0.6, '&:hover': { backgroundColor: '#eeeeee' } }
+                  : { '&:hover': { backgroundColor: '#f9f9f9' } };
+                
+                return (
+                  <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={rowStyle}>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                      {row.nro_comprobante}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                      {row.tipo}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                      {row.cliente}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                      {row.direccion}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>
+                      {row.cantidad}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                      {formatDate(row.fecha_pedido)}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                      {formatDate(row.fecha_entrega)}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                      {Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor'}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                      {Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado'}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                      {row.tipo_transporte}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                      {row.transporte}
+                    </TableCell>
+                    <TableCell sx={{ padding: '4px' }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleEdit(row)}
+                        color="primary"
+                        sx={{ padding: '4px', opacity: isCompleted ? 0.5 : 1 }}
+                        disabled={isCompleted}
+                      >
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                    <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                      <Checkbox
+                        size="small"
+                        checked={row.completado || false}
+                        onChange={() => handleCompleted(row)}
+                        color={isCompleted ? "default" : "success"}
+                        sx={{ 
+                          color: isCompleted ? '#666' : 'inherit',
+                          '&.Mui-checked': { 
+                            color: isCompleted ? '#666' : '#2e7d32' 
+                          }
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
           </TableBody>
         </Table>
       </TableContainer>
