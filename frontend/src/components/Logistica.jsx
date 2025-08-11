@@ -84,7 +84,7 @@ const columns = [
 
 const pageSizes = [10, 15, 25, 50];
 
-const Logistica = ({ pedidos, loading }) => {
+function Logistica({ pedidos, loading }) {
   // Estado para modal de edición
   const [editOpen, setEditOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
@@ -469,7 +469,43 @@ const Logistica = ({ pedidos, loading }) => {
         rowsPerPageOptions={pageSizes}
         sx={{ mt: 2 }}
       />
+
+      {/* Modal de edición de Tipo Tte y Transporte */}
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)}>
+        <DialogTitle>Editar Tipo Tte y Transporte</DialogTitle>
+        <DialogContent sx={{ minWidth: 320, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <FormControl fullWidth sx={{ mt: 1 }}>
+            <Select
+              value={editTipoTte}
+              onChange={e => setEditTipoTte(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value=""><em>Sin tipo</em></MenuItem>
+              {tiposTransporte.map(t => (
+                <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth sx={{ mt: 1 }}>
+            <Select
+              value={editTransporte}
+              onChange={e => setEditTransporte(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value=""><em>Sin transporte</em></MenuItem>
+              {transportesEdit.map(t => (
+                <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditOpen(false)} color="secondary">Cancelar</Button>
+          <Button onClick={handleEditSave} variant="contained" color="primary">Guardar</Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
-};
+}
+
 export default Logistica;
