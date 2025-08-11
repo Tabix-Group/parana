@@ -30,63 +30,27 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import api from '../api';
 
-const formatDate = (dateString) => {
-  if (!dateString) return '';
-  
-  try {
-    // Para strings con formato YYYY-MM-DD, usar Date con T00:00:00 para evitar problemas de timezone
-    if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      const date = new Date(dateString + 'T00:00:00');
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = String(date.getFullYear()).slice(-2);
-      return `${day}/${month}/${year}`;
-    }
-
-    // Añadir 'T00:00:00' para forzar interpretación en hora local
-    const dateToUse = typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/) 
-      ? dateString + 'T00:00:00' 
-      : dateString;
-
-    const date = new Date(dateToUse);
-    
-    if (isNaN(date.getTime())) {
-      return dateString;
-    }
-
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = String(date.getFullYear());
-    
-    return `${day}/${month}/${year}`;
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return dateString;
-  }
+const formatDate = (input) => {
+  if (!input) return '';
+  // Obtener parte de fecha YYYY-MM-DD sin hora
+  const datePart = input.toString().split('T')[0];
+  const [year, month, day] = datePart.split('-');
+  if (!year || !month || !day) return '';
+  return `${day}/${month}/${year}`;
 };
 
 const compareDates = (dateString, filterDate) => {
   if (!filterDate) return true;
-  let pedidoDateStr = '';
   try {
     if (!dateString) return false;
-
+    
+    // Obtener parte de fecha YYYY-MM-DD sin hora, evitando conversiones de timezone
+    let pedidoDateStr = '';
     if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
       pedidoDateStr = dateString;
     } else {
-      // Añadir 'T00:00:00' para forzar interpretación en hora local
-      const dateToUse = typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/) 
-        ? dateString + 'T00:00:00' 
-        : dateString;
-      
-      const date = new Date(dateToUse);
-      if (isNaN(date.getTime())) return false;
-      
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      
-      pedidoDateStr = `${year}-${month}-${day}`;
+      // Para otros formatos, extraer solo la parte de fecha
+      pedidoDateStr = dateString.toString().split('T')[0];
     }
 
     return pedidoDateStr === filterDate;
