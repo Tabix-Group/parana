@@ -55,11 +55,16 @@ router.get('/logistica', async (req, res) => {
         'transportes.nombre as transporte_nombre',
         'pedidos.comprobante as pedido_comprobante',
         'devoluciones.fecha_pedido as fecha_pedido',
-        'devoluciones.fecha as fecha_entrega'
+        'devoluciones.fecha as fecha_entrega',
+        'armadores.nombre as armador_nombre',
+        'armadores.apellido as armador_apellido',
+        'estados.nombre as estado_nombre'
       ])
       .leftJoin('clientes', 'devoluciones.cliente_id', 'clientes.id')
       .leftJoin('transportes', 'devoluciones.transporte_id', 'transportes.id')
       .leftJoin('pedidos', 'devoluciones.pedido_id', 'pedidos.id')
+      .leftJoin('armadores', 'pedidos.armador_id', 'armadores.id')
+      .leftJoin('estados', 'pedidos.estado_id', 'estados.id')
       .where('devoluciones.en_logistica', true)
       .orderBy('devoluciones.fecha', 'asc');
 

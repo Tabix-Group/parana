@@ -71,6 +71,8 @@ const columns = [
   { id: 'cliente', label: 'Cliente' },
   { id: 'direccion', label: 'Dirección' },
   { id: 'cantidad', label: 'Cantidad' },
+  { id: 'armador', label: 'Armador' },
+  { id: 'estado', label: 'Estado' },
   { id: 'tipo', label: 'Tipo' },
   { id: 'tipo_devolucion', label: 'Tipo de Devolución' },
   { id: 'fecha_pedido', label: 'Fecha Pedido' },
@@ -164,7 +166,10 @@ const Logistica = ({ pedidos, loading }) => {
         direccion: p.cliente_direccion || p.direccion || '',
         transporte: p.transporte_nombre,
         fecha: p.fecha_entrega,
-        cantidad: p.cant_bultos
+        cantidad: p.cant_bultos,
+        comprobante: p.comprobante || '',
+        armador: (p.armador_nombre ? p.armador_nombre : '') + (p.armador_apellido ? ' ' + p.armador_apellido : ''),
+        estado: p.estado_nombre || p.estado || ''
       }));
 
       // Mapear devoluciones en logística
@@ -177,6 +182,8 @@ const Logistica = ({ pedidos, loading }) => {
         transporte: d.transporte_nombre,
         comprobante: d.pedido_comprobante || '',
         cantidad: '',
+        armador: (d.armador_nombre ? d.armador_nombre : '') + (d.armador_apellido ? ' ' + d.armador_apellido : ''),
+        estado: d.estado_nombre || ''
       }));
       setData([...pedidosEnLogistica, ...devolucionesEnLogistica]);
     }).catch(error => {
