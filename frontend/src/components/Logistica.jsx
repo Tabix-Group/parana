@@ -320,7 +320,7 @@ const Logistica = ({ pedidos, loading }) => {
           startIcon={<DownloadIcon />}
           sx={{ fontWeight: 500, px: 2, py: 1, borderRadius: 2 }}
         >
-          Exportar
+          Export
         </Button>
         <Menu anchorEl={anchorEl} open={open} onClose={handleExportClose}>
           <MenuItem onClick={handleExportExcel}>
