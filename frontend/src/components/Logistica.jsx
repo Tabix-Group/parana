@@ -2,10 +2,11 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import React, { useState, useEffect } from 'react';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Box, TablePagination, TextField, FormControl, Select, MenuItem, Button, Autocomplete, Menu, ListItemIcon, ListItemText } from '@mui/material';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Box, TablePagination, TextField, FormControl, Select, MenuItem, Button, Autocomplete, Menu, ListItemIcon, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import TableViewIcon from '@mui/icons-material/TableView';
+import EditIcon from '@mui/icons-material/Edit';
 import API from '../api';
 
 // Función robusta para formatear fechas a dd/mm/yy sin problemas de zona horaria
@@ -78,6 +79,50 @@ const columns = [
   { id: 'fecha_pedido', label: 'Fecha Pedido' },
   { id: 'fecha', label: 'Fecha Entrega' },
   { id: 'completado', label: 'Completado' },
+  { id: 'accion', label: 'Acción' },
+  // Estado para modal de edición
+  const [editOpen, setEditOpen] = useState(false);
+  const [editRow, setEditRow] = useState(null);
+  const [editTipoTte, setEditTipoTte] = useState('');
+  const [editTransporte, setEditTransporte] = useState('');
+  const [tiposTransporte, setTiposTransporte] = useState([]);
+  const [transportes, setTransportes] = useState([]);
+  // Cargar catálogos para el modal de edición
+  useEffect(() => {
+    if (editOpen) {
+      API.get('/tipos-transporte').then(res => setTiposTransporte(res.data.data || []));
+      API.get('/transportes').then(res => setTransportes(res.data.data || []));
+    }
+  }, [editOpen]);
+
+  const handleEditClick = (row) => {
+    setEditRow(row);
+    setEditTipoTte(row.tipo_transporte_id || row.tipo_transporte || '');
+    setEditTransporte(row.transporte_id || row.transporte || '');
+    setEditOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!editRow) return;
+    try {
+      if (editRow.origen === 'Pedido' || editRow.hasOwnProperty('cant_bultos')) {
+        await API.put(`/pedidos/${editRow.id}`, {
+          tipo_transporte_id: editTipoTte,
+          transporte_id: editTransporte
+        });
+      } else {
+        await API.put(`/devoluciones/${editRow.id}`, {
+          tipo_transporte_id: editTipoTte,
+          transporte_id: editTransporte
+        });
+      }
+      setEditOpen(false);
+      setEditRow(null);
+      setRefresh(r => !r);
+    } catch (err) {
+      alert('Error al guardar: ' + (err.response?.data?.message || err.message));
+    }
+  };
 ];
 
 const pageSizes = [10, 15, 25, 50];
@@ -400,6 +445,15 @@ const Logistica = ({ pedidos, loading }) => {
                   {columns.map(col => {
                     // Ocultar las columnas tipo, tipo_devolucion, origen y codigo
                     if (col.id === 'tipo' || col.id === 'tipo_devolucion' || col.id === 'origen' || col.id === 'codigo') return null;
+                    if (col.id === 'accion') {
+                      return (
+                        <TableCell key={col.id} sx={{ fontSize: 10, py: 0.4, px: 0.6, textAlign: 'center' }}>
+                          <IconButton size="small" color="primary" onClick={() => handleEditClick(pedido)}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      );
+                    }
                     return (
                       col.id === 'completado' ? (
                         <TableCell key={col.id} sx={{ fontSize: 10, py: 0.4, px: 0.6, textAlign: 'center' }}>
@@ -417,6 +471,43 @@ const Logistica = ({ pedidos, loading }) => {
                       )
                     );
                   })}
+
+      {/* Modal de edición de Tipo Tte y Transporte */}
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)}>
+        <DialogTitle>Editar Tipo Tte y Transporte</DialogTitle>
+        <DialogContent sx={{ minWidth: 320, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <FormControl fullWidth sx={{ mt: 1 }}>
+            <Typography variant="caption" sx={{ mb: 0.5 }}>Tipo Tte</Typography>
+            <Select
+              value={editTipoTte}
+              onChange={e => setEditTipoTte(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value=""><em>Sin tipo</em></MenuItem>
+              {tiposTransporte.map(t => (
+                <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth sx={{ mt: 1 }}>
+            <Typography variant="caption" sx={{ mb: 0.5 }}>Transporte</Typography>
+            <Select
+              value={editTransporte}
+              onChange={e => setEditTransporte(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value=""><em>Sin transporte</em></MenuItem>
+              {transportes.map(t => (
+                <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditOpen(false)} color="secondary">Cancelar</Button>
+          <Button onClick={handleEditSave} variant="contained" color="primary">Guardar</Button>
+        </DialogActions>
+      </Dialog>
                 </TableRow>
               ))
             ) : (
