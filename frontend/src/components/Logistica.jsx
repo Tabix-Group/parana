@@ -137,7 +137,7 @@ const Logistica = ({ pedidos, loading }) => {
     fecha_pedido: '', 
     fecha_entrega: '', 
     transporte: '', 
-    origen: '',
+    estado: '',
     completado: 'pendiente' // Default: mostrar solo pendientes
   });
   const [clientes, setClientes] = useState([]);
@@ -170,31 +170,29 @@ const Logistica = ({ pedidos, loading }) => {
           }
         }
       });
-      return row;
-    });
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Logistica');
-    XLSX.writeFile(wb, 'logistica.xlsx');
-    handleExportClose();
-  };
-  
-  // Exportar a PDF
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-    const tableColumn = columns.filter(col => col.id !== 'tipo' && col.id !== 'tipo_devolucion').map(col => col.label);
-    const tableRows = filteredPedidos.map(p =>
-      tableColumn.map(label => {
-        const col = columns.find(c => c.label === label);
-        if (col.id === 'fecha' || col.id === 'fecha_pedido') return formatDate(p[col.id]);
-        if (col.id === 'completado') return p.completado ? 'Sí' : 'No';
-        return p[col.id] ?? '';
-      })
-    );
-    doc.autoTable({ head: [tableColumn], body: tableRows });
-    doc.save('logistica.pdf');
-    handleExportClose();
-  };
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Logistica');
+      XLSX.writeFile(wb, 'logistica.xlsx');
+      handleExportClose();
+    };
+    
+    // Exportar a PDF
+    const handleExportPDF = () => {
+      const doc = new jsPDF();
+      const tableColumn = columns.filter(col => col.id !== 'tipo' && col.id !== 'tipo_devolucion').map(col => col.label);
+      const tableRows = filteredPedidos.map(p =>
+        tableColumn.map(label => {
+          const col = columns.find(c => c.label === label);
+          if (col.id === 'fecha' || col.id === 'fecha_pedido') return formatDate(p[col.id]);
+          if (col.id === 'completado') return p.completado ? 'Sí' : 'No';
+          return p[col.id] ?? '';
+        })
+      );
+      doc.autoTable({ head: [tableColumn], body: tableRows });
+      doc.save('logistica.pdf');
+      handleExportClose();
+    };
 
   useEffect(() => {
     // Cargar solo pedidos y devoluciones que están en logística
@@ -250,6 +248,12 @@ const Logistica = ({ pedidos, loading }) => {
     }
   };
 
+  // Cargar estados para el filtro
+  useEffect(() => {
+    API.get('/estados', { params: { pageSize: 100 } })
+      .then(res => setEstados(res.data.data || []));
+  }, []);
+
   // Ya no necesitamos cargar los catálogos completos para los filtros de texto
   // useEffect(() => {
   //   API.get('/clientes').then(res => setClientes(res.data.data));
@@ -279,7 +283,7 @@ const Logistica = ({ pedidos, loading }) => {
       fecha_pedido: '', 
       fecha_entrega: '', 
       transporte: '', 
-      origen: '',
+      estado: '',
       completado: 'pendiente' // Mantener pendiente como default al limpiar
     });
     setPage(0);
@@ -290,49 +294,17 @@ const Logistica = ({ pedidos, loading }) => {
   const pedidosToShow = data.length ? data : pedidos;
   const filteredPedidos = pedidosToShow.filter(p => {
     const matchComprobante = filters.comprobante === '' || (p.comprobante || '').toLowerCase().includes(filters.comprobante.toLowerCase());
-    
-    // Para cliente, buscar por nombre ya que el campo 'cliente' contiene el nombre
     const matchCliente = filters.cliente === '' || (p.cliente || '').toLowerCase().includes(filters.cliente.toLowerCase());
-    
-    // Para fecha, usar la función robusta de comparación
     const matchFecha = filters.fecha_entrega === '' || compareDates(p.fecha, filters.fecha_entrega);
-    
-    // Para fecha de pedido, usar la función robusta de comparación
     const matchFechaPedido = filters.fecha_pedido === '' || compareDates(p.fecha_pedido, filters.fecha_pedido);
-    
-    // Debug temporal para verificar fechas
-    if (filters.fecha_entrega && p.fecha) {
-      console.log('Debug fecha entrega:', {
-        filterDate: filters.fecha_entrega,
-        pedidoDate: p.fecha,
-        comprobante: p.comprobante,
-        matchResult: matchFecha
-      });
-    }
-    
-    if (filters.fecha_pedido && p.fecha_pedido) {
-      console.log('Debug fecha pedido:', {
-        filterDate: filters.fecha_pedido,
-        pedidoDate: p.fecha_pedido,
-        comprobante: p.comprobante,
-        matchResult: matchFechaPedido
-      });
-    }
-    
-    
-    // Para transporte, buscar por nombre ya que el campo 'transporte' contiene el nombre
     const matchTransporte = filters.transporte === '' || (p.transporte || '').toLowerCase().includes(filters.transporte.toLowerCase());
-    
-    // Filtro por origen si existe
-    const matchOrigen = !filters.origen || filters.origen === '' || p.origen === filters.origen;
-    
-    // Filtro por estado de completado
+    // Filtro por estado si existe
+    const matchEstado = !filters.estado || filters.estado === '' || (p.estado || '').toLowerCase() === filters.estado.toLowerCase();
     const matchCompletado = 
       filters.completado === '' || 
       (filters.completado === 'pendiente' && !p.completado) ||
       (filters.completado === 'completado' && p.completado);
-    
-    return matchComprobante && matchCliente && matchFecha && matchFechaPedido && matchTransporte && matchOrigen && matchCompletado;
+    return matchComprobante && matchCliente && matchFecha && matchFechaPedido && matchTransporte && matchEstado && matchCompletado;
   });
   const paginatedPedidos = filteredPedidos.slice(page * pageSize, page * pageSize + pageSize);
 
@@ -405,10 +377,11 @@ const Logistica = ({ pedidos, loading }) => {
           sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
         />
         <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
-          <Select name="origen" value={filters.origen || ''} onChange={e => { setFilters(f => ({ ...f, origen: e.target.value })); setPage(0); }} displayEmpty>
+          <Select name="estado" value={filters.estado || ''} onChange={e => { setFilters(f => ({ ...f, estado: e.target.value })); setPage(0); }} displayEmpty>
             <MenuItem value="">Todos</MenuItem>
-            <MenuItem value="Pedido">Pedido</MenuItem>
-            <MenuItem value="Devolución">Devolución</MenuItem>
+            {estados.map(est => (
+              <MenuItem key={est.id} value={est.nombre}>{est.nombre}</MenuItem>
+            ))}
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}>
@@ -472,43 +445,6 @@ const Logistica = ({ pedidos, loading }) => {
                       )
                     );
                   })}
-
-      {/* Modal de edición de Tipo Tte y Transporte */}
-      <Dialog open={editOpen} onClose={() => setEditOpen(false)}>
-        <DialogTitle>Editar Tipo Tte y Transporte</DialogTitle>
-        <DialogContent sx={{ minWidth: 320, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <FormControl fullWidth sx={{ mt: 1 }}>
-            <Typography variant="caption" sx={{ mb: 0.5 }}>Tipo Tte</Typography>
-            <Select
-              value={editTipoTte}
-              onChange={e => setEditTipoTte(e.target.value)}
-              displayEmpty
-            >
-              <MenuItem value=""><em>Sin tipo</em></MenuItem>
-              {tiposTransporte.map(t => (
-                <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth sx={{ mt: 1 }}>
-            <Typography variant="caption" sx={{ mb: 0.5 }}>Transporte</Typography>
-                          <Select
-                            value={editTransporte}
-                            onChange={e => setEditTransporte(e.target.value)}
-                            displayEmpty
-                          >
-                            <MenuItem value=""><em>Sin transporte</em></MenuItem>
-                            {transportesEdit.map(t => (
-                              <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>
-                            ))}
-                          </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditOpen(false)} color="secondary">Cancelar</Button>
-          <Button onClick={handleEditSave} variant="contained" color="primary">Guardar</Button>
-        </DialogActions>
-      </Dialog>
                 </TableRow>
               ))
             ) : (
