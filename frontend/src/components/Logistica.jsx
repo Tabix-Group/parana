@@ -21,7 +21,8 @@ import {
   DialogActions, 
   IconButton,
   Checkbox,
-  Typography
+  Typography,
+  Menu
 } from '@mui/material';
 import { Edit, FileDownload } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
@@ -102,6 +103,7 @@ function Logistica() {
   const [editingItem, setEditingItem] = useState(null);
   const [editingTransporte, setEditingTransporte] = useState('');
   const [editingTipoTransporte, setEditingTipoTransporte] = useState('');
+  const [exportAnchor, setExportAnchor] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -346,6 +348,9 @@ function Logistica() {
     doc.save(`Logistica_${fecha}.pdf`);
   };
 
+  const handleExportClick = (e) => setExportAnchor(e.currentTarget);
+  const handleExportClose = () => setExportAnchor(null);
+
   const columns = [
     { id: 'nro_comprobante', label: 'Nro Comprobante', minWidth: 120 },
     { id: 'tipo', label: 'Tipo', minWidth: 80 },
@@ -364,40 +369,15 @@ function Logistica() {
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Título y contadores */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-          Vista Logística
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Typography variant="body2" sx={{ 
-            backgroundColor: '#e3f2fd', 
-            padding: '4px 12px', 
-            borderRadius: '16px',
-            color: '#1976d2'
-          }}>
-            Pendientes: {filteredData.filter(item => !item.completado).length}
-          </Typography>
-          <Typography variant="body2" sx={{ 
-            backgroundColor: '#f3e5f5', 
-            padding: '4px 12px', 
-            borderRadius: '16px',
-            color: '#7b1fa2'
-          }}>
-            Completados: {filteredData.filter(item => item.completado).length}
-          </Typography>
-        </Box>
-      </Box>
-
-      {/* Filtros */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+      {/* Filtros y contadores en la misma fila */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
         <Autocomplete
           options={Array.isArray(vendedores) ? vendedores : []}
           getOptionLabel={(option) => option.nombre || ''}
           value={Array.isArray(vendedores) ? vendedores.find(v => v.nombre?.toLowerCase().includes(filterVendedor.toLowerCase())) || null : null}
           onChange={(event, value) => setFilterVendedor(value ? value.nombre : '')}
           renderInput={(params) => <TextField {...params} label="Filtrar por Vendedor" size="small" />}
-          sx={{ minWidth: 180 }}
+          sx={{ minWidth: 160 }}
         />
         
         <TextField
@@ -405,10 +385,10 @@ function Logistica() {
           value={filterCliente}
           onChange={(e) => setFilterCliente(e.target.value)}
           size="small"
-          sx={{ minWidth: 180 }}
+          sx={{ minWidth: 160 }}
         />
         
-        <FormControl size="small" sx={{ minWidth: 130 }}>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
           <Select
             value={filterEstado}
             onChange={(e) => setFilterEstado(e.target.value)}
@@ -430,7 +410,7 @@ function Logistica() {
           onChange={(e) => setFilterFechaPedido(e.target.value)}
           InputLabelProps={{ shrink: true }}
           size="small"
-          sx={{ minWidth: 130 }}
+          sx={{ minWidth: 120 }}
         />
 
         <TextField
@@ -440,7 +420,7 @@ function Logistica() {
           onChange={(e) => setFilterFechaEntrega(e.target.value)}
           InputLabelProps={{ shrink: true }}
           size="small"
-          sx={{ minWidth: 130 }}
+          sx={{ minWidth: 120 }}
         />
 
         <Button 
@@ -456,26 +436,44 @@ function Logistica() {
         >
           Limpiar Filtros
         </Button>
+
+        {/* Contadores */}
+        <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
+          <Typography variant="body2" sx={{ 
+            backgroundColor: '#e3f2fd', 
+            padding: '4px 12px', 
+            borderRadius: '16px',
+            color: '#1976d2',
+            fontSize: '0.75rem'
+          }}>
+            Pendientes: {filteredData.filter(item => !item.completado).length}
+          </Typography>
+          <Typography variant="body2" sx={{ 
+            backgroundColor: '#f3e5f5', 
+            padding: '4px 12px', 
+            borderRadius: '16px',
+            color: '#7b1fa2',
+            fontSize: '0.75rem'
+          }}>
+            Completados: {filteredData.filter(item => item.completado).length}
+          </Typography>
+        </Box>
       </Box>
 
-      {/* Botones de exportación */}
+      {/* Botón de exportación con dropdown */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <Button
           variant="contained"
           startIcon={<FileDownload />}
-          onClick={handleExportExcel}
-          sx={{ backgroundColor: '#1976d2' }}
+          onClick={handleExportClick}
+          sx={{ fontWeight: 600, px: 2.5, py: 1.2, borderRadius: 2 }}
         >
-          Exportar Excel
+          Exportar
         </Button>
-        <Button
-          variant="contained"
-          startIcon={<FileDownload />}
-          onClick={handleExportPDF}
-          sx={{ backgroundColor: '#d32f2f' }}
-        >
-          Exportar PDF
-        </Button>
+        <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={handleExportClose}>
+          <MenuItem onClick={() => { handleExportExcel(); handleExportClose(); }}>Exportar a Excel</MenuItem>
+          <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
+        </Menu>
       </Box>
 
       <TableContainer component={Paper}>
