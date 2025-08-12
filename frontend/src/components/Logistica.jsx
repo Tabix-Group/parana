@@ -81,6 +81,7 @@ function Logistica() {
   const [editingItem, setEditingItem] = useState(null);
   const [editingTransporte, setEditingTransporte] = useState('');
   const [editingTipoTransporte, setEditingTipoTransporte] = useState('');
+  const [editingNotas, setEditingNotas] = useState('');
   const [exportAnchor, setExportAnchor] = useState(null);
 
   useEffect(() => {
@@ -202,17 +203,23 @@ function Logistica() {
     setEditingItem(item);
     setEditingTransporte(item.transporte_id || '');
     setEditingTipoTransporte(item.tipo_transporte_id || '');
+    setEditingNotas(item.tipo === 'Pedido' ? (item.notas || '') : (item.texto || ''));
     setEditModalOpen(true);
   };
 
   const handleSaveEdit = async () => {
     try {
       const endpoint = editingItem.tipo === 'Pedido' ? '/pedidos' : '/devoluciones';
-      await api.put(`${endpoint}/${editingItem.id}`, {
+      const body = {
         transporte_id: editingTransporte,
         tipo_transporte_id: editingTipoTransporte
-      });
-      
+      };
+      if (editingItem.tipo === 'Pedido') {
+        body.notas = editingNotas;
+      } else {
+        body.texto = editingNotas;
+      }
+      await api.put(`${endpoint}/${editingItem.id}`, body);
       setEditModalOpen(false);
       setEditingItem(null);
       fetchData();
@@ -337,6 +344,7 @@ function Logistica() {
     { id: 'cantidad', label: 'Cantidad', minWidth: 70 },
     { id: 'fecha_pedido', label: 'Fecha Pedido', minWidth: 90 },
     { id: 'fecha_entrega', label: 'Fecha Entrega', minWidth: 90 },
+    { id: 'notas', label: 'Notas/Observaciones', minWidth: 140 },
     { id: 'vendedor', label: 'Vendedor', minWidth: 100 },
     { id: 'estado', label: 'Estado', minWidth: 80 },
     { id: 'tipo_tte', label: 'Tipo Tte', minWidth: 80 },
@@ -479,39 +487,20 @@ function Logistica() {
                 
                 return (
                   <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={rowStyle}>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {row.nro_comprobante}
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.nro_comprobante}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.tipo}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_pedido)}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_entrega)}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit', maxWidth: 180, whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
+                      {row.tipo === 'Pedido' ? (row.notas || '') : (row.texto || '')}
                     </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {row.tipo}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {row.cliente}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {row.direccion}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>
-                      {row.cantidad}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {formatDate(row.fecha_pedido)}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {formatDate(row.fecha_entrega)}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor'}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado'}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {row.tipo_transporte}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {row.transporte}
-                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor'}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado'}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.tipo_transporte}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.transporte}</TableCell>
                     <TableCell sx={{ padding: '4px' }}>
                       <IconButton
                         size="small"
@@ -555,7 +544,7 @@ function Logistica() {
       />
 
       <Dialog open={editModalOpen} onClose={handleCloseEdit}>
-        <DialogTitle>Editar Transporte</DialogTitle>
+        <DialogTitle>Editar Transporte y Notas/Observaciones</DialogTitle>
         <DialogContent>
           <FormControl fullWidth margin="normal">
             <Select
@@ -585,6 +574,16 @@ function Logistica() {
               ))}
             </Select>
           </FormControl>
+          <TextField
+            fullWidth
+            margin="normal"
+            label={editingItem?.tipo === 'Pedido' ? 'Notas' : 'Observaciones'}
+            value={editingNotas}
+            onChange={e => setEditingNotas(e.target.value)}
+            multiline
+            minRows={2}
+            maxRows={6}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseEdit}>Cancelar</Button>

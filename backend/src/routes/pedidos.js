@@ -111,7 +111,18 @@ router.get('/', async (req, res) => {
 // Crear pedido
 router.post('/', async (req, res) => {
   try {
-    const pedido = req.body;
+    const pedido = { ...req.body };
+    
+    // Procesar fechas para evitar problemas de timezone
+    if (pedido.fecha_pedido) {
+      // Asegurar que la fecha se guarde exactamente como viene del frontend
+      pedido.fecha_pedido = pedido.fecha_pedido.split('T')[0];
+    }
+    if (pedido.fecha_entrega) {
+      // Asegurar que la fecha se guarde exactamente como viene del frontend
+      pedido.fecha_entrega = pedido.fecha_entrega.split('T')[0];
+    }
+    
     let id;
     if (db.client.config.client === 'pg') {
       id = (await db('pedidos').insert(pedido).returning('id'))[0].id;
@@ -179,8 +190,25 @@ router.put('/:id/completado', async (req, res) => {
 
 // Editar pedido
 router.put('/:id', async (req, res) => {
-  await db('pedidos').where({ id: req.params.id }).update(req.body);
-  res.status(200).json({ success: true });
+  try {
+    const datos = { ...req.body };
+    
+    // Procesar fechas para evitar problemas de timezone
+    if (datos.fecha_pedido) {
+      // Asegurar que la fecha se guarde exactamente como viene del frontend
+      datos.fecha_pedido = datos.fecha_pedido.split('T')[0];
+    }
+    if (datos.fecha_entrega) {
+      // Asegurar que la fecha se guarde exactamente como viene del frontend
+      datos.fecha_entrega = datos.fecha_entrega.split('T')[0];
+    }
+    
+    await db('pedidos').where({ id: req.params.id }).update(datos);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('Error PUT /pedidos:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Borrar pedido
