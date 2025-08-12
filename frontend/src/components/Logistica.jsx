@@ -77,6 +77,8 @@ function Logistica() {
   const [filterEstado, setFilterEstado] = useState('');
   const [filterFechaPedido, setFilterFechaPedido] = useState('');
   const [filterFechaEntrega, setFilterFechaEntrega] = useState('');
+  const [filterTipoTte, setFilterTipoTte] = useState('');
+  const [filterTransporte, setFilterTransporte] = useState('');
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [editingTransporte, setEditingTransporte] = useState('');
@@ -189,8 +191,14 @@ function Logistica() {
       filtered = filtered.filter(item => compareDates(item.fecha_entrega, filterFechaEntrega));
     }
 
+    if (filterTipoTte) {
+      filtered = filtered.filter(item => (item.tipo_transporte || '').toLowerCase().includes(filterTipoTte.toLowerCase()));
+    }
+    if (filterTransporte) {
+      filtered = filtered.filter(item => (item.transporte || '').toLowerCase().includes(filterTransporte.toLowerCase()));
+    }
     setFilteredData(filtered);
-  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterFechaPedido, filterFechaEntrega, vendedores, estados]);
+  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterFechaPedido, filterFechaEntrega, filterTipoTte, filterTransporte, vendedores, estados]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -345,7 +353,6 @@ function Logistica() {
 
   const columns = [
     { id: 'nro_comprobante', label: 'Nro Comprobante', minWidth: 120 },
-    { id: 'tipo', label: 'Tipo', minWidth: 80 },
     { id: 'cliente', label: 'Cliente', minWidth: 120 },
     { id: 'direccion', label: 'Dirección', minWidth: 120 },
     { id: 'cantidad', label: 'Cantidad', minWidth: 70 },
@@ -416,6 +423,20 @@ function Logistica() {
           sx={{ minWidth: 120 }}
         />
 
+        <TextField
+          label="Filtrar por Tipo Tte"
+          value={filterTipoTte}
+          onChange={e => setFilterTipoTte(e.target.value)}
+          size="small"
+          sx={{ minWidth: 120 }}
+        />
+        <TextField
+          label="Filtrar por Transporte"
+          value={filterTransporte}
+          onChange={e => setFilterTransporte(e.target.value)}
+          size="small"
+          sx={{ minWidth: 120 }}
+        />
         <Button 
           variant="outlined" 
           onClick={() => {
@@ -424,6 +445,8 @@ function Logistica() {
             setFilterEstado('');
             setFilterFechaPedido('');
             setFilterFechaEntrega('');
+            setFilterTipoTte('');
+            setFilterTransporte('');
           }}
           size="small"
         >
@@ -495,7 +518,6 @@ function Logistica() {
                 return (
                   <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={rowStyle}>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.nro_comprobante}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.tipo}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
