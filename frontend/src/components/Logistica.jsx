@@ -373,8 +373,8 @@ function Logistica() {
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Filtros y contadores en la misma fila */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+  {/* Filtros en una sola fila */}
+  <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
         {/* Filtros principales agrupados */}
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           <TextField
@@ -456,8 +456,23 @@ function Logistica() {
           Limpiar Filtros
         </Button>
 
-        {/* Contadores a la derecha del botón Exportar */}
-        <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
+      </Box>
+
+      {/* Botón de exportación con contadores a la derecha */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+        <Button
+          variant="contained"
+          startIcon={<FileDownload />}
+          onClick={handleExportClick}
+          sx={{ fontWeight: 600, px: 2.5, py: 1.2, borderRadius: 2 }}
+        >
+          Exportar
+        </Button>
+        <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={handleExportClose}>
+          <MenuItem onClick={() => { handleExportExcel(); handleExportClose(); }}>Exportar a Excel</MenuItem>
+          <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
+        </Menu>
+        <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
           <Typography variant="body2" sx={{ 
             backgroundColor: '#e3f2fd', 
             padding: '4px 12px', 
@@ -477,22 +492,6 @@ function Logistica() {
             Completados: {filteredData.filter(item => item.completado).length}
           </Typography>
         </Box>
-      </Box>
-
-      {/* Botón de exportación con dropdown */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <Button
-          variant="contained"
-          startIcon={<FileDownload />}
-          onClick={handleExportClick}
-          sx={{ fontWeight: 600, px: 2.5, py: 1.2, borderRadius: 2 }}
-        >
-          Exportar
-        </Button>
-        <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={handleExportClose}>
-          <MenuItem onClick={() => { handleExportExcel(); handleExportClose(); }}>Exportar a Excel</MenuItem>
-          <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
-        </Menu>
       </Box>
 
       <TableContainer component={Paper}>
