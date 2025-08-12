@@ -123,7 +123,7 @@ function Logistica() {
   useEffect(() => {
     const combined = [
       ...pedidos
-        .filter(p => p.en_logistica === true) // Solo pedidos marcados para logística
+        .filter(p => p.en_logistica === true)
         .map(p => ({
           ...p,
           tipo: 'Pedido',
@@ -136,10 +136,11 @@ function Logistica() {
           armador: p.cliente_nombre || 'No disponible',
           tipo_transporte: p.tipo_transporte_nombre || 'No disponible',
           transporte: p.transporte_nombre || 'No disponible',
-          completado: p.completado || false
+          completado: p.completado || false,
+          notas: p.notas || '' // Asegura que siempre exista el campo notas
         })),
       ...devoluciones
-        .filter(d => d.en_logistica === true) // Solo devoluciones marcadas para logística
+        .filter(d => d.en_logistica === true)
         .map(d => ({
           ...d,
           tipo: 'Devolución',
@@ -152,7 +153,8 @@ function Logistica() {
           armador: d.cliente_nombre || 'No disponible',
           tipo_transporte: d.tipo_transporte_nombre || 'No disponible',
           transporte: d.transporte_nombre || 'No disponible',
-          completado: d.completado || false
+          completado: d.completado || false,
+          texto: d.texto || '' // Asegura que siempre exista el campo texto
         }))
     ];
     setCombinedData(combined);
@@ -344,11 +346,11 @@ function Logistica() {
     { id: 'cantidad', label: 'Cantidad', minWidth: 70 },
     { id: 'fecha_pedido', label: 'Fecha Pedido', minWidth: 90 },
     { id: 'fecha_entrega', label: 'Fecha Entrega', minWidth: 90 },
-    { id: 'notas', label: 'Notas/Observaciones', minWidth: 140 },
     { id: 'vendedor', label: 'Vendedor', minWidth: 100 },
     { id: 'estado', label: 'Estado', minWidth: 80 },
     { id: 'tipo_tte', label: 'Tipo Tte', minWidth: 80 },
     { id: 'transporte', label: 'Transporte', minWidth: 100 },
+    { id: 'notas', label: 'Notas/Observaciones', minWidth: 140 },
     { id: 'accion', label: 'Acción', minWidth: 60 },
     { id: 'completado', label: 'Completado', minWidth: 80 }
   ];
@@ -494,13 +496,13 @@ function Logistica() {
                     <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_pedido)}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_entrega)}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit', maxWidth: 180, whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
-                      {row.tipo === 'Pedido' ? (row.notas || '') : (row.texto || '')}
-                    </TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor'}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado'}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.tipo_transporte}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.transporte}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit', maxWidth: 180, whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
+                      {row.tipo === 'Pedido' ? (row.notas || '') : (row.texto || '')}
+                    </TableCell>
                     <TableCell sx={{ padding: '4px' }}>
                       <IconButton
                         size="small"
