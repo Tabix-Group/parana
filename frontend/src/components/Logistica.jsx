@@ -209,11 +209,13 @@ function Logistica() {
     setPage(0);
   };
 
+  const [editingDireccion, setEditingDireccion] = useState('');
   const handleEdit = (item) => {
     setEditingItem(item);
     setEditingTransporte(item.transporte_id || '');
     setEditingTipoTransporte(item.tipo_transporte_id || '');
     setEditingNotas(item.tipo === 'Pedido' ? (item.notas || '') : (item.texto || ''));
+    setEditingDireccion(item.direccion || '');
     setEditModalOpen(true);
   };
 
@@ -223,7 +225,8 @@ function Logistica() {
       // Asegurar que los campos sean string y no undefined/null
       const body = {
         transporte_id: editingTransporte || null,
-        tipo_transporte_id: editingTipoTransporte || null
+        tipo_transporte_id: editingTipoTransporte || null,
+        direccion: editingDireccion
       };
       if (editingItem.tipo === 'Pedido') {
         body.notas = typeof editingNotas === 'string' ? editingNotas : '';
@@ -248,6 +251,7 @@ function Logistica() {
     setEditingItem(null);
     setEditingTransporte('');
     setEditingTipoTransporte('');
+    setEditingDireccion('');
   };
 
   const handleCompleted = async (item) => {
@@ -572,7 +576,7 @@ function Logistica() {
       />
 
       <Dialog open={editModalOpen} onClose={handleCloseEdit}>
-        <DialogTitle>Editar Transporte y Notas/Observaciones</DialogTitle>
+        <DialogTitle>Editar Transporte, Dirección y Notas/Observaciones</DialogTitle>
         <DialogContent>
           <FormControl fullWidth margin="normal">
             <Select
@@ -602,6 +606,16 @@ function Logistica() {
               ))}
             </Select>
           </FormControl>
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Dirección"
+            value={editingDireccion}
+            onChange={e => setEditingDireccion(e.target.value)}
+            multiline
+            minRows={1}
+            maxRows={3}
+          />
           <TextField
             fullWidth
             margin="normal"
