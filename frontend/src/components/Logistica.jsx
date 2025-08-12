@@ -212,15 +212,20 @@ function Logistica() {
   const handleSaveEdit = async () => {
     try {
       const endpoint = editingItem.tipo === 'Pedido' ? '/pedidos' : '/devoluciones';
+      // Asegurar que los campos sean string y no undefined/null
       const body = {
-        transporte_id: editingTransporte,
-        tipo_transporte_id: editingTipoTransporte
+        transporte_id: editingTransporte || null,
+        tipo_transporte_id: editingTipoTransporte || null
       };
       if (editingItem.tipo === 'Pedido') {
-        body.notas = editingNotas;
+        body.notas = typeof editingNotas === 'string' ? editingNotas : '';
       } else {
-        body.texto = editingNotas;
+        body.texto = typeof editingNotas === 'string' ? editingNotas : '';
       }
+      // Eliminar campos undefined/null excepto los que deben ir null
+      Object.keys(body).forEach(key => {
+        if (body[key] === undefined) delete body[key];
+      });
       await api.put(`${endpoint}/${editingItem.id}`, body);
       setEditModalOpen(false);
       setEditingItem(null);
