@@ -352,7 +352,7 @@ function Logistica() {
   const handleExportClose = () => setExportAnchor(null);
 
   const columns = [
-    { id: 'nro_comprobante', label: 'Nro Comprobante', minWidth: 120 },
+    { id: 'nro_comprobante', label: 'Comprobante', minWidth: 50 },
     { id: 'cliente', label: 'Cliente', minWidth: 120 },
     { id: 'direccion', label: 'Dirección', minWidth: 120 },
     { id: 'cantidad', label: 'Cantidad', minWidth: 70 },
@@ -371,23 +371,39 @@ function Logistica() {
     <Box sx={{ p: 3 }}>
       {/* Filtros y contadores en la misma fila */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Autocomplete
-          options={Array.isArray(vendedores) ? vendedores : []}
-          getOptionLabel={(option) => option.nombre || ''}
-          value={Array.isArray(vendedores) ? vendedores.find(v => v.nombre?.toLowerCase().includes(filterVendedor.toLowerCase())) || null : null}
-          onChange={(event, value) => setFilterVendedor(value ? value.nombre : '')}
-          renderInput={(params) => <TextField {...params} label="Filtrar por Vendedor" size="small" />}
-          sx={{ minWidth: 160 }}
-        />
-        
-        <TextField
-          label="Filtrar por Cliente"
-          value={filterCliente}
-          onChange={(e) => setFilterCliente(e.target.value)}
-          size="small"
-          sx={{ minWidth: 160 }}
-        />
-        
+        {/* Filtros principales agrupados */}
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+          <TextField
+            label="Filtrar por Vendedor"
+            value={filterVendedor}
+            onChange={e => setFilterVendedor(e.target.value)}
+            size="small"
+            sx={{ minWidth: 140 }}
+          />
+          <TextField
+            label="Filtrar por Cliente"
+            value={filterCliente}
+            onChange={e => setFilterCliente(e.target.value)}
+            size="small"
+            sx={{ minWidth: 140 }}
+          />
+          <TextField
+            label="Filtrar por Tipo Tte"
+            value={filterTipoTte}
+            onChange={e => setFilterTipoTte(e.target.value)}
+            size="small"
+            sx={{ minWidth: 140 }}
+          />
+          <TextField
+            label="Filtrar por Transporte"
+            value={filterTransporte}
+            onChange={e => setFilterTransporte(e.target.value)}
+            size="small"
+            sx={{ minWidth: 140 }}
+          />
+        </Box>
+
+        {/* Filtros secundarios */}
         <FormControl size="small" sx={{ minWidth: 120 }}>
           <Select
             value={filterEstado}
@@ -402,7 +418,6 @@ function Logistica() {
             ))}
           </Select>
         </FormControl>
-
         <TextField
           label="Fecha Pedido"
           type="date"
@@ -412,28 +427,12 @@ function Logistica() {
           size="small"
           sx={{ minWidth: 120 }}
         />
-
         <TextField
           label="Fecha Entrega"
           type="date"
           value={filterFechaEntrega}
           onChange={(e) => setFilterFechaEntrega(e.target.value)}
           InputLabelProps={{ shrink: true }}
-          size="small"
-          sx={{ minWidth: 120 }}
-        />
-
-        <TextField
-          label="Filtrar por Tipo Tte"
-          value={filterTipoTte}
-          onChange={e => setFilterTipoTte(e.target.value)}
-          size="small"
-          sx={{ minWidth: 120 }}
-        />
-        <TextField
-          label="Filtrar por Transporte"
-          value={filterTransporte}
-          onChange={e => setFilterTransporte(e.target.value)}
           size="small"
           sx={{ minWidth: 120 }}
         />
