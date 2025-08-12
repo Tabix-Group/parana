@@ -456,7 +456,7 @@ function Logistica() {
           Limpiar Filtros
         </Button>
 
-        {/* Contadores */}
+        {/* Contadores a la derecha del botón Exportar */}
         <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
           <Typography variant="body2" sx={{ 
             backgroundColor: '#e3f2fd', 
