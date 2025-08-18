@@ -12,6 +12,7 @@ import estadosRoutes from './routes/estados.js';
 import devolucionesRoutes from './routes/devoluciones.js';
 import usuariosRoutes from './routes/usuarios.js';
 import loginRoutes from './routes/login.js';
+import reportesRoutes from './routes/reportes.js';
 
 // Detectar si estamos en Railway/Postgres
 const isPostgres = process.env.DATABASE_URL || (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE && process.env.PGPORT);
@@ -63,6 +64,7 @@ app.use('/api/estados', estadosRoutes);
 app.use('/api/devoluciones', devolucionesRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/login', loginRoutes);
+app.use('/api/reportes', reportesRoutes);
 
 app.listen(port, () => {
   console.log(`Backend escuchando en http://localhost:${port}`);

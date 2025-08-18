@@ -10,6 +10,7 @@ import LogisticaPage from './pages/Logistica';
 import Login from './components/Login';
 import PrivateRoute from './components/PrivateRoute';
 import { AuthProvider, useAuth } from './auth.jsx';
+import Reportes from './pages/Reportes';
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ function ProtectedLayout() {
           <Route path="/parciales" element={<PedidosParciales />} />
           <Route path="/devoluciones" element={<Devoluciones />} />
           <Route path="/retiran" element={<RetiranPage />} />
+          <Route path="/reportes" element={<Reportes />} />
           <Route path="/logistica" element={<LogisticaPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
