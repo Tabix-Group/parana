@@ -65,6 +65,7 @@ function Retiran() {
   const [transportes, setTransportes] = useState([]);
   const [tiposTransporte, setTiposTransporte] = useState([]);
   const [estados, setEstados] = useState([]);
+  const [armadores, setArmadores] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filterVendedor, setFilterVendedor] = useState('');
@@ -89,7 +90,7 @@ function Retiran() {
 
   const fetchData = async () => {
     try {
-      const [pedidosRes, devolucionesRes, vendedoresRes, clientesRes, transportesRes, tiposTransporteRes, estadosRes] = await Promise.all([
+      const [pedidosRes, devolucionesRes, vendedoresRes, clientesRes, transportesRes, tiposTransporteRes, estadosRes, armadoresRes] = await Promise.all([
         api.get('/pedidos?pageSize=1000'),
         api.get('/devoluciones?pageSize=1000'),
         api.get('/vendedores?pageSize=1000'),
@@ -97,6 +98,8 @@ function Retiran() {
         api.get('/transportes?pageSize=1000'),
         api.get('/tipos-transporte?pageSize=1000'),
         api.get('/estados?pageSize=1000')
+        ,
+        api.get('/armadores?pageSize=1000')
       ]);
 
       setPedidos(pedidosRes.data?.data || []);
@@ -106,15 +109,17 @@ function Retiran() {
       setTransportes(transportesRes.data?.data || []);
       setTiposTransporte(tiposTransporteRes.data?.data || []);
       setEstados(estadosRes.data?.data || []);
+  setArmadores(armadoresRes.data?.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       setPedidos([]);
       setDevoluciones([]);
       setVendedores([]);
       setClientes([]);
-      setTransportes([]);
-      setTiposTransporte([]);
-      setEstados([]);
+  setTransportes([]);
+  setTiposTransporte([]);
+  setEstados([]);
+  setArmadores([]);
     }
   };
 
@@ -199,12 +204,18 @@ function Retiran() {
   const handleChangeRowsPerPage = (event) => { setRowsPerPage(parseInt(event.target.value, 10)); setPage(0); };
 
   const [editingDireccion, setEditingDireccion] = useState('');
+  const [editingArmador, setEditingArmador] = useState('');
+  const [editingEstado, setEditingEstado] = useState('');
+  const [editingCantidad, setEditingCantidad] = useState('');
   const handleEdit = (item) => {
     setEditingItem(item);
     setEditingTransporte(item.transporte_id || '');
     setEditingTipoTransporte(item.tipo_transporte_id || '');
     setEditingNotas(item.tipo === 'Pedido' ? (item.notas || '') : (item.texto || ''));
     setEditingDireccion(item.direccion || '');
+    setEditingArmador(item.armador_id || item.armador || '');
+    setEditingEstado(item.estado_id || '');
+    setEditingCantidad(typeof item.cantidad !== 'undefined' && item.cantidad !== null ? item.cantidad : '');
     setEditModalOpen(true);
   };
 
@@ -214,6 +225,17 @@ function Retiran() {
       const body = { transporte_id: editingTransporte || null, tipo_transporte_id: editingTipoTransporte || null, direccion: editingDireccion };
       if (editingItem.tipo === 'Pedido') body.notas = typeof editingNotas === 'string' ? editingNotas : '';
       else body.texto = typeof editingNotas === 'string' ? editingNotas : '';
+      // armador
+      if (editingArmador === '' || editingArmador === null) body.armador_id = null;
+      else if (typeof editingArmador === 'string' || typeof editingArmador === 'number') body.armador_id = editingArmador;
+      // estado
+      if (editingEstado === '' || editingEstado === null) body.estado_id = null;
+      else if (typeof editingEstado === 'string' || typeof editingEstado === 'number') body.estado_id = editingEstado;
+      // cantidad (cant_bultos)
+      if (!(editingCantidad === '' || editingCantidad === null)) {
+        const n = Number(editingCantidad);
+        body.cant_bultos = Number.isNaN(n) ? editingCantidad : n;
+      }
       Object.keys(body).forEach(key => { if (body[key] === undefined) delete body[key]; });
       await api.put(`${endpoint}/${editingItem.id}`, body);
       setEditModalOpen(false);
@@ -224,7 +246,7 @@ function Retiran() {
     }
   };
 
-  const handleCloseEdit = () => { setEditModalOpen(false); setEditingItem(null); setEditingTransporte(''); setEditingTipoTransporte(''); setEditingDireccion(''); };
+  const handleCloseEdit = () => { setEditModalOpen(false); setEditingItem(null); setEditingTransporte(''); setEditingTipoTransporte(''); setEditingDireccion(''); setEditingArmador(''); setEditingEstado(''); setEditingCantidad(''); };
 
   const handleCompleted = async (item) => {
     try {
