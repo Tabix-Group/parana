@@ -36,17 +36,18 @@ router.get('/por-armador', async (req, res) => {
     const query = db('pedidos')
       .leftJoin('armadores', 'pedidos.armador_id', 'armadores.id')
       .select(
-        db.raw("TRIM(COALESCE(armadores.nombre,'') || ' ' || COALESCE(armadores.apellido,'')) as nombre"),
+        'armadores.id as armador_id',
+        db.raw("COALESCE(TRIM(COALESCE(armadores.nombre,'') || ' ' || COALESCE(armadores.apellido,'')), 'Sin armador') as nombre"),
         db.raw('SUM(COALESCE(pedidos.cant_bultos,0)) as totalBultos'),
         db.raw('COUNT(pedidos.id) as pedidos')
       )
-      .groupBy('armadores.nombre', 'armadores.apellido')
+      .groupBy('armadores.id')
       .orderBy('totalBultos', 'desc');
 
     applyDateFilter(query, from, to);
     const rows = await query;
-    const norm = rows.map(r => ({ nombre: r.nombre || 'Sin armador', totalBultos: r.totalBultos, pedidos: r.pedidos }));
-    res.json(norm);
+  const norm = rows.map(r => ({ nombre: r.nombre || 'Sin armador', totalBultos: r.totalBultos, pedidos: r.pedidos, armador_id: r.armador_id }));
+  res.json(norm);
   } catch (err) {
     console.error('Error GET /reportes/por-armador', err);
     res.status(500).json({ error: err.message });
@@ -59,17 +60,18 @@ router.get('/por-vendedor', async (req, res) => {
     const query = db('pedidos')
       .leftJoin('vendedores', 'pedidos.vendedor_id', 'vendedores.id')
       .select(
-        db.raw("TRIM(COALESCE(vendedores.nombre,'') || ' ' || COALESCE(vendedores.apellido,'')) as nombre"),
+        'vendedores.id as vendedor_id',
+        db.raw("COALESCE(TRIM(COALESCE(vendedores.nombre,'') || ' ' || COALESCE(vendedores.apellido,'')), 'Sin vendedor') as nombre"),
         db.raw('SUM(COALESCE(pedidos.cant_bultos,0)) as totalBultos'),
         db.raw('COUNT(pedidos.id) as pedidos')
       )
-      .groupBy('vendedores.nombre', 'vendedores.apellido')
+      .groupBy('vendedores.id')
       .orderBy('totalBultos', 'desc');
 
     applyDateFilter(query, from, to);
     const rows = await query;
-    const norm = rows.map(r => ({ nombre: r.nombre || 'Sin vendedor', totalBultos: r.totalBultos, pedidos: r.pedidos }));
-    res.json(norm);
+  const norm = rows.map(r => ({ nombre: r.nombre || 'Sin vendedor', totalBultos: r.totalBultos, pedidos: r.pedidos, vendedor_id: r.vendedor_id }));
+  res.json(norm);
   } catch (err) {
     console.error('Error GET /reportes/por-vendedor', err);
     res.status(500).json({ error: err.message });

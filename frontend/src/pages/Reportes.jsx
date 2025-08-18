@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Tabs, Tab, Typography, Grid, Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Button, TextField } from '@mui/material';
+import { Box, Tabs, Tab, Typography, Grid, Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Button, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import Pagination from '@mui/material/Pagination';
 import API from '../api';
 
 function SummaryKPIs({ pedidos, devoluciones }) {
@@ -171,24 +172,27 @@ export default function Reportes() {
   const [aggTransporte, setAggTransporte] = React.useState([]);
   const [aggArmador, setAggArmador] = React.useState([]);
   const [aggVendedor, setAggVendedor] = React.useState([]);
+  // Aggregates pagination (client-side)
+  const [aggPage, setAggPage] = React.useState(1);
+  const [aggPageSize, setAggPageSize] = React.useState(10);
   const [fromDate, setFromDate] = React.useState('');
   const [toDate, setToDate] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+  // Raw data pagination (server-side)
+  const [rawPage, setRawPage] = React.useState(1);
+  const [rawPageSize, setRawPageSize] = React.useState(20);
+  const [pedidosTotal, setPedidosTotal] = React.useState(0);
+  const [devolTotal, setDevolTotal] = React.useState(0);
 
   React.useEffect(() => {
     async function load() {
       try {
         setLoading(true);
-        // Traer un dataset amplio (pageSize grande) para análisis en UI
-        const pRes = await API.get('/pedidos', { params: { page: 1, pageSize: 1000, sortBy: 'fecha_pedido', order: 'desc' } });
-        const dRes = await API.get('/devoluciones', { params: { page: 1, pageSize: 1000, sortBy: 'fecha', order: 'desc' } });
-        const pedidosData = pRes.data.data || pRes.data || [];
-        const devolData = dRes.data.data || dRes.data || [];
-        setPedidos(pedidosData);
-        setDevoluciones(devolData);
-
-        // Traer agregados desde backend (sin filtros iniciales)
-        await fetchAggregates();
+        // Traer raw data paginada y agregados
+        await Promise.all([
+          fetchAggregates(),
+          fetchRaw(1, rawPageSize)
+        ]);
       } catch (err) {
         console.error('Error cargando datos para reportes', err);
       } finally {
@@ -211,6 +215,24 @@ export default function Reportes() {
       setAggVendedor(vRes.data || []);
     } catch (err) {
       console.error('Error cargando agregados', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchRaw(page = 1, pageSize = 20) {
+    try {
+      setLoading(true);
+      const [pRes, dRes] = await Promise.all([
+        API.get('/pedidos', { params: { page, pageSize, sortBy: 'fecha_pedido', order: 'desc' } }),
+        API.get('/devoluciones', { params: { page, pageSize, sortBy: 'fecha', order: 'desc' } })
+      ]);
+      setPedidos(pRes.data.data || pRes.data || []);
+      setPedidosTotal(pRes.data.total || 0);
+      setDevoluciones(dRes.data.data || dRes.data || []);
+      setDevolTotal(dRes.data.total || 0);
+    } catch (err) {
+      console.error('Error cargando raw data paginada', err);
     } finally {
       setLoading(false);
     }
@@ -266,18 +288,57 @@ export default function Reportes() {
       )}
 
       {!loading && tab === 4 && (
-  <AggregateTable rows={aggTransporte} title="Cantidades por Transporte" />
+        <Box>
+          <AggregateTable rows={aggTransporte.slice((aggPage-1)*aggPageSize, aggPage*aggPageSize)} title="Cantidades por Transporte" />
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+            <Pagination count={Math.max(1, Math.ceil((aggTransporte.length||1)/aggPageSize))} page={aggPage} onChange={(_, p) => setAggPage(p)} />
+            <FormControl size="small" sx={{ width: 120 }}>
+              <InputLabel>Page size</InputLabel>
+              <Select value={aggPageSize} label="Page size" onChange={e => { setAggPageSize(Number(e.target.value)); setAggPage(1); }}>
+                <MenuItem value={5}>5</MenuItem>
+                <MenuItem value={10}>10</MenuItem>
+                <MenuItem value={20}>20</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </Box>
       )}
 
       {!loading && tab === 5 && (
-  <AggregateTable rows={aggArmador} title="Cantidades por Armador" />
+        <Box>
+          <AggregateTable rows={aggArmador.slice((aggPage-1)*aggPageSize, aggPage*aggPageSize)} title="Cantidades por Armador" />
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+            <Pagination count={Math.max(1, Math.ceil((aggArmador.length||1)/aggPageSize))} page={aggPage} onChange={(_, p) => setAggPage(p)} />
+            <FormControl size="small" sx={{ width: 120 }}>
+              <InputLabel>Page size</InputLabel>
+              <Select value={aggPageSize} label="Page size" onChange={e => { setAggPageSize(Number(e.target.value)); setAggPage(1); }}>
+                <MenuItem value={5}>5</MenuItem>
+                <MenuItem value={10}>10</MenuItem>
+                <MenuItem value={20}>20</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </Box>
       )}
 
       {!loading && tab === 6 && (
-  <AggregateTable rows={aggVendedor} title="Cantidades por Vendedor" />
+        <Box>
+          <AggregateTable rows={aggVendedor.slice((aggPage-1)*aggPageSize, aggPage*aggPageSize)} title="Cantidades por Vendedor" />
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+            <Pagination count={Math.max(1, Math.ceil((aggVendedor.length||1)/aggPageSize))} page={aggPage} onChange={(_, p) => setAggPage(p)} />
+            <FormControl size="small" sx={{ width: 120 }}>
+              <InputLabel>Page size</InputLabel>
+              <Select value={aggPageSize} label="Page size" onChange={e => { setAggPageSize(Number(e.target.value)); setAggPage(1); }}>
+                <MenuItem value={5}>5</MenuItem>
+                <MenuItem value={10}>10</MenuItem>
+                <MenuItem value={20}>20</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </Box>
       )}
 
-      {!loading && tab === 4 && (
+      {!loading && tab === 7 && (
         <Paper sx={{ p: 2 }}>
           <Typography variant="h6">Pedidos (raw)</Typography>
           <TableContainer sx={{ maxHeight: 400 }}>
@@ -306,6 +367,17 @@ export default function Reportes() {
               </TableBody>
             </Table>
           </TableContainer>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+            <Pagination count={Math.max(1, Math.ceil((pedidosTotal||1)/rawPageSize))} page={rawPage} onChange={(_, p) => { setRawPage(p); fetchRaw(p, rawPageSize); }} />
+            <FormControl size="small" sx={{ width: 120 }}>
+              <InputLabel>Page size</InputLabel>
+              <Select value={rawPageSize} label="Page size" onChange={e => { setRawPageSize(Number(e.target.value)); setRawPage(1); fetchRaw(1, Number(e.target.value)); }}>
+                <MenuItem value={10}>10</MenuItem>
+                <MenuItem value={20}>20</MenuItem>
+                <MenuItem value={50}>50</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
 
           <Typography variant="h6" sx={{ mt: 2 }}>Devoluciones (raw)</Typography>
           <TableContainer sx={{ maxHeight: 300 }}>
