@@ -140,7 +140,8 @@ function Logistica() {
           direccion: p.direccion || 'Sin dirección',
           cantidad: p.cant_bultos || 0,
           // Preferir campos de armador si vienen desde el backend, sino fallback a cliente_nombre
-          armador: (p.armador_nombre || '') + (p.armador_apellido ? ` ${p.armador_apellido}` : '') || p.armador || p.cliente_nombre || 'No disponible',
+          // Construir nombre de armador si existe; si no, dejar vacío (no usar cliente como fallback)
+          armador: ((p.armador_nombre || '') + (p.armador_apellido ? ` ${p.armador_apellido}` : '')).trim() || (p.armador || ''),
           fecha_pedido: p.fecha_pedido || p.fecha,
           fecha_entrega: p.fecha_entrega || '',
           tipo_transporte: p.tipo_transporte_nombre || 'No disponible',
@@ -161,7 +162,8 @@ function Logistica() {
           cliente: d.cliente_nombre || 'No disponible',
           direccion: d.direccion || 'Sin dirección',
           cantidad: d.cant_bultos || 0,
-          armador: (d.armador_nombre || '') + (d.armador_apellido ? ` ${d.armador_apellido}` : '') || d.armador || d.cliente_nombre || 'No disponible',
+          // Construir nombre de armador si existe; si no, dejar vacío (no usar cliente como fallback)
+          armador: ((d.armador_nombre || '') + (d.armador_apellido ? ` ${d.armador_apellido}` : '')).trim() || (d.armador || ''),
           fecha_pedido: d.fecha_pedido || d.fecha,
           fecha_entrega: d.fecha_entrega || '',
           tipo_transporte: d.tipo_transporte_nombre || 'No disponible',
@@ -569,7 +571,7 @@ function Logistica() {
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.nro_comprobante}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.armador || 'No disponible'}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.armador || ''}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_pedido)}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_entrega)}</TableCell>
