@@ -28,6 +28,7 @@ const menuItems = [
   { label: 'Pedidos', path: '/pedidos-totales', icon: <ReceiptLongRounded sx={{ color: '#a5d8ff' }} /> },
   { label: 'Parciales', path: '/parciales', icon: <FactCheckRounded sx={{ color: '#b9fbc0' }} /> },
   { label: 'Movimientos de Cobros y Materiales', path: '/devoluciones', icon: <PaidRounded sx={{ color: '#ffd6e0' }} /> },
+  { label: 'Retiran', path: '/retiran', icon: <AssignmentTurnedInRounded sx={{ color: '#c7f9cc' }} /> },
   { label: 'Logística', path: '/logistica', icon: <LocalShippingRounded sx={{ color: '#ffe5b4' }} /> },
   { label: 'Configuración', path: '/', icon: <SettingsRounded sx={{ color: '#dbeafe' }} /> },
 ];

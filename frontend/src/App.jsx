@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import PedidosTotales from './pages/PedidosTotales';
 import PedidosParciales from './pages/PedidosParciales';
 import Devoluciones from './pages/Devoluciones';
+import RetiranPage from './pages/Retiran';
 import Layout from './components/Layout';
 import LogisticaPage from './pages/Logistica';
 import Login from './components/Login';
@@ -39,6 +40,7 @@ function ProtectedLayout() {
           <Route path="/pedidos-totales" element={<PedidosTotales />} />
           <Route path="/parciales" element={<PedidosParciales />} />
           <Route path="/devoluciones" element={<Devoluciones />} />
+          <Route path="/retiran" element={<RetiranPage />} />
           <Route path="/logistica" element={<LogisticaPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
