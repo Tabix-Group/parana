@@ -76,7 +76,7 @@ function Logistica() {
   const [filterCliente, setFilterCliente] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
   const [filterArmador, setFilterArmador] = useState('');
-  const [filterCompletado, setFilterCompletado] = useState('');
+  const [filterCompletado, setFilterCompletado] = useState('pendiente');
   const [filterFechaPedido, setFilterFechaPedido] = useState('');
   const [filterFechaEntrega, setFilterFechaEntrega] = useState('');
   const [filterTipoTte, setFilterTipoTte] = useState('');
