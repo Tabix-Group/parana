@@ -75,6 +75,8 @@ function Logistica() {
   const [filterVendedor, setFilterVendedor] = useState('');
   const [filterCliente, setFilterCliente] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
+  const [filterArmador, setFilterArmador] = useState('');
+  const [filterCompletado, setFilterCompletado] = useState('');
   const [filterFechaPedido, setFilterFechaPedido] = useState('');
   const [filterFechaEntrega, setFilterFechaEntrega] = useState('');
   const [filterTipoTte, setFilterTipoTte] = useState('');
@@ -123,7 +125,7 @@ function Logistica() {
   };
 
   useEffect(() => {
-    const combined = [
+  const combined = [
       ...pedidos
         .filter(p => p.en_logistica === true)
         .map(p => ({
@@ -133,9 +135,10 @@ function Logistica() {
           cliente: p.cliente_nombre || 'No disponible',
           direccion: p.direccion || 'Sin dirección',
           cantidad: p.cant_bultos || 0,
+          // Preferir campos de armador si vienen desde el backend, sino fallback a cliente_nombre
+          armador: (p.armador_nombre || '') + (p.armador_apellido ? ` ${p.armador_apellido}` : '') || p.armador || p.cliente_nombre || 'No disponible',
           fecha_pedido: p.fecha_pedido || p.fecha,
           fecha_entrega: p.fecha_entrega || '',
-          armador: p.cliente_nombre || 'No disponible',
           tipo_transporte: p.tipo_transporte_nombre || 'No disponible',
           transporte: p.transporte_nombre || 'No disponible',
           completado: p.completado || false,
@@ -150,9 +153,9 @@ function Logistica() {
           cliente: d.cliente_nombre || 'No disponible',
           direccion: d.direccion || 'Sin dirección',
           cantidad: d.cant_bultos || 0,
+          armador: (d.armador_nombre || '') + (d.armador_apellido ? ` ${d.armador_apellido}` : '') || d.armador || d.cliente_nombre || 'No disponible',
           fecha_pedido: d.fecha_pedido || d.fecha,
           fecha_entrega: d.fecha_entrega || '',
-          armador: d.cliente_nombre || 'No disponible',
           tipo_transporte: d.tipo_transporte_nombre || 'No disponible',
           transporte: d.transporte_nombre || 'No disponible',
           completado: d.completado || false,
@@ -177,6 +180,18 @@ function Logistica() {
       );
     }
 
+    if (filterArmador) {
+      filtered = filtered.filter(item => (item.armador || '').toLowerCase().includes(filterArmador.toLowerCase()));
+    }
+
+    if (filterCompletado) {
+      if (filterCompletado === 'completado') {
+        filtered = filtered.filter(item => item.completado);
+      } else if (filterCompletado === 'pendiente') {
+        filtered = filtered.filter(item => !item.completado);
+      }
+    }
+
     if (filterEstado && Array.isArray(estados)) {
       filtered = filtered.filter(item => 
         item.estado_id === parseInt(filterEstado)
@@ -198,7 +213,7 @@ function Logistica() {
       filtered = filtered.filter(item => (item.transporte || '').toLowerCase().includes(filterTransporte.toLowerCase()));
     }
     setFilteredData(filtered);
-  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterFechaPedido, filterFechaEntrega, filterTipoTte, filterTransporte, vendedores, estados]);
+  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterFechaPedido, filterFechaEntrega, filterTipoTte, filterTransporte, filterArmador, filterCompletado, vendedores, estados]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -286,8 +301,9 @@ function Logistica() {
       'Nro Comprobante': row.nro_comprobante,
       'Tipo': row.tipo,
       'Cliente': row.cliente,
-      'Dirección': row.direccion,
-      'Cantidad': row.cantidad,
+  'Dirección': row.direccion,
+  'Armador': row.armador,
+  'Cantidad': row.cantidad,
       'Fecha Pedido': formatDate(row.fecha_pedido),
       'Fecha Entrega': formatDate(row.fecha_entrega),
       'Vendedor': Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
@@ -310,8 +326,9 @@ function Logistica() {
       row.nro_comprobante,
       row.tipo,
       row.cliente,
-      row.direccion,
-      row.cantidad,
+  row.direccion,
+  row.armador,
+  row.cantidad,
       formatDate(row.fecha_pedido),
       formatDate(row.fecha_entrega),
       Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
@@ -321,7 +338,7 @@ function Logistica() {
     ]);
 
     doc.autoTable({
-      head: [['Nro Comprobante', 'Tipo', 'Cliente', 'Dirección', 'Cantidad', 'Fecha Pedido', 'Fecha Entrega', 'Vendedor', 'Estado', 'Tipo Tte', 'Transporte']],
+  head: [['Nro Comprobante', 'Tipo', 'Cliente', 'Dirección', 'Armador', 'Cantidad', 'Fecha Pedido', 'Fecha Entrega', 'Vendedor', 'Estado', 'Tipo Tte', 'Transporte']],
       body: exportData,
       styles: { 
         fontSize: 6,
@@ -336,15 +353,16 @@ function Logistica() {
       columnStyles: {
         0: { cellWidth: 20 }, // Nro Comprobante
         1: { cellWidth: 15 }, // Tipo
-        2: { cellWidth: 30 }, // Cliente
-        3: { cellWidth: 25 }, // Dirección
-        4: { cellWidth: 12 }, // Cantidad
-        5: { cellWidth: 18 }, // Fecha Pedido
-        6: { cellWidth: 18 }, // Fecha Entrega
-        7: { cellWidth: 20 }, // Vendedor
-        8: { cellWidth: 15 }, // Estado
-        9: { cellWidth: 15 }, // Tipo Tte
-        10: { cellWidth: 20 } // Transporte
+        2: { cellWidth: 28 }, // Cliente
+        3: { cellWidth: 22 }, // Dirección
+        4: { cellWidth: 18 }, // Armador
+        5: { cellWidth: 12 }, // Cantidad
+        6: { cellWidth: 18 }, // Fecha Pedido
+        7: { cellWidth: 18 }, // Fecha Entrega
+        8: { cellWidth: 20 }, // Vendedor
+        9: { cellWidth: 15 }, // Estado
+        10: { cellWidth: 15 }, // Tipo Tte
+        11: { cellWidth: 20 } // Transporte
       }
     });
 
@@ -358,7 +376,8 @@ function Logistica() {
   const columns = [
     { id: 'nro_comprobante', label: 'Comprobante', minWidth: 50 },
     { id: 'cliente', label: 'Cliente', minWidth: 120 },
-    { id: 'direccion', label: 'Dirección', minWidth: 120 },
+  { id: 'direccion', label: 'Dirección', minWidth: 120 },
+  { id: 'armador', label: 'Armador', minWidth: 120 },
     { id: 'cantidad', label: 'Cantidad', minWidth: 70 },
     { id: 'fecha_pedido', label: 'Fecha Pedido', minWidth: 90 },
     { id: 'fecha_entrega', label: 'Fecha Entrega', minWidth: 90 },
@@ -388,6 +407,13 @@ function Logistica() {
             label="Filtrar por Cliente"
             value={filterCliente}
             onChange={e => setFilterCliente(e.target.value)}
+            size="small"
+            sx={{ minWidth: 140 }}
+          />
+          <TextField
+            label="Filtrar por Armador"
+            value={filterArmador}
+            onChange={e => setFilterArmador(e.target.value)}
             size="small"
             sx={{ minWidth: 140 }}
           />
@@ -422,6 +448,17 @@ function Logistica() {
             ))}
           </Select>
         </FormControl>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <Select
+            value={filterCompletado}
+            onChange={(e) => setFilterCompletado(e.target.value)}
+            displayEmpty
+          >
+            <MenuItem value="">Todos</MenuItem>
+            <MenuItem value="completado">Completado</MenuItem>
+            <MenuItem value="pendiente">Pendiente</MenuItem>
+          </Select>
+        </FormControl>
         <TextField
           label="Fecha Pedido"
           type="date"
@@ -445,11 +482,13 @@ function Logistica() {
           onClick={() => {
             setFilterVendedor('');
             setFilterCliente('');
+              setFilterArmador('');
             setFilterEstado('');
             setFilterFechaPedido('');
             setFilterFechaEntrega('');
             setFilterTipoTte('');
             setFilterTransporte('');
+              setFilterCompletado('');
           }}
           size="small"
         >
@@ -522,6 +561,7 @@ function Logistica() {
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.nro_comprobante}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.armador || 'No disponible'}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_pedido)}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_entrega)}</TableCell>
