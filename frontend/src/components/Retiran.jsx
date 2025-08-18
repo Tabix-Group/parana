@@ -127,44 +127,55 @@ function Retiran() {
     const combined = [
       ...pedidos
         .filter(p => p.en_logistica === true)
-        .map(p => ({
-          ...p,
-          tipo: 'Pedido',
-          nro_comprobante: p.comprobante || 'Sin comprobante',
-          cliente: p.cliente_nombre || 'No disponible',
-          direccion: p.direccion || 'Sin dirección',
-          cantidad: p.cant_bultos || 0,
-          armador: (p.armador_nombre || '') + (p.armador_apellido ? ` ${p.armador_apellido}` : '') || p.armador || p.cliente_nombre || 'No disponible',
-          fecha_pedido: p.fecha_pedido || p.fecha,
-          fecha_entrega: p.fecha_entrega || '',
-          tipo_transporte: p.tipo_transporte_nombre || 'No disponible',
-          transporte: p.transporte_nombre || 'No disponible',
-          completado: p.completado || false,
-          notas: p.notas || ''
-        })),
+        .map(p => {
+          const completed = (p.completado === true || p.completado === 1 || p.completado === '1');
+          return ({
+            ...p,
+            tipo: 'Pedido',
+            nro_comprobante: p.comprobante || 'Sin comprobante',
+            cliente: p.cliente_nombre || 'No disponible',
+            direccion: p.direccion || 'Sin dirección',
+            cantidad: p.cant_bultos || 0,
+            armador: (p.armador_nombre || '') + (p.armador_apellido ? ` ${p.armador_apellido}` : '') || p.armador || p.cliente_nombre || 'No disponible',
+            fecha_pedido: p.fecha_pedido || p.fecha,
+            fecha_entrega: p.fecha_entrega || '',
+            tipo_transporte: p.tipo_transporte_nombre || 'No disponible',
+            transporte: p.transporte_nombre || 'No disponible',
+            completado: completed,
+            notas: p.notas || ''
+          });
+        }),
       ...devoluciones
         .filter(d => d.en_logistica === true)
-        .map(d => ({
-          ...d,
-          tipo: 'Devolución',
-          nro_comprobante: d.comprobante || 'Sin comprobante',
-          cliente: d.cliente_nombre || 'No disponible',
-          direccion: d.direccion || 'Sin dirección',
-          cantidad: d.cant_bultos || 0,
-          armador: (d.armador_nombre || '') + (d.armador_apellido ? ` ${d.armador_apellido}` : '') || d.armador || d.cliente_nombre || 'No disponible',
-          fecha_pedido: d.fecha_pedido || d.fecha,
-          fecha_entrega: d.fecha_entrega || '',
-          tipo_transporte: d.tipo_transporte_nombre || 'No disponible',
-          transporte: d.transporte_nombre || 'No disponible',
-          completado: d.completado || false,
-          texto: d.texto || ''
-        }))
+        .map(d => {
+          const completed = (d.completado === true || d.completado === 1 || d.completado === '1');
+          return ({
+            ...d,
+            tipo: 'Devolución',
+            nro_comprobante: d.comprobante || 'Sin comprobante',
+            cliente: d.cliente_nombre || 'No disponible',
+            direccion: d.direccion || 'Sin dirección',
+            cantidad: d.cant_bultos || 0,
+            armador: (d.armador_nombre || '') + (d.armador_apellido ? ` ${d.armador_apellido}` : '') || d.armador || d.cliente_nombre || 'No disponible',
+            fecha_pedido: d.fecha_pedido || d.fecha,
+            fecha_entrega: d.fecha_entrega || '',
+            tipo_transporte: d.tipo_transporte_nombre || 'No disponible',
+            transporte: d.transporte_nombre || 'No disponible',
+            completado: completed,
+            texto: d.texto || ''
+          });
+        })
     ];
 
     // Filtrar sólo los que tengan tipo_transporte que contenga 'retira'
     const filteredByType = combined.filter(item => (item.tipo_transporte || '').toLowerCase().includes('retira'));
     setCombinedData(filteredByType);
   }, [pedidos, devoluciones]);
+
+  // Ensure default filter shows pendientes on first mount
+  useEffect(() => {
+    setFilterCompletado('pendiente');
+  }, []);
 
   useEffect(() => {
     let filtered = combinedData;
