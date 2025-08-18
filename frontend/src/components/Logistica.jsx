@@ -235,12 +235,14 @@ function Logistica() {
   };
 
   const [editingDireccion, setEditingDireccion] = useState('');
+  const [editingArmador, setEditingArmador] = useState('');
   const handleEdit = (item) => {
     setEditingItem(item);
     setEditingTransporte(item.transporte_id || '');
     setEditingTipoTransporte(item.tipo_transporte_id || '');
     setEditingNotas(item.tipo === 'Pedido' ? (item.notas || '') : (item.texto || ''));
     setEditingDireccion(item.direccion || '');
+    setEditingArmador(item.armador || '');
     setEditModalOpen(true);
   };
 
@@ -258,6 +260,8 @@ function Logistica() {
       } else {
         body.texto = typeof editingNotas === 'string' ? editingNotas : '';
       }
+  // Incluir armador si se definió (puede ser cadena vacía para limpiar)
+  body.armador = typeof editingArmador === 'string' ? editingArmador : '';
       // Eliminar campos undefined/null excepto los que deben ir null
       Object.keys(body).forEach(key => {
         if (body[key] === undefined) delete body[key];
@@ -276,7 +280,8 @@ function Logistica() {
     setEditingItem(null);
     setEditingTransporte('');
     setEditingTipoTransporte('');
-    setEditingDireccion('');
+  setEditingDireccion('');
+  setEditingArmador('');
   };
 
   const handleCompleted = async (item) => {
@@ -664,6 +669,14 @@ function Logistica() {
             multiline
             minRows={1}
             maxRows={3}
+          />
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Armador"
+            value={editingArmador}
+            onChange={e => setEditingArmador(e.target.value)}
+            size="small"
           />
           <TextField
             fullWidth
