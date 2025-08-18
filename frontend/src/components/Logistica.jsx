@@ -68,6 +68,7 @@ function Logistica() {
   const [vendedores, setVendedores] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [transportes, setTransportes] = useState([]);
+  const [armadores, setArmadores] = useState([]);
   const [tiposTransporte, setTiposTransporte] = useState([]);
   const [estados, setEstados] = useState([]);
   const [page, setPage] = useState(0);
@@ -94,14 +95,15 @@ function Logistica() {
 
   const fetchData = async () => {
     try {
-      const [pedidosRes, devolucionesRes, vendedoresRes, clientesRes, transportesRes, tiposTransporteRes, estadosRes] = await Promise.all([
+      const [pedidosRes, devolucionesRes, vendedoresRes, clientesRes, transportesRes, tiposTransporteRes, estadosRes, armadoresRes] = await Promise.all([
         api.get('/pedidos?pageSize=1000'),
         api.get('/devoluciones?pageSize=1000'),
         api.get('/vendedores?pageSize=1000'),
         api.get('/clientes?pageSize=1000'),
         api.get('/transportes?pageSize=1000'),
         api.get('/tipos-transporte?pageSize=1000'),
-        api.get('/estados?pageSize=1000')
+        api.get('/estados?pageSize=1000'),
+        api.get('/armadores?pageSize=1000')
       ]);
 
       setPedidos(pedidosRes.data?.data || []);
@@ -111,6 +113,7 @@ function Logistica() {
       setTransportes(transportesRes.data?.data || []);
       setTiposTransporte(tiposTransporteRes.data?.data || []);
       setEstados(estadosRes.data?.data || []);
+  setArmadores(armadoresRes.data?.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       // En caso de error, asegurar que todos los states sean arrays vacíos
@@ -121,6 +124,7 @@ function Logistica() {
       setTransportes([]);
       setTiposTransporte([]);
       setEstados([]);
+  setArmadores([]);
     }
   };
 
@@ -142,6 +146,7 @@ function Logistica() {
           // Preferir campos de armador si vienen desde el backend, sino fallback a cliente_nombre
           // Construir nombre de armador si existe; si no, dejar vacío (no usar cliente como fallback)
           armador: ((p.armador_nombre || '') + (p.armador_apellido ? ` ${p.armador_apellido}` : '')).trim() || (p.armador || ''),
+          armador_id: p.armador_id || p.armador || null,
           fecha_pedido: p.fecha_pedido || p.fecha,
           fecha_entrega: p.fecha_entrega || '',
           tipo_transporte: p.tipo_transporte_nombre || 'No disponible',
@@ -164,6 +169,7 @@ function Logistica() {
           cantidad: d.cant_bultos || 0,
           // Construir nombre de armador si existe; si no, dejar vacío (no usar cliente como fallback)
           armador: ((d.armador_nombre || '') + (d.armador_apellido ? ` ${d.armador_apellido}` : '')).trim() || (d.armador || ''),
+          armador_id: d.armador_id || d.armador || null,
           fecha_pedido: d.fecha_pedido || d.fecha,
           fecha_entrega: d.fecha_entrega || '',
           tipo_transporte: d.tipo_transporte_nombre || 'No disponible',
@@ -242,7 +248,7 @@ function Logistica() {
     setEditingTipoTransporte(item.tipo_transporte_id || '');
     setEditingNotas(item.tipo === 'Pedido' ? (item.notas || '') : (item.texto || ''));
     setEditingDireccion(item.direccion || '');
-    setEditingArmador(item.armador || '');
+  setEditingArmador(item.armador_id || item.armador || '');
     setEditModalOpen(true);
   };
 
@@ -260,8 +266,12 @@ function Logistica() {
       } else {
         body.texto = typeof editingNotas === 'string' ? editingNotas : '';
       }
-  // Incluir armador si se definió (puede ser cadena vacía para limpiar)
-  body.armador = typeof editingArmador === 'string' ? editingArmador : '';
+      // Incluir armador_id si se definió (puede ser null para limpiar)
+      if (editingArmador === '' || editingArmador === null) {
+        body.armador_id = null;
+      } else if (typeof editingArmador === 'string' || typeof editingArmador === 'number') {
+        body.armador_id = editingArmador;
+      }
       // Eliminar campos undefined/null excepto los que deben ir null
       Object.keys(body).forEach(key => {
         if (body[key] === undefined) delete body[key];
@@ -576,7 +586,9 @@ function Logistica() {
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.nro_comprobante}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.armador || ''}</TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                      {row.armador_id ? (Array.isArray(armadores) ? (armadores.find(a => a.id === row.armador_id)?.nombre ? `${armadores.find(a => a.id === row.armador_id)?.nombre}${armadores.find(a => a.id === row.armador_id)?.apellido ? ' ' + armadores.find(a => a.id === row.armador_id)?.apellido : ''}` : row.armador) : row.armador) : (row.armador || '')}
+                    </TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_pedido)}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_entrega)}</TableCell>
@@ -670,14 +682,18 @@ function Logistica() {
             minRows={1}
             maxRows={3}
           />
-          <TextField
-            fullWidth
-            margin="normal"
-            label="Armador"
-            value={editingArmador}
-            onChange={e => setEditingArmador(e.target.value)}
-            size="small"
-          />
+          <FormControl fullWidth margin="normal">
+            <Select
+              value={editingArmador ?? ''}
+              onChange={(e) => setEditingArmador(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="">Sin Armador</MenuItem>
+              {Array.isArray(armadores) && armadores.map(a => (
+                <MenuItem key={a.id} value={a.id}>{`${a.nombre || ''}${a.apellido ? ' ' + a.apellido : ''}`}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
             fullWidth
             margin="normal"
