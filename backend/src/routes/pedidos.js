@@ -111,7 +111,7 @@ router.get('/', async (req, res) => {
 // Crear pedido
 router.post('/', async (req, res) => {
   try {
-    const pedido = { ...req.body };
+  const pedido = { ...req.body };
     
     // Procesar fechas para evitar problemas de timezone
     if (pedido.fecha_pedido) {
@@ -123,6 +123,14 @@ router.post('/', async (req, res) => {
       pedido.fecha_entrega = pedido.fecha_entrega.split('T')[0];
     }
     
+    // Asegurar cant_bultos siempre sea número (0 si viene vacío/null)
+    if (pedido.cant_bultos === '' || pedido.cant_bultos === null || pedido.cant_bultos === undefined) {
+      pedido.cant_bultos = 0;
+    } else {
+      pedido.cant_bultos = Number(pedido.cant_bultos);
+      if (isNaN(pedido.cant_bultos)) pedido.cant_bultos = 0;
+    }
+
     let id;
     if (db.client.config.client === 'pg') {
       id = (await db('pedidos').insert(pedido).returning('id'))[0].id;
@@ -203,6 +211,14 @@ router.put('/:id', async (req, res) => {
       datos.fecha_entrega = datos.fecha_entrega.split('T')[0];
     }
     
+    // Coerce cant_bultos on update as well
+    if (datos.cant_bultos === '' || datos.cant_bultos === null || datos.cant_bultos === undefined) {
+      datos.cant_bultos = 0;
+    } else {
+      datos.cant_bultos = Number(datos.cant_bultos);
+      if (isNaN(datos.cant_bultos)) datos.cant_bultos = 0;
+    }
+
     await db('pedidos').where({ id: req.params.id }).update(datos);
     res.status(200).json({ success: true });
   } catch (err) {

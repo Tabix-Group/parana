@@ -14,16 +14,19 @@ router.get('/por-transporte', async (req, res) => {
     const query = db('pedidos')
       .leftJoin('transportes', 'pedidos.transporte_id', 'transportes.id')
       .select(
+        'transportes.id as transporte_id',
         db.raw("COALESCE(transportes.nombre, 'Sin transporte') as nombre"),
-        db.raw('SUM(COALESCE(pedidos.cant_bultos,0)) as totalBultos'),
+        // NULLIF(...,'') convierte cadena vacía a NULL, luego COALESCE a 0
+        db.raw("SUM(COALESCE(NULLIF(pedidos.cant_bultos, ''), 0)) as totalBultos"),
         db.raw('COUNT(pedidos.id) as pedidos')
       )
-      .groupBy('transportes.nombre')
+      .groupBy('transportes.id')
       .orderBy('totalBultos', 'desc');
 
-    applyDateFilter(query, from, to);
-    const rows = await query;
-    res.json(rows);
+  applyDateFilter(query, from, to);
+  const rows = await query;
+  const norm = rows.map(r => ({ nombre: r.nombre || 'Sin transporte', totalBultos: r.totalBultos, pedidos: r.pedidos, transporte_id: r.transporte_id }));
+  res.json(norm);
   } catch (err) {
     console.error('Error GET /reportes/por-transporte', err);
     res.status(500).json({ error: err.message });
@@ -74,6 +77,22 @@ router.get('/por-vendedor', async (req, res) => {
   res.json(norm);
   } catch (err) {
     console.error('Error GET /reportes/por-vendedor', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Backfill: set cant_bultos empty or NULL to 0 (one-time admin endpoint)
+router.post('/backfill-cant-bultos', async (req, res) => {
+  try {
+    if (db.client.config.client === 'sqlite3') {
+      await db.raw("UPDATE pedidos SET cant_bultos = 0 WHERE cant_bultos IS NULL OR cant_bultos = ''");
+    } else {
+      // Postgres
+      await db.raw("UPDATE pedidos SET cant_bultos = 0 WHERE cant_bultos IS NULL OR cant_bultos = ''");
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error backfill cant_bultos', err);
     res.status(500).json({ error: err.message });
   }
 });

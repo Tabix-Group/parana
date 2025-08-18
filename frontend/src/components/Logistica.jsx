@@ -242,6 +242,8 @@ function Logistica() {
 
   const [editingDireccion, setEditingDireccion] = useState('');
   const [editingArmador, setEditingArmador] = useState('');
+  const [editingEstado, setEditingEstado] = useState('');
+  const [editingCantidad, setEditingCantidad] = useState('');
   const handleEdit = (item) => {
     setEditingItem(item);
     setEditingTransporte(item.transporte_id || '');
@@ -249,6 +251,8 @@ function Logistica() {
     setEditingNotas(item.tipo === 'Pedido' ? (item.notas || '') : (item.texto || ''));
     setEditingDireccion(item.direccion || '');
   setEditingArmador(item.armador_id || item.armador || '');
+    setEditingEstado(item.estado_id || '');
+    setEditingCantidad(typeof item.cantidad !== 'undefined' && item.cantidad !== null ? item.cantidad : '');
     setEditModalOpen(true);
   };
 
@@ -271,6 +275,20 @@ function Logistica() {
         body.armador_id = null;
       } else if (typeof editingArmador === 'string' || typeof editingArmador === 'number') {
         body.armador_id = editingArmador;
+      }
+      // Incluir estado si fue modificado
+      if (editingEstado === '' || editingEstado === null) {
+        body.estado_id = null;
+      } else if (typeof editingEstado === 'string' || typeof editingEstado === 'number') {
+        body.estado_id = editingEstado;
+      }
+      // Incluir cantidad (cant_bultos) si fue modificado
+      if (editingCantidad === '' || editingCantidad === null) {
+        // don't include field if empty string - server will handle coercion/backfill
+      } else {
+        // enviar como número si es posible
+        const n = Number(editingCantidad);
+        body.cant_bultos = Number.isNaN(n) ? editingCantidad : n;
       }
       // Eliminar campos undefined/null excepto los que deben ir null
       Object.keys(body).forEach(key => {
@@ -555,6 +573,15 @@ function Logistica() {
           }}>
             Completados: {filteredData.filter(item => item.completado).length}
           </Typography>
+            <Typography variant="body2" sx={{ 
+              backgroundColor: '#e8f5e9', 
+              padding: '4px 12px', 
+              borderRadius: '16px',
+              color: '#2e7d32',
+              fontSize: '0.75rem'
+            }}>
+              Total Cantidad: {filteredData.reduce((s, it) => s + (Number(it.cantidad) ? Number(it.cantidad) : 0), 0)}
+            </Typography>
         </Box>
       </Box>
 
@@ -694,6 +721,27 @@ function Logistica() {
               ))}
             </Select>
           </FormControl>
+          <FormControl fullWidth margin="normal">
+            <Select
+              value={editingEstado ?? ''}
+              onChange={(e) => setEditingEstado(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="">Sin Estado</MenuItem>
+              {Array.isArray(estados) && estados.map(e => (
+                <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Cantidad (bultos)"
+            type="number"
+            value={editingCantidad}
+            onChange={e => setEditingCantidad(e.target.value)}
+            inputProps={{ min: 0 }}
+          />
           <TextField
             fullWidth
             margin="normal"
