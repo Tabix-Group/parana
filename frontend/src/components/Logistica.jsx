@@ -125,9 +125,13 @@ function Logistica() {
   };
 
   useEffect(() => {
-  const combined = [
+    const combined = [
       ...pedidos
-        .filter(p => p.en_logistica === true)
+        .filter(p => {
+          if (!p.en_logistica) return false;
+          const tipo = (p.tipo_transporte_nombre || p.tipo_transporte || '').toString().toLowerCase();
+          return !tipo.includes('retira');
+        })
         .map(p => ({
           ...p,
           tipo: 'Pedido',
@@ -145,7 +149,11 @@ function Logistica() {
           notas: p.notas || '' // Asegura que siempre exista el campo notas
         })),
       ...devoluciones
-        .filter(d => d.en_logistica === true)
+        .filter(d => {
+          if (!d.en_logistica) return false;
+          const tipo = (d.tipo_transporte_nombre || d.tipo_transporte || '').toString().toLowerCase();
+          return !tipo.includes('retira');
+        })
         .map(d => ({
           ...d,
           tipo: 'Devolución',
