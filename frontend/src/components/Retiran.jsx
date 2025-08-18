@@ -72,7 +72,7 @@ function Retiran() {
   const [filterCliente, setFilterCliente] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
   const [filterArmador, setFilterArmador] = useState('');
-  const [filterCompletado, setFilterCompletado] = useState('');
+  const [filterCompletado, setFilterCompletado] = useState('pendiente');
   const [filterFechaPedido, setFilterFechaPedido] = useState('');
   const [filterFechaEntrega, setFilterFechaEntrega] = useState('');
   const [filterTipoTte, setFilterTipoTte] = useState('');
@@ -414,6 +414,39 @@ function Retiran() {
             </Select>
           </FormControl>
           <TextField fullWidth margin="normal" label="Dirección" value={editingDireccion} onChange={e => setEditingDireccion(e.target.value)} multiline minRows={1} maxRows={3} />
+          <FormControl fullWidth margin="normal">
+            <Select
+              value={editingArmador ?? ''}
+              onChange={(e) => setEditingArmador(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="">Sin Armador</MenuItem>
+              {Array.isArray(armadores) && armadores.map(a => (
+                <MenuItem key={a.id} value={a.id}>{`${a.nombre || ''}${a.apellido ? ' ' + a.apellido : ''}`}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal">
+            <Select
+              value={editingEstado ?? ''}
+              onChange={(e) => setEditingEstado(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="">Sin Estado</MenuItem>
+              {Array.isArray(estados) && estados.map(e => (
+                <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Cantidad (bultos)"
+            type="number"
+            value={editingCantidad}
+            onChange={e => setEditingCantidad(e.target.value)}
+            inputProps={{ min: 0 }}
+          />
           <TextField fullWidth margin="normal" label={editingItem?.tipo === 'Pedido' ? 'Notas' : 'Observaciones'} value={editingNotas} onChange={e => setEditingNotas(e.target.value)} multiline minRows={2} maxRows={6} />
         </DialogContent>
         <DialogActions>
