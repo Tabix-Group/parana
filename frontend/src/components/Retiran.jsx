@@ -74,6 +74,7 @@ function Retiran() {
   const [filterEstado, setFilterEstado] = useState('');
   const [filterArmador, setFilterArmador] = useState('');
   const [filterCompletado, setFilterCompletado] = useState('pendiente');
+  const [filterOk, setFilterOk] = useState('');
   const [filterFechaEntrega, setFilterFechaEntrega] = useState('');
   const [filterTipoTte, setFilterTipoTte] = useState('');
   const [filterTransporte, setFilterTransporte] = useState('');
@@ -199,6 +200,11 @@ function Retiran() {
       else if (filterCompletado === 'pendiente') filtered = filtered.filter(item => !item.completado);
     }
 
+    if (filterOk) {
+      if (filterOk === 'ok') filtered = filtered.filter(item => item.ok === true);
+      else if (filterOk === 'no_ok') filtered = filtered.filter(item => !item.ok);
+    }
+
     if (filterEstado && Array.isArray(estados)) {
       filtered = filtered.filter(item => item.estado_id === parseInt(filterEstado));
     }
@@ -280,6 +286,7 @@ function Retiran() {
   'Armador': row.armador,
   'Cantidad': row.cantidad,
   'Fecha Entrega': formatDate(row.fecha_entrega),
+  'Ok': row.ok ? 'Sí' : 'No',
       'Vendedor': Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
       'Estado': Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado',
       'Tipo Tte': row.tipo_transporte,
@@ -295,10 +302,10 @@ function Retiran() {
     const doc = new jsPDF('landscape', 'mm', 'a4');
     const exportData = filteredData.map(row => [
       row.nro_comprobante, row.tipo, row.cliente, row.armador, row.direccion, row.cantidad,
-      formatDate(row.fecha_entrega), Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor', Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado', row.tipo_transporte, row.transporte
+      formatDate(row.fecha_entrega), row.ok ? 'Sí' : 'No', Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor', Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado', row.tipo_transporte, row.transporte
     ]);
     doc.autoTable({
-      head: [['Nro Comprobante','Tipo','Cliente','Armador','Dirección','Cantidad','Fecha Entrega','Vendedor','Estado','Tipo Tte','Transporte']],
+      head: [['Nro Comprobante','Tipo','Cliente','Armador','Dirección','Cantidad','Fecha Entrega','Ok','Vendedor','Estado','Tipo Tte','Transporte']],
       body: exportData,
       styles: { fontSize: 6, cellPadding: 1, overflow: 'linebreak' },
       headStyles: { fillColor: [34,51,107], fontSize: 7, fontStyle: 'bold' },
@@ -313,7 +320,7 @@ function Retiran() {
   const columns = [
     { id: 'nro_comprobante', label: 'Comprobante', minWidth: 50 },
     { id: 'cliente', label: 'Cliente', minWidth: 120 },
-    { id: 'armador', label: 'Armador', minWidth: 120 },
+  { id: 'armador', label: 'Armador', minWidth: 120 },
     { id: 'direccion', label: 'Dirección', minWidth: 120 },
     { id: 'cantidad', label: 'Cantidad', minWidth: 70 },
     { id: 'fecha_entrega', label: 'Fecha Entrega', minWidth: 90 },
@@ -323,6 +330,7 @@ function Retiran() {
     { id: 'transporte', label: 'Transporte', minWidth: 100 },
     { id: 'notas', label: 'Notas/Observaciones', minWidth: 140 },
     { id: 'accion', label: 'Acción', minWidth: 60 },
+  { id: 'ok', label: 'Ok', minWidth: 60 },
     { id: 'completado', label: 'Completado', minWidth: 80 }
   ];
 
@@ -348,6 +356,13 @@ function Retiran() {
             <MenuItem value="">Todos</MenuItem>
             <MenuItem value="completado">Completado</MenuItem>
             <MenuItem value="pendiente">Pendiente</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <Select value={filterOk} onChange={(e) => setFilterOk(e.target.value)} displayEmpty>
+            <MenuItem value="">Todos</MenuItem>
+            <MenuItem value="ok">Ok</MenuItem>
+            <MenuItem value="no_ok">No Ok</MenuItem>
           </Select>
         </FormControl>
   <TextField label="Fecha Entrega" type="date" value={filterFechaEntrega} onChange={(e) => setFilterFechaEntrega(e.target.value)} InputLabelProps={{ shrink: true }} size="small" sx={{ minWidth: 120 }} />
@@ -394,6 +409,15 @@ function Retiran() {
                   <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit', maxWidth: 180, whiteSpace: 'pre-line', wordBreak: 'break-word' }}>{row.tipo === 'Pedido' ? (row.notas || '') : (row.texto || '')}</TableCell>
                   <TableCell sx={{ padding: '4px' }}>
                     <IconButton size="small" onClick={() => handleEdit(row)} color="primary" sx={{ padding: '4px', opacity: isCompleted ? 0.5 : 1 }} disabled={isCompleted}><Edit fontSize="small" /></IconButton>
+                  </TableCell>
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    <Checkbox size="small" checked={row.ok || false} onChange={async () => {
+                      try {
+                        const endpoint = row.tipo === 'Pedido' ? '/pedidos' : '/devoluciones';
+                        await api.put(`${endpoint}/${row.id}/ok`, { ok: !row.ok });
+                        setCombinedData(prev => prev.map(r => r.id === row.id && r.tipo === row.tipo ? { ...r, ok: !r.ok } : r));
+                      } catch (err) { console.error('Error toggling ok:', err); }
+                    }} color={row.ok ? 'success' : 'default'} sx={{ color: row.ok ? '#2e7d32' : 'inherit' }} />
                   </TableCell>
                   <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                     <Checkbox size="small" checked={row.completado || false} onChange={() => handleCompleted(row)} color={isCompleted ? '#666' : 'success'} sx={{ color: isCompleted ? '#666' : 'inherit', '&.Mui-checked': { color: isCompleted ? '#666' : '#2e7d32' } }} />

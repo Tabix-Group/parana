@@ -78,6 +78,7 @@ function Logistica() {
   const [filterEstado, setFilterEstado] = useState('');
   const [filterArmador, setFilterArmador] = useState('');
   const [filterCompletado, setFilterCompletado] = useState('pendiente');
+  const [filterOk, setFilterOk] = useState('');
   const [filterFechaEntrega, setFilterFechaEntrega] = useState('');
   const [filterTipoTte, setFilterTipoTte] = useState('');
   const [filterTransporte, setFilterTransporte] = useState('');
@@ -207,6 +208,11 @@ function Logistica() {
       }
     }
 
+    if (filterOk) {
+      if (filterOk === 'ok') filtered = filtered.filter(item => item.ok === true);
+      else if (filterOk === 'no_ok') filtered = filtered.filter(item => !item.ok);
+    }
+
     if (filterEstado && Array.isArray(estados)) {
       filtered = filtered.filter(item => 
         item.estado_id === parseInt(filterEstado)
@@ -226,7 +232,7 @@ function Logistica() {
       filtered = filtered.filter(item => (item.transporte || '').toLowerCase().includes(filterTransporte.toLowerCase()));
     }
     setFilteredData(filtered);
-  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterFechaPedido, filterFechaEntrega, filterTipoTte, filterTransporte, filterArmador, filterCompletado, vendedores, estados]);
+  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterFechaEntrega, filterTipoTte, filterTransporte, filterArmador, filterCompletado, filterOk, vendedores, estados]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -345,7 +351,8 @@ function Logistica() {
   'Armador': row.armador,
   'Cantidad': row.cantidad,
   //'Fecha Pedido' removed
-      'Fecha Entrega': formatDate(row.fecha_entrega),
+  'Fecha Entrega': formatDate(row.fecha_entrega),
+  'Ok': row.ok ? 'Sí' : 'No',
       'Vendedor': Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
       'Estado': Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado',
       'Tipo Tte': row.tipo_transporte,
@@ -369,15 +376,16 @@ function Logistica() {
   row.armador,
   row.direccion,
   row.cantidad,
-      formatDate(row.fecha_entrega),
-      Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
+  formatDate(row.fecha_entrega),
+  row.ok ? 'Sí' : 'No',
+  Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
       Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado',
       row.tipo_transporte,
       row.transporte
     ]);
 
     doc.autoTable({
-  head: [['Nro Comprobante', 'Tipo', 'Cliente', 'Armador', 'Dirección', 'Cantidad', 'Fecha Entrega', 'Vendedor', 'Estado', 'Tipo Tte', 'Transporte']],
+  head: [['Nro Comprobante', 'Tipo', 'Cliente', 'Armador', 'Dirección', 'Cantidad', 'Fecha Entrega', 'Ok', 'Vendedor', 'Estado', 'Tipo Tte', 'Transporte']],
       body: exportData,
       styles: { 
         fontSize: 6,
@@ -423,8 +431,9 @@ function Logistica() {
     { id: 'tipo_tte', label: 'Tipo Tte', minWidth: 80 },
     { id: 'transporte', label: 'Transporte', minWidth: 100 },
     { id: 'notas', label: 'Notas/Observaciones', minWidth: 140 },
-    { id: 'accion', label: 'Acción', minWidth: 60 },
-    { id: 'completado', label: 'Completado', minWidth: 80 }
+  { id: 'accion', label: 'Acción', minWidth: 60 },
+  { id: 'ok', label: 'Ok', minWidth: 60 },
+  { id: 'completado', label: 'Completado', minWidth: 80 }
   ];
 
   return (
@@ -494,6 +503,13 @@ function Logistica() {
             <MenuItem value="">Todos</MenuItem>
             <MenuItem value="completado">Completado</MenuItem>
             <MenuItem value="pendiente">Pendiente</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <Select value={filterOk} onChange={(e) => setFilterOk(e.target.value)} displayEmpty>
+            <MenuItem value="">Todos</MenuItem>
+            <MenuItem value="ok">Ok</MenuItem>
+            <MenuItem value="no_ok">No Ok</MenuItem>
           </Select>
         </FormControl>
         <TextField
@@ -619,6 +635,24 @@ function Logistica() {
                       >
                         <Edit fontSize="small" />
                       </IconButton>
+                    </TableCell>
+                    <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                      <Checkbox
+                        size="small"
+                        checked={row.ok || false}
+                        onChange={async () => {
+                          try {
+                            const endpoint = row.tipo === 'Pedido' ? '/pedidos' : '/devoluciones';
+                            await api.put(`${endpoint}/${row.id}/ok`, { ok: !row.ok });
+                            // Optimistic update
+                            setCombinedData(prev => prev.map(r => r.id === row.id && r.tipo === row.tipo ? { ...r, ok: !r.ok } : r));
+                          } catch (err) {
+                            console.error('Error toggling ok:', err);
+                          }
+                        }}
+                        color={row.ok ? 'success' : 'default'}
+                        sx={{ color: row.ok ? '#2e7d32' : 'inherit' }}
+                      />
                     </TableCell>
                     <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                       <Checkbox

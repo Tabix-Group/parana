@@ -94,6 +94,13 @@ router.put('/:id/completado', async (req, res) => {
   res.json({ success: true });
 });
 
+// Marcar/Desmarcar campo OK
+router.put('/:id/ok', async (req, res) => {
+  const { ok } = req.body;
+  await db('devoluciones').where({ id: req.params.id }).update({ ok: !!ok });
+  res.json({ success: true });
+});
+
 // Editar devolucion
 router.put('/:id', async (req, res) => {
   await db('devoluciones').where({ id: req.params.id }).update(req.body);

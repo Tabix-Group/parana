@@ -157,6 +157,13 @@ export async function createTables(db) {
           t.boolean('completado').defaultTo(false).comment('Si el pedido está completado/entregado');
         });
       }
+      // Agregar columna 'ok' para marcar pedidos OK/No OK
+      const hasOk = await db.schema.hasColumn('pedidos', 'ok');
+      if (!hasOk) {
+        await db.schema.table('pedidos', t => {
+          t.boolean('ok').defaultTo(false).comment('Marca si el pedido fue verificado OK');
+        });
+      }
       
       // Reiniciar la secuencia de auto-incremento para PostgreSQL
       if (db.client.config.client === 'pg') {
@@ -228,6 +235,13 @@ export async function createTables(db) {
           if (!hasCol) {
             return db.schema.table('devoluciones', t => {
               t.boolean('completado').defaultTo(false).comment('Si la devolución está completada');
+            });
+          }
+        }),
+        db.schema.hasColumn('devoluciones', 'ok').then(hasCol => {
+          if (!hasCol) {
+            return db.schema.table('devoluciones', t => {
+              t.boolean('ok').defaultTo(false).comment('Marca si la devolución fue verificada OK');
             });
           }
         }),
