@@ -130,6 +130,7 @@ function Retiran() {
         .filter(p => p.en_logistica === true)
         .map(p => {
           const completed = (p.completado === true || p.completado === 1 || p.completado === '1');
+          const armadorName = ((p.armador_nombre || '') + (p.armador_apellido ? ` ${p.armador_apellido}` : '')).trim();
           return ({
             ...p,
             tipo: 'Pedido',
@@ -137,7 +138,8 @@ function Retiran() {
             cliente: p.cliente_nombre || 'No disponible',
             direccion: p.direccion || 'Sin dirección',
             cantidad: p.cant_bultos || 0,
-            armador: (p.armador_nombre || '') + (p.armador_apellido ? ` ${p.armador_apellido}` : '') || p.armador || p.cliente_nombre || 'No disponible',
+            // Mostrar armador sólo si existe; no usar datos del cliente como fallback
+            armador: armadorName || (typeof p.armador === 'string' ? p.armador : ''),
             fecha_pedido: p.fecha_pedido || p.fecha,
             fecha_entrega: p.fecha_entrega || '',
             tipo_transporte: p.tipo_transporte_nombre || 'No disponible',
@@ -150,6 +152,7 @@ function Retiran() {
         .filter(d => d.en_logistica === true)
         .map(d => {
           const completed = (d.completado === true || d.completado === 1 || d.completado === '1');
+          const armadorName = ((d.armador_nombre || '') + (d.armador_apellido ? ` ${d.armador_apellido}` : '')).trim();
           return ({
             ...d,
             tipo: 'Devolución',
@@ -157,7 +160,8 @@ function Retiran() {
             cliente: d.cliente_nombre || 'No disponible',
             direccion: d.direccion || 'Sin dirección',
             cantidad: d.cant_bultos || 0,
-            armador: (d.armador_nombre || '') + (d.armador_apellido ? ` ${d.armador_apellido}` : '') || d.armador || d.cliente_nombre || 'No disponible',
+            // Mostrar armador sólo si existe; no usar datos del cliente como fallback
+            armador: armadorName || (typeof d.armador === 'string' ? d.armador : ''),
             fecha_pedido: d.fecha_pedido || d.fecha,
             fecha_entrega: d.fecha_entrega || '',
             tipo_transporte: d.tipo_transporte_nombre || 'No disponible',
@@ -397,7 +401,17 @@ function Retiran() {
                   <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.nro_comprobante}</TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                    {row.armador_id ? (Array.isArray(armadores) ? (armadores.find(a => a.id === row.armador_id)?.nombre ? `${armadores.find(a => a.id === row.armador_id)?.nombre}${armadores.find(a => a.id === row.armador_id)?.apellido ? ' ' + armadores.find(a => a.id === row.armador_id)?.apellido : ''}` : row.armador) : row.armador) : (row.armador || '')}
+                    {row.armador_id ? (
+                      Array.isArray(armadores) ? (
+                        (() => {
+                          const a = armadores.find(a => a.id === row.armador_id);
+                          return a ? `${a.nombre || ''}${a.apellido ? ' ' + a.apellido : ''}` : (row.armador || '');
+                        })()
+                      ) : (row.armador || '')
+                    ) : (
+                      // If no armador_id and armador is empty, show blank
+                      row.armador || ''
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
