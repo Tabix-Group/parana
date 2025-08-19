@@ -43,7 +43,7 @@ const columns = [
   { id: 'fecha_entrega', label: 'Fecha Entrega' },
   { id: 'notas', label: 'Notas' }
 ];
-const pageSizes = [10, 15, 25, 50];
+const pageSizes = [10, 15, 25, 50, 100];
 
 
 
@@ -51,7 +51,7 @@ export default function PedidosParciales() {
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
   const [filter, setFilter] = useState('');
 
   useEffect(() => { fetchData(); }, [page, pageSize, filter]);

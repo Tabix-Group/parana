@@ -50,7 +50,7 @@ const columns = [
   { id: 'en_logistica', label: 'En Logística' }
 ];
 
-const pageSizes = [10, 15, 25, 50];
+const pageSizes = [10, 15, 25, 50, 100];
 
 export default function Pedidos() {
   // Estado para el diálogo de edición/alta
@@ -268,7 +268,7 @@ export default function Pedidos() {
   };
   // Estados para paginación
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
 
 
   // Filtros debe ir antes de cualquier uso

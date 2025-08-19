@@ -51,13 +51,13 @@ const columns = [
   { id: 'en_logistica', label: 'En Logística' }
 ];
 
-const pageSizes = [10, 15, 25, 50];
+const pageSizes = [10, 15, 25, 50, 100];
 
 export default function Devoluciones() {
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
   const [editRow, setEditRow] = useState(null);
   const [form, setForm] = useState({ pedido_id: '', Codigo: '', cliente_id: '', transporte_id: '', tipo: '', recibido: false, fecha: '', texto: '' });
   const [pedidos, setPedidos] = useState([]);

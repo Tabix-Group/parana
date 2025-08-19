@@ -67,7 +67,8 @@ function Retiran() {
   const [estados, setEstados] = useState([]);
   const [armadores, setArmadores] = useState([]);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  // Default to 100 rows per page as requested
+  const [rowsPerPage, setRowsPerPage] = useState(100);
   const [filterVendedor, setFilterVendedor] = useState('');
   const [filterCliente, setFilterCliente] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
