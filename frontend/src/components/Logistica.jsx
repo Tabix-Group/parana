@@ -78,7 +78,6 @@ function Logistica() {
   const [filterEstado, setFilterEstado] = useState('');
   const [filterArmador, setFilterArmador] = useState('');
   const [filterCompletado, setFilterCompletado] = useState('pendiente');
-  const [filterFechaPedido, setFilterFechaPedido] = useState('');
   const [filterFechaEntrega, setFilterFechaEntrega] = useState('');
   const [filterTipoTte, setFilterTipoTte] = useState('');
   const [filterTransporte, setFilterTransporte] = useState('');
@@ -214,9 +213,7 @@ function Logistica() {
       );
     }
 
-    if (filterFechaPedido) {
-      filtered = filtered.filter(item => compareDates(item.fecha_pedido, filterFechaPedido));
-    }
+  // fecha_pedido filter removed
 
     if (filterFechaEntrega) {
       filtered = filtered.filter(item => compareDates(item.fecha_entrega, filterFechaEntrega));
@@ -347,7 +344,7 @@ function Logistica() {
   'Dirección': row.direccion,
   'Armador': row.armador,
   'Cantidad': row.cantidad,
-      'Fecha Pedido': formatDate(row.fecha_pedido),
+  //'Fecha Pedido' removed
       'Fecha Entrega': formatDate(row.fecha_entrega),
       'Vendedor': Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
       'Estado': Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado',
@@ -365,14 +362,13 @@ function Logistica() {
   // Exportar a PDF
   const handleExportPDF = () => {
     const doc = new jsPDF('landscape', 'mm', 'a4');
-    const exportData = filteredData.map(row => [
+      const exportData = filteredData.map(row => [
       row.nro_comprobante,
       row.tipo,
       row.cliente,
-  row.direccion,
   row.armador,
+  row.direccion,
   row.cantidad,
-      formatDate(row.fecha_pedido),
       formatDate(row.fecha_entrega),
       Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
       Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado',
@@ -381,7 +377,7 @@ function Logistica() {
     ]);
 
     doc.autoTable({
-  head: [['Nro Comprobante', 'Tipo', 'Cliente', 'Dirección', 'Armador', 'Cantidad', 'Fecha Pedido', 'Fecha Entrega', 'Vendedor', 'Estado', 'Tipo Tte', 'Transporte']],
+  head: [['Nro Comprobante', 'Tipo', 'Cliente', 'Armador', 'Dirección', 'Cantidad', 'Fecha Entrega', 'Vendedor', 'Estado', 'Tipo Tte', 'Transporte']],
       body: exportData,
       styles: { 
         fontSize: 6,
@@ -397,15 +393,14 @@ function Logistica() {
         0: { cellWidth: 20 }, // Nro Comprobante
         1: { cellWidth: 15 }, // Tipo
         2: { cellWidth: 28 }, // Cliente
-        3: { cellWidth: 22 }, // Dirección
-        4: { cellWidth: 18 }, // Armador
+        3: { cellWidth: 22 }, // Armador
+        4: { cellWidth: 18 }, // Dirección
         5: { cellWidth: 12 }, // Cantidad
-        6: { cellWidth: 18 }, // Fecha Pedido
-        7: { cellWidth: 18 }, // Fecha Entrega
-        8: { cellWidth: 20 }, // Vendedor
-        9: { cellWidth: 15 }, // Estado
-        10: { cellWidth: 15 }, // Tipo Tte
-        11: { cellWidth: 20 } // Transporte
+        6: { cellWidth: 18 }, // Fecha Entrega
+        7: { cellWidth: 20 }, // Vendedor
+        8: { cellWidth: 15 }, // Estado
+        9: { cellWidth: 15 }, // Tipo Tte
+        10: { cellWidth: 20 } // Transporte
       }
     });
 
@@ -419,10 +414,9 @@ function Logistica() {
   const columns = [
     { id: 'nro_comprobante', label: 'Comprobante', minWidth: 50 },
     { id: 'cliente', label: 'Cliente', minWidth: 120 },
-  { id: 'direccion', label: 'Dirección', minWidth: 120 },
-  { id: 'armador', label: 'Armador', minWidth: 120 },
+    { id: 'armador', label: 'Armador', minWidth: 120 },
+    { id: 'direccion', label: 'Dirección', minWidth: 120 },
     { id: 'cantidad', label: 'Cantidad', minWidth: 70 },
-    { id: 'fecha_pedido', label: 'Fecha Pedido', minWidth: 90 },
     { id: 'fecha_entrega', label: 'Fecha Entrega', minWidth: 90 },
     { id: 'vendedor', label: 'Vendedor', minWidth: 100 },
     { id: 'estado', label: 'Estado', minWidth: 80 },
@@ -503,15 +497,6 @@ function Logistica() {
           </Select>
         </FormControl>
         <TextField
-          label="Fecha Pedido"
-          type="date"
-          value={filterFechaPedido}
-          onChange={(e) => setFilterFechaPedido(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          size="small"
-          sx={{ minWidth: 120 }}
-        />
-        <TextField
           label="Fecha Entrega"
           type="date"
           value={filterFechaEntrega}
@@ -525,13 +510,12 @@ function Logistica() {
           onClick={() => {
             setFilterVendedor('');
             setFilterCliente('');
-              setFilterArmador('');
+            setFilterArmador('');
             setFilterEstado('');
-            setFilterFechaPedido('');
             setFilterFechaEntrega('');
             setFilterTipoTte('');
             setFilterTransporte('');
-              setFilterCompletado('');
+            setFilterCompletado('');
           }}
           size="small"
         >
@@ -612,12 +596,11 @@ function Logistica() {
                   <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={rowStyle}>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.nro_comprobante}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
                       {row.armador_id ? (Array.isArray(armadores) ? (armadores.find(a => a.id === row.armador_id)?.nombre ? `${armadores.find(a => a.id === row.armador_id)?.nombre}${armadores.find(a => a.id === row.armador_id)?.apellido ? ' ' + armadores.find(a => a.id === row.armador_id)?.apellido : ''}` : row.armador) : row.armador) : (row.armador || '')}
                     </TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_pedido)}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_entrega)}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor'}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado'}</TableCell>

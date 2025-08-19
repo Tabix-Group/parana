@@ -74,7 +74,6 @@ function Retiran() {
   const [filterEstado, setFilterEstado] = useState('');
   const [filterArmador, setFilterArmador] = useState('');
   const [filterCompletado, setFilterCompletado] = useState('pendiente');
-  const [filterFechaPedido, setFilterFechaPedido] = useState('');
   const [filterFechaEntrega, setFilterFechaEntrega] = useState('');
   const [filterTipoTte, setFilterTipoTte] = useState('');
   const [filterTransporte, setFilterTransporte] = useState('');
@@ -204,13 +203,13 @@ function Retiran() {
       filtered = filtered.filter(item => item.estado_id === parseInt(filterEstado));
     }
 
-    if (filterFechaPedido) filtered = filtered.filter(item => compareDates(item.fecha_pedido, filterFechaPedido));
-    if (filterFechaEntrega) filtered = filtered.filter(item => compareDates(item.fecha_entrega, filterFechaEntrega));
+  // Fecha Pedido filter removed per request
+  if (filterFechaEntrega) filtered = filtered.filter(item => compareDates(item.fecha_entrega, filterFechaEntrega));
     if (filterTipoTte) filtered = filtered.filter(item => (item.tipo_transporte || '').toLowerCase().includes(filterTipoTte.toLowerCase()));
     if (filterTransporte) filtered = filtered.filter(item => (item.transporte || '').toLowerCase().includes(filterTransporte.toLowerCase()));
 
     setFilteredData(filtered);
-  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterFechaPedido, filterFechaEntrega, filterTipoTte, filterTransporte, filterArmador, filterCompletado, vendedores, estados]);
+  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterFechaEntrega, filterTipoTte, filterTransporte, filterArmador, filterCompletado, vendedores, estados]);
 
   const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => { setRowsPerPage(parseInt(event.target.value, 10)); setPage(0); };
@@ -277,11 +276,10 @@ function Retiran() {
       'Nro Comprobante': row.nro_comprobante,
       'Tipo': row.tipo,
       'Cliente': row.cliente,
-      'Dirección': row.direccion,
-      'Armador': row.armador,
-      'Cantidad': row.cantidad,
-      'Fecha Pedido': formatDate(row.fecha_pedido),
-      'Fecha Entrega': formatDate(row.fecha_entrega),
+  'Dirección': row.direccion,
+  'Armador': row.armador,
+  'Cantidad': row.cantidad,
+  'Fecha Entrega': formatDate(row.fecha_entrega),
       'Vendedor': Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
       'Estado': Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado',
       'Tipo Tte': row.tipo_transporte,
@@ -296,15 +294,15 @@ function Retiran() {
   const handleExportPDF = () => {
     const doc = new jsPDF('landscape', 'mm', 'a4');
     const exportData = filteredData.map(row => [
-      row.nro_comprobante, row.tipo, row.cliente, row.direccion, row.armador, row.cantidad,
-      formatDate(row.fecha_pedido), formatDate(row.fecha_entrega), Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor', Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado', row.tipo_transporte, row.transporte
+      row.nro_comprobante, row.tipo, row.cliente, row.armador, row.direccion, row.cantidad,
+      formatDate(row.fecha_entrega), Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor', Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado', row.tipo_transporte, row.transporte
     ]);
     doc.autoTable({
-      head: [['Nro Comprobante','Tipo','Cliente','Dirección','Armador','Cantidad','Fecha Pedido','Fecha Entrega','Vendedor','Estado','Tipo Tte','Transporte']],
+      head: [['Nro Comprobante','Tipo','Cliente','Armador','Dirección','Cantidad','Fecha Entrega','Vendedor','Estado','Tipo Tte','Transporte']],
       body: exportData,
       styles: { fontSize: 6, cellPadding: 1, overflow: 'linebreak' },
       headStyles: { fillColor: [34,51,107], fontSize: 7, fontStyle: 'bold' },
-      columnStyles: { 0:{cellWidth:20},1:{cellWidth:15},2:{cellWidth:28},3:{cellWidth:22},4:{cellWidth:18},5:{cellWidth:12},6:{cellWidth:18},7:{cellWidth:18},8:{cellWidth:20},9:{cellWidth:15},10:{cellWidth:15},11:{cellWidth:20} }
+      columnStyles: { 0:{cellWidth:20},1:{cellWidth:15},2:{cellWidth:28},3:{cellWidth:22},4:{cellWidth:18},5:{cellWidth:12},6:{cellWidth:18},7:{cellWidth:18},8:{cellWidth:20},9:{cellWidth:15},10:{cellWidth:20} }
     });
     const fecha = new Date().toISOString().slice(0,10); doc.save(`Retiran_${fecha}.pdf`);
   };
@@ -315,10 +313,9 @@ function Retiran() {
   const columns = [
     { id: 'nro_comprobante', label: 'Comprobante', minWidth: 50 },
     { id: 'cliente', label: 'Cliente', minWidth: 120 },
-    { id: 'direccion', label: 'Dirección', minWidth: 120 },
     { id: 'armador', label: 'Armador', minWidth: 120 },
+    { id: 'direccion', label: 'Dirección', minWidth: 120 },
     { id: 'cantidad', label: 'Cantidad', minWidth: 70 },
-    { id: 'fecha_pedido', label: 'Fecha Pedido', minWidth: 90 },
     { id: 'fecha_entrega', label: 'Fecha Entrega', minWidth: 90 },
     { id: 'vendedor', label: 'Vendedor', minWidth: 100 },
     { id: 'estado', label: 'Estado', minWidth: 80 },
@@ -353,9 +350,8 @@ function Retiran() {
             <MenuItem value="pendiente">Pendiente</MenuItem>
           </Select>
         </FormControl>
-        <TextField label="Fecha Pedido" type="date" value={filterFechaPedido} onChange={(e) => setFilterFechaPedido(e.target.value)} InputLabelProps={{ shrink: true }} size="small" sx={{ minWidth: 120 }} />
-        <TextField label="Fecha Entrega" type="date" value={filterFechaEntrega} onChange={(e) => setFilterFechaEntrega(e.target.value)} InputLabelProps={{ shrink: true }} size="small" sx={{ minWidth: 120 }} />
-        <Button variant="outlined" onClick={() => { setFilterVendedor(''); setFilterCliente(''); setFilterArmador(''); setFilterEstado(''); setFilterFechaPedido(''); setFilterFechaEntrega(''); setFilterTipoTte(''); setFilterTransporte(''); setFilterCompletado(''); }} size="small">Limpiar Filtros</Button>
+  <TextField label="Fecha Entrega" type="date" value={filterFechaEntrega} onChange={(e) => setFilterFechaEntrega(e.target.value)} InputLabelProps={{ shrink: true }} size="small" sx={{ minWidth: 120 }} />
+  <Button variant="outlined" onClick={() => { setFilterVendedor(''); setFilterCliente(''); setFilterArmador(''); setFilterEstado(''); setFilterFechaEntrega(''); setFilterTipoTte(''); setFilterTransporte(''); setFilterCompletado(''); }} size="small">Limpiar Filtros</Button>
       </Box>
 
       <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
@@ -385,10 +381,11 @@ function Retiran() {
                 <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={rowStyle}>
                   <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.nro_comprobante}</TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
+                  <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                    {row.armador_id ? (Array.isArray(armadores) ? (armadores.find(a => a.id === row.armador_id)?.nombre ? `${armadores.find(a => a.id === row.armador_id)?.nombre}${armadores.find(a => a.id === row.armador_id)?.apellido ? ' ' + armadores.find(a => a.id === row.armador_id)?.apellido : ''}` : row.armador) : row.armador) : (row.armador || '')}
+                  </TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
-                  <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.armador || 'No disponible'}</TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
-                  <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_pedido)}</TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_entrega)}</TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor'}</TableCell>
                   <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado'}</TableCell>
