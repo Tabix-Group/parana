@@ -314,7 +314,8 @@ export default function Pedidos() {
     API.get('/armadores').then(res => setArmadores(res.data.data));
     API.get('/tipos-transporte').then(res => setTiposTransporte(res.data.data));
     API.get('/transportes').then(res => setTransportes(res.data.data));
-    API.get('/vendedores').then(res => setVendedores(res.data.data));
+  // Request all vendedores (pageSize=0) so dropdowns contain the full list
+  API.get('/vendedores', { params: { pageSize: 0 } }).then(res => setVendedores(res.data.data));
   }, []);
   // Maneja los cambios en los filtros de la tabla
   const handleFilter = (e) => {
