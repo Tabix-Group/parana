@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     .leftJoin('transportes', 'pedidos.transporte_id', 'transportes.id')
     .leftJoin('vendedores', 'pedidos.vendedor_id', 'vendedores.id');
   if (parcial === 'true') {
-    baseQuery = baseQuery.leftJoin('estados', 'pedidos.estado_id', 'estados.id').where('estados.nombre', 'like', '%Parcial%');
+    baseQuery = baseQuery.leftJoin('estados', 'pedidos.estado_id', 'estados.id').whereRaw('lower(estados.nombre) like ?', ['%parcial%']);
   } else if (estado) {
     baseQuery = baseQuery.where('pedidos.estado_id', estado);
   }
@@ -65,19 +65,19 @@ router.get('/', async (req, res) => {
       // Aplicar mismos filtros usados arriba
       if (cliente) {
         if (/^\d+$/.test(String(cliente))) qb.where('pedidos.cliente_id', cliente);
-        else qb.where('clientes.nombre', 'like', `%${cliente}%`);
+        else qb.whereRaw('lower(clientes.nombre) like ?', [`%${String(cliente).toLowerCase()}%`]);
       }
       if (armador) {
         if (/^\d+$/.test(String(armador))) qb.where('pedidos.armador_id', armador);
-        else qb.where('armadores.nombre', 'like', `%${armador}%`);
+        else qb.whereRaw('lower(armadores.nombre) like ?', [`%${String(armador).toLowerCase()}%`]);
       }
       if (vendedor) {
         if (/^\d+$/.test(String(vendedor))) qb.where('pedidos.vendedor_id', vendedor);
-        else qb.where('vendedores.nombre', 'like', `%${vendedor}%`);
+        else qb.whereRaw('lower(vendedores.nombre) like ?', [`%${String(vendedor).toLowerCase()}%`]);
       }
       if (transporte) {
         if (/^\d+$/.test(String(transporte))) qb.where('pedidos.transporte_id', transporte);
-        else qb.where('transportes.nombre', 'like', `%${transporte}%`);
+        else qb.whereRaw('lower(transportes.nombre) like ?', [`%${String(transporte).toLowerCase()}%`]);
       }
       if (comprobante) qb.where('pedidos.comprobante', 'like', `%${comprobante}%`);
       if (fecha_entrega) {
@@ -131,27 +131,27 @@ router.get('/', async (req, res) => {
       'estados.nombre as estado' // para Logistica
     );
   if (parcial === 'true') {
-    query = query.where('estados.nombre', 'like', '%Parcial%');
+    query = query.whereRaw('lower(estados.nombre) like ?', ['%parcial%']);
   } else if (estado) {
     query = query.where('pedidos.estado_id', estado);
   }
   if (cliente) {
     if (/^\d+$/.test(String(cliente))) query = query.where('pedidos.cliente_id', cliente);
-    else query = query.where('clientes.nombre', 'like', `%${cliente}%`);
+    else query = query.whereRaw('lower(clientes.nombre) like ?', [`%${String(cliente).toLowerCase()}%`]);
   }
   if (armador) {
     if (/^\d+$/.test(String(armador))) query = query.where('pedidos.armador_id', armador);
-    else query = query.where('armadores.nombre', 'like', `%${armador}%`);
+    else query = query.whereRaw('lower(armadores.nombre) like ?', [`%${String(armador).toLowerCase()}%`]);
   }
   if (vendedor) {
     if (/^\d+$/.test(String(vendedor))) query = query.where('pedidos.vendedor_id', vendedor);
-    else query = query.where('vendedores.nombre', 'like', `%${vendedor}%`);
+    else query = query.whereRaw('lower(vendedores.nombre) like ?', [`%${String(vendedor).toLowerCase()}%`]);
   }
   if (transporte) {
     if (/^\d+$/.test(String(transporte))) query = query.where('pedidos.transporte_id', transporte);
-    else query = query.where('transportes.nombre', 'like', `%${transporte}%`);
+    else query = query.whereRaw('lower(transportes.nombre) like ?', [`%${String(transporte).toLowerCase()}%`]);
   }
-  if (comprobante) query = query.where('pedidos.comprobante', 'like', `%${comprobante}%`);
+  if (comprobante) query = query.whereRaw('lower(pedidos.comprobante) like ?', [`%${String(comprobante).toLowerCase()}%`]);
   if (fecha_entrega) {
     // Usar comparación directa de fecha sin conversiones UTC problemáticas
     query = query.whereRaw('DATE(pedidos.fecha_entrega) = ?', [fecha_entrega]);
