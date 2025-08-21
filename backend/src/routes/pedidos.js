@@ -135,7 +135,22 @@ router.get('/', async (req, res) => {
   } else if (estado) {
     query = query.where('pedidos.estado_id', estado);
   }
-  if (cliente) query = query.where('pedidos.cliente_id', cliente);
+  if (cliente) {
+    if (/^\d+$/.test(String(cliente))) query = query.where('pedidos.cliente_id', cliente);
+    else query = query.where('clientes.nombre', 'like', `%${cliente}%`);
+  }
+  if (armador) {
+    if (/^\d+$/.test(String(armador))) query = query.where('pedidos.armador_id', armador);
+    else query = query.where('armadores.nombre', 'like', `%${armador}%`);
+  }
+  if (vendedor) {
+    if (/^\d+$/.test(String(vendedor))) query = query.where('pedidos.vendedor_id', vendedor);
+    else query = query.where('vendedores.nombre', 'like', `%${vendedor}%`);
+  }
+  if (transporte) {
+    if (/^\d+$/.test(String(transporte))) query = query.where('pedidos.transporte_id', transporte);
+    else query = query.where('transportes.nombre', 'like', `%${transporte}%`);
+  }
   if (comprobante) query = query.where('pedidos.comprobante', 'like', `%${comprobante}%`);
   if (fecha_entrega) {
     // Usar comparación directa de fecha sin conversiones UTC problemáticas
