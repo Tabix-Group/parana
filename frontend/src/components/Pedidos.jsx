@@ -275,6 +275,9 @@ export default function Pedidos() {
   const [filters, setFilters] = useState({
     comprobante: '',
     cliente: '',
+    armador: '',
+    vendedor: '',
+    transporte: '',
     fecha_pedido: '',
     fecha_entrega: '',
     estado: ''
@@ -325,7 +328,7 @@ export default function Pedidos() {
 
   // Función para limpiar los filtros
   const handleClearFilters = () => {
-    setFilters({ comprobante: '', cliente: '', fecha_pedido: '', fecha_entrega: '', estado: '' });
+    setFilters({ comprobante: '', cliente: '', armador: '', vendedor: '', transporte: '', fecha_pedido: '', fecha_entrega: '', estado: '' });
   };
 
   // Función de sorting (placeholder por ahora)
@@ -457,6 +460,30 @@ export default function Pedidos() {
           value={filters.cliente}
           onChange={handleFilter}
           placeholder="Filtrar por Cliente"
+          sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+        />
+        <TextField
+          size="small"
+          name="armador"
+          value={filters.armador}
+          onChange={handleFilter}
+          placeholder="Filtrar por Armador"
+          sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+        />
+        <TextField
+          size="small"
+          name="vendedor"
+          value={filters.vendedor}
+          onChange={handleFilter}
+          placeholder="Filtrar por Vendedor"
+          sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
+        />
+        <TextField
+          size="small"
+          name="transporte"
+          value={filters.transporte}
+          onChange={handleFilter}
+          placeholder="Filtrar por Transporte"
           sx={{ minWidth: 140, bgcolor: '#fff', borderRadius: 1, boxShadow: '0 1px 4px 0 rgba(34,51,107,0.04)' }}
         />
         <TextField
