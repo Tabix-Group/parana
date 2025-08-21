@@ -282,21 +282,31 @@ export default function Pedidos() {
     fecha_entrega: '',
     estado: ''
   });
+  // Debounced copy of filters to avoid firing API on every keystroke
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
   const [total, setTotal] = useState(0);
 
-  // Cargar datos de pedidos con filtros y paginación
+  // Debounce filters updates
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedFilters(filters), 350);
+    return () => clearTimeout(t);
+  }, [filters]);
+
+  // Cargar datos de pedidos con filtros (debounced) y paginación
   useEffect(() => {
     API.get('/pedidos', {
       params: {
-        ...filters,
+        ...debouncedFilters,
         page: page + 1,
         pageSize
       }
     }).then(res => {
       setData(res.data.data);
       setTotal(Number(res.data.total) || 0);
+    }).catch(err => {
+      console.error('Error loading pedidos:', err);
     });
-  }, [filters, page, pageSize]);
+  }, [debouncedFilters, page, pageSize]);
 
   // Handlers de paginación
   const handleChangePage = (_, newPage) => setPage(newPage);
