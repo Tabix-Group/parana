@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Box, 
-  TablePagination, 
-  TextField, 
-  FormControl, 
-  Select, 
-  MenuItem, 
-  Button, 
-  Autocomplete, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Box,
+  TablePagination,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
+  Button,
+  Autocomplete,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   IconButton,
   Checkbox,
   Typography,
@@ -43,7 +43,7 @@ const compareDates = (dateString, filterDate) => {
   if (!filterDate) return true;
   try {
     if (!dateString) return false;
-    
+
     // Obtener parte de fecha YYYY-MM-DD sin hora, evitando conversiones de timezone
     let pedidoDateStr = '';
     if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -96,9 +96,9 @@ function Logistica() {
   const fetchData = async () => {
     try {
       const [pedidosRes, devolucionesRes, vendedoresRes, clientesRes, transportesRes, tiposTransporteRes, estadosRes, armadoresRes] = await Promise.all([
-        api.get('/pedidos?pageSize=1000'),
+        api.get('/pedidos/logistica'),
         api.get('/devoluciones?pageSize=1000'),
-  api.get('/vendedores', { params: { pageSize: 0 } }),
+        api.get('/vendedores', { params: { pageSize: 0 } }),
         api.get('/clientes?pageSize=1000'),
         api.get('/transportes?pageSize=1000'),
         api.get('/tipos-transporte?pageSize=1000'),
@@ -106,14 +106,14 @@ function Logistica() {
         api.get('/armadores?pageSize=1000')
       ]);
 
-      setPedidos(pedidosRes.data?.data || []);
+      setPedidos(pedidosRes.data || []);
       setDevoluciones(devolucionesRes.data?.data || []);
-  setVendedores(vendedoresRes.data?.data || []);
+      setVendedores(vendedoresRes.data?.data || []);
       setClientes(clientesRes.data?.data || []);
       setTransportes(transportesRes.data?.data || []);
       setTiposTransporte(tiposTransporteRes.data?.data || []);
       setEstados(estadosRes.data?.data || []);
-  setArmadores(armadoresRes.data?.data || []);
+      setArmadores(armadoresRes.data?.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       // En caso de error, asegurar que todos los states sean arrays vacíos
@@ -124,7 +124,7 @@ function Logistica() {
       setTransportes([]);
       setTiposTransporte([]);
       setEstados([]);
-  setArmadores([]);
+      setArmadores([]);
     }
   };
 
@@ -132,7 +132,6 @@ function Logistica() {
     const combined = [
       ...pedidos
         .filter(p => {
-          if (!p.en_logistica) return false;
           const tipo = (p.tipo_transporte_nombre || p.tipo_transporte || '').toString().toLowerCase();
           return !tipo.includes('retira');
         })
@@ -185,13 +184,13 @@ function Logistica() {
     let filtered = combinedData; // Mostrar todos, incluyendo completados
 
     if (filterVendedor && Array.isArray(vendedores)) {
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         vendedores.find(v => v.id === item.vendedor_id)?.nombre?.toLowerCase().includes(filterVendedor.toLowerCase())
       );
     }
 
     if (filterCliente) {
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         item.cliente?.toLowerCase().includes(filterCliente.toLowerCase())
       );
     }
@@ -214,12 +213,12 @@ function Logistica() {
     }
 
     if (filterEstado && Array.isArray(estados)) {
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         item.estado_id === parseInt(filterEstado)
       );
     }
 
-  // fecha_pedido filter removed
+    // fecha_pedido filter removed
 
     if (filterFechaEntrega) {
       filtered = filtered.filter(item => compareDates(item.fecha_entrega, filterFechaEntrega));
@@ -253,7 +252,7 @@ function Logistica() {
     setEditingTipoTransporte(item.tipo_transporte_id || '');
     setEditingNotas(item.tipo === 'Pedido' ? (item.notas || '') : (item.texto || ''));
     setEditingDireccion(item.direccion || '');
-  setEditingArmador(item.armador_id || item.armador || '');
+    setEditingArmador(item.armador_id || item.armador || '');
     setEditingEstado(item.estado_id || '');
     setEditingCantidad(typeof item.cantidad !== 'undefined' && item.cantidad !== null ? item.cantidad : '');
     setEditModalOpen(true);
@@ -311,15 +310,15 @@ function Logistica() {
     setEditingItem(null);
     setEditingTransporte('');
     setEditingTipoTransporte('');
-  setEditingDireccion('');
-  setEditingArmador('');
+    setEditingDireccion('');
+    setEditingArmador('');
   };
 
   const handleCompleted = async (item) => {
     try {
       const endpoint = item.tipo === 'Pedido' ? '/pedidos' : '/devoluciones';
       const newCompletedState = !item.completado; // Toggle del estado
-      
+
       if (newCompletedState) {
         // Marcar como completado usando el endpoint específico
         await api.put(`${endpoint}/${item.id}/completado`);
@@ -329,10 +328,10 @@ function Logistica() {
           completado: false
         });
       }
-      
+
       // Actualizar el estado local
-      setCombinedData(prev => prev.map(row => 
-        row.id === item.id && row.tipo === item.tipo 
+      setCombinedData(prev => prev.map(row =>
+        row.id === item.id && row.tipo === item.tipo
           ? { ...row, completado: newCompletedState }
           : row
       ));
@@ -347,12 +346,12 @@ function Logistica() {
       'Nro Comprobante': row.nro_comprobante,
       'Tipo': row.tipo,
       'Cliente': row.cliente,
-  'Dirección': row.direccion,
-  'Armador': row.armador,
-  'Cantidad': row.cantidad,
-  //'Fecha Pedido' removed
-  'Fecha Entrega': formatDate(row.fecha_entrega),
-  'Ok': row.ok ? 'Sí' : 'No',
+      'Dirección': row.direccion,
+      'Armador': row.armador,
+      'Cantidad': row.cantidad,
+      //'Fecha Pedido' removed
+      'Fecha Entrega': formatDate(row.fecha_entrega),
+      'Ok': row.ok ? 'Sí' : 'No',
       'Vendedor': Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
       'Estado': Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado',
       'Tipo Tte': row.tipo_transporte,
@@ -362,38 +361,38 @@ function Logistica() {
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Logistica');
-    const fecha = new Date().toISOString().slice(0,10);
+    const fecha = new Date().toISOString().slice(0, 10);
     XLSX.writeFile(wb, `Logistica_${fecha}.xlsx`);
   };
 
   // Exportar a PDF
   const handleExportPDF = () => {
     const doc = new jsPDF('landscape', 'mm', 'a4');
-      const exportData = filteredData.map(row => [
+    const exportData = filteredData.map(row => [
       row.nro_comprobante,
       row.tipo,
       row.cliente,
-  row.armador,
-  row.direccion,
-  row.cantidad,
-  formatDate(row.fecha_entrega),
-  row.ok ? 'Sí' : 'No',
-  Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
+      row.armador,
+      row.direccion,
+      row.cantidad,
+      formatDate(row.fecha_entrega),
+      row.ok ? 'Sí' : 'No',
+      Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
       Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado',
       row.tipo_transporte,
       row.transporte
     ]);
 
     doc.autoTable({
-  head: [['Nro Comprobante', 'Tipo', 'Cliente', 'Armador', 'Dirección', 'Cantidad', 'Fecha Entrega', 'Ok', 'Vendedor', 'Estado', 'Tipo Tte', 'Transporte']],
+      head: [['Nro Comprobante', 'Tipo', 'Cliente', 'Armador', 'Dirección', 'Cantidad', 'Fecha Entrega', 'Ok', 'Vendedor', 'Estado', 'Tipo Tte', 'Transporte']],
       body: exportData,
-      styles: { 
+      styles: {
         fontSize: 6,
         cellPadding: 1,
         overflow: 'linebreak'
       },
-      headStyles: { 
-        fillColor: [34,51,107],
+      headStyles: {
+        fillColor: [34, 51, 107],
         fontSize: 7,
         fontStyle: 'bold'
       },
@@ -412,7 +411,7 @@ function Logistica() {
       }
     });
 
-    const fecha = new Date().toISOString().slice(0,10);
+    const fecha = new Date().toISOString().slice(0, 10);
     doc.save(`Logistica_${fecha}.pdf`);
   };
 
@@ -431,15 +430,15 @@ function Logistica() {
     { id: 'tipo_tte', label: 'Tipo Tte', minWidth: 80 },
     { id: 'transporte', label: 'Transporte', minWidth: 100 },
     { id: 'notas', label: 'Notas/Observaciones', minWidth: 140 },
-  { id: 'accion', label: 'Acción', minWidth: 60 },
-  { id: 'ok', label: 'Ok', minWidth: 60 },
-  { id: 'completado', label: 'Completado', minWidth: 80 }
+    { id: 'accion', label: 'Acción', minWidth: 60 },
+    { id: 'ok', label: 'Ok', minWidth: 60 },
+    { id: 'completado', label: 'Completado', minWidth: 80 }
   ];
 
   return (
     <Box sx={{ p: 3 }}>
-  {/* Filtros en una sola fila */}
-  <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+      {/* Filtros en una sola fila */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
         {/* Filtros principales agrupados */}
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           <TextField
@@ -521,8 +520,8 @@ function Logistica() {
           size="small"
           sx={{ minWidth: 120 }}
         />
-        <Button 
-          variant="outlined" 
+        <Button
+          variant="outlined"
           onClick={() => {
             setFilterVendedor('');
             setFilterCliente('');
@@ -555,33 +554,33 @@ function Logistica() {
           <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
         </Menu>
         <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
-          <Typography variant="body2" sx={{ 
-            backgroundColor: '#e3f2fd', 
-            padding: '4px 12px', 
+          <Typography variant="body2" sx={{
+            backgroundColor: '#e3f2fd',
+            padding: '4px 12px',
             borderRadius: '16px',
             color: '#1976d2',
             fontSize: '0.75rem'
           }}>
             Pendientes: {filteredData.filter(item => !item.completado).length}
           </Typography>
-          <Typography variant="body2" sx={{ 
-            backgroundColor: '#f3e5f5', 
-            padding: '4px 12px', 
+          <Typography variant="body2" sx={{
+            backgroundColor: '#f3e5f5',
+            padding: '4px 12px',
             borderRadius: '16px',
             color: '#7b1fa2',
             fontSize: '0.75rem'
           }}>
             Completados: {filteredData.filter(item => item.completado).length}
           </Typography>
-            <Typography variant="body2" sx={{ 
-              backgroundColor: '#e8f5e9', 
-              padding: '4px 12px', 
-              borderRadius: '16px',
-              color: '#2e7d32',
-              fontSize: '0.75rem'
-            }}>
-              Total Cantidad: {filteredData.reduce((s, it) => s + (Number(it.cantidad) ? Number(it.cantidad) : 0), 0)}
-            </Typography>
+          <Typography variant="body2" sx={{
+            backgroundColor: '#e8f5e9',
+            padding: '4px 12px',
+            borderRadius: '16px',
+            color: '#2e7d32',
+            fontSize: '0.75rem'
+          }}>
+            Total Cantidad: {filteredData.reduce((s, it) => s + (Number(it.cantidad) ? Number(it.cantidad) : 0), 0)}
+          </Typography>
         </Box>
       </Box>
 
@@ -590,8 +589,8 @@ function Logistica() {
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
               {columns.map((column) => (
-                <TableCell 
-                  key={column.id} 
+                <TableCell
+                  key={column.id}
                   style={{ minWidth: column.minWidth, fontWeight: 'bold', fontSize: '0.8rem' }}
                 >
                   {column.label}
@@ -604,10 +603,10 @@ function Logistica() {
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((row, index) => {
                 const isCompleted = row.completado;
-                const rowStyle = isCompleted 
+                const rowStyle = isCompleted
                   ? { backgroundColor: '#f5f5f5', opacity: 0.6, '&:hover': { backgroundColor: '#eeeeee' } }
                   : { '&:hover': { backgroundColor: '#f9f9f9' } };
-                
+
                 return (
                   <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={rowStyle}>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.nro_comprobante}</TableCell>
@@ -660,10 +659,10 @@ function Logistica() {
                         checked={row.completado || false}
                         onChange={() => handleCompleted(row)}
                         color={isCompleted ? "default" : "success"}
-                        sx={{ 
+                        sx={{
                           color: isCompleted ? '#666' : 'inherit',
-                          '&.Mui-checked': { 
-                            color: isCompleted ? '#666' : '#2e7d32' 
+                          '&.Mui-checked': {
+                            color: isCompleted ? '#666' : '#2e7d32'
                           }
                         }}
                       />
