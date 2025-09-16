@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import knex from 'knex';
-import { createTables } from './migrations.js';
 import pedidosRoutes from './routes/pedidos.js';
 import clientesRoutes from './routes/clientes.js';
 import armadoresRoutes from './routes/armadores.js';
@@ -51,30 +50,56 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Función para inicializar la base de datos
-async function initializeDatabase() {
-  try {
-    console.log('🚀 Iniciando inicialización de base de datos...');
+// Función para inicializar la base de datos con reintentos
+async function initializeDatabase(maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`🚀 Intento ${attempt}/${maxRetries} - Verificando conexión a base de datos...`);
 
-    // Crear tablas base si no existen
-    await createTables(db);
-    console.log('✅ Tablas base creadas/verficadas');
+      // Verificar conexión a la base de datos
+      await db.raw('SELECT 1');
+      console.log('✅ Conexión a base de datos verificada');
 
-    // Crear/verificar tabla entregas específicamente
-    const { crearTablaEntregas } = await import('./crear-entregas.js');
-    await crearTablaEntregas(db);
-    console.log('✅ Tabla entregas creada/verificada');
+      // Verificar que la tabla entregas existe
+      const tablaExiste = await db.schema.hasTable('entregas');
+      if (!tablaExiste) {
+        console.log('⚠️  Tabla entregas no encontrada, intentando crear...');
+        const { crearTablaEntregas } = await import('./crear-entregas.js');
+        await crearTablaEntregas(db);
+        console.log('✅ Tabla entregas creada');
+      } else {
+        console.log('✅ Tabla entregas ya existe');
+      }
 
-    console.log('🎉 Base de datos inicializada correctamente');
-  } catch (error) {
-    console.error('❌ Error inicializando base de datos:', error);
-    // No salir del proceso, continuar con el servidor
-    console.log('⚠️  Continuando con el servidor a pesar del error de BD');
+      // Verificación final
+      const count = await db('entregas').count('id as count').first();
+      console.log(`📊 Registros en entregas: ${count.count}`);
+
+      return; // Éxito
+
+    } catch (error) {
+      console.error(`❌ Error en intento ${attempt}/${maxRetries}:`, error.message);
+
+      if (attempt === maxRetries) {
+        console.error('💥 No se pudo verificar la base de datos después de varios intentos');
+        throw error;
+      }
+
+      // Esperar antes del siguiente intento
+      console.log(`⏳ Esperando 2 segundos antes del siguiente intento...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
   }
 }
 
 // Inicializar base de datos y luego iniciar servidor
+console.log('🔄 Iniciando servidor...');
+console.log(`📊 Base de datos: ${isPostgres ? 'PostgreSQL (Railway)' : 'SQLite (Local)'}`);
+console.log(`🌐 Puerto: ${port}`);
+
 initializeDatabase().then(() => {
+  console.log('✅ Base de datos verificada, iniciando rutas...');
+
   // Rutas
   app.use('/api/pedidos', pedidosRoutes);
   app.use('/api/clientes', clientesRoutes);
@@ -92,8 +117,10 @@ initializeDatabase().then(() => {
   app.listen(port, () => {
     console.log(`🚀 Backend escuchando en http://localhost:${port}`);
     console.log(`📊 Base de datos: ${isPostgres ? 'PostgreSQL (Railway)' : 'SQLite (Local)'}`);
+    console.log('🎉 Servidor completamente operativo');
   });
 }).catch((error) => {
-  console.error('❌ Error fatal al inicializar:', error);
+  console.error('❌ Error fatal durante la inicialización:', error);
+  console.error('Stack completo:', error.stack);
   process.exit(1);
 });
