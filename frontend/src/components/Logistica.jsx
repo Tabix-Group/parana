@@ -76,6 +76,7 @@ function Logistica() {
   const [rowsPerPage, setRowsPerPage] = useState(100);
   const [filterVendedor, setFilterVendedor] = useState('');
   const [filterCliente, setFilterCliente] = useState('');
+  const [filterComprobante, setFilterComprobante] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
   const [filterArmador, setFilterArmador] = useState('');
   const [filterCompletado, setFilterCompletado] = useState('pendiente');
