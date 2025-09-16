@@ -88,9 +88,30 @@ router.get('/', async (req, res) => {
 
         console.log('🔍 Ejecutando consulta final...');
 
-        // Obtener total para paginación
-        const totalResult = await query.clone().countDistinct({ count: 'entregas.id' }).first();
-        const total = totalResult ? totalResult.count : 0;
+        // Obtener total para paginación (compatible con PostgreSQL)
+        let total = 0;
+        if (db.client.config.client === 'pg') {
+            // Para PostgreSQL, contar directamente sin usar countDistinct con JOINs complejos
+            let countQuery = db('entregas');
+
+            // Aplicar los mismos filtros a la consulta de total
+            if (pedido_id) {
+                countQuery = countQuery.where('entregas.pedido_id', pedido_id);
+            }
+            if (completado !== undefined) {
+                countQuery = countQuery.where('entregas.completado', completado === 'true');
+            }
+            if (fecha_entrega) {
+                countQuery = countQuery.whereRaw('DATE(entregas.fecha_entrega) = ?', [fecha_entrega]);
+            }
+
+            const totalResult = await countQuery.count('* as count').first();
+            total = totalResult ? parseInt(totalResult.count) : 0;
+        } else {
+            // Para SQLite, usar el método original
+            const totalResult = await query.clone().countDistinct({ count: 'entregas.id' }).first();
+            total = totalResult ? totalResult.count : 0;
+        }
 
         console.log(`📊 Total de registros con filtros: ${total}`);
 
