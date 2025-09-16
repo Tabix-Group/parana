@@ -51,23 +51,49 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Crear tablas si no existen
-createTables(db);
+// Función para inicializar la base de datos
+async function initializeDatabase() {
+  try {
+    console.log('🚀 Iniciando inicialización de base de datos...');
 
-// Rutas
-app.use('/api/pedidos', pedidosRoutes);
-app.use('/api/clientes', clientesRoutes);
-app.use('/api/armadores', armadoresRoutes);
-app.use('/api/transportes', transportesRoutes);
-app.use('/api/tipos-transporte', tiposTransporteRoutes);
-app.use('/api/vendedores', vendedoresRoutes);
-app.use('/api/estados', estadosRoutes);
-app.use('/api/devoluciones', devolucionesRoutes);
-app.use('/api/usuarios', usuariosRoutes);
-app.use('/api/login', loginRoutes);
-app.use('/api/reportes', reportesRoutes);
-app.use('/api/entregas', entregasRoutes);
+    // Crear tablas base si no existen
+    await createTables(db);
+    console.log('✅ Tablas base creadas/verficadas');
 
-app.listen(port, () => {
-  console.log(`Backend escuchando en http://localhost:${port}`);
+    // Crear/verificar tabla entregas específicamente
+    const { crearTablaEntregas } = await import('./crear-entregas.js');
+    await crearTablaEntregas(db);
+    console.log('✅ Tabla entregas creada/verificada');
+
+    console.log('🎉 Base de datos inicializada correctamente');
+  } catch (error) {
+    console.error('❌ Error inicializando base de datos:', error);
+    // No salir del proceso, continuar con el servidor
+    console.log('⚠️  Continuando con el servidor a pesar del error de BD');
+  }
+}
+
+// Inicializar base de datos y luego iniciar servidor
+initializeDatabase().then(() => {
+  // Rutas
+  app.use('/api/pedidos', pedidosRoutes);
+  app.use('/api/clientes', clientesRoutes);
+  app.use('/api/armadores', armadoresRoutes);
+  app.use('/api/transportes', transportesRoutes);
+  app.use('/api/tipos-transporte', tiposTransporteRoutes);
+  app.use('/api/vendedores', vendedoresRoutes);
+  app.use('/api/estados', estadosRoutes);
+  app.use('/api/devoluciones', devolucionesRoutes);
+  app.use('/api/usuarios', usuariosRoutes);
+  app.use('/api/login', loginRoutes);
+  app.use('/api/reportes', reportesRoutes);
+  app.use('/api/entregas', entregasRoutes);
+
+  app.listen(port, () => {
+    console.log(`🚀 Backend escuchando en http://localhost:${port}`);
+    console.log(`📊 Base de datos: ${isPostgres ? 'PostgreSQL (Railway)' : 'SQLite (Local)'}`);
+  });
+}).catch((error) => {
+  console.error('❌ Error fatal al inicializar:', error);
+  process.exit(1);
 });

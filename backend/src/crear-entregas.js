@@ -1,7 +1,5 @@
-import { db } from './index.js';
-
 // Script para crear la tabla entregas manualmente en producción
-export async function crearTablaEntregas() {
+export async function crearTablaEntregas(db) {
     try {
         console.log('Verificando tabla entregas...');
 
@@ -109,13 +107,16 @@ export async function crearTablaEntregas() {
 
 // Ejecutar si se llama directamente
 if (import.meta.url === `file://${process.argv[1]}`) {
-    crearTablaEntregas()
-        .then(() => {
-            console.log('Script completado exitosamente');
-            process.exit(0);
-        })
-        .catch((error) => {
-            console.error('Error en el script:', error);
-            process.exit(1);
-        });
+    // Para ejecutar standalone, necesitamos crear la conexión DB aquí
+    import('./index.js').then(({ db }) => {
+        crearTablaEntregas(db)
+            .then(() => {
+                console.log('Script completado exitosamente');
+                process.exit(0);
+            })
+            .catch((error) => {
+                console.error('Error en el script:', error);
+                process.exit(1);
+            });
+    });
 }
