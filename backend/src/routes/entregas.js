@@ -3,9 +3,37 @@ import { db } from '../index.js';
 
 const router = express.Router();
 
+// Función auxiliar para verificar si la tabla existe
+const verificarTablaEntregas = async () => {
+    try {
+        if (db.client.config.client === 'pg') {
+            // PostgreSQL
+            const result = await db.raw("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'entregas')");
+            return result.rows[0].exists;
+        } else {
+            // SQLite
+            const result = await db.raw("SELECT name FROM sqlite_master WHERE type='table' AND name='entregas'");
+            return result.length > 0;
+        }
+    } catch (error) {
+        console.error('Error verificando tabla entregas:', error);
+        return false;
+    }
+};
+
 // Listar entregas con paginación y filtros
 router.get('/', async (req, res) => {
     try {
+        // Verificar si la tabla existe
+        const tablaExiste = await verificarTablaEntregas();
+        if (!tablaExiste) {
+            console.error('La tabla entregas no existe en la base de datos');
+            return res.status(500).json({
+                error: 'Tabla entregas no encontrada',
+                details: 'La tabla entregas no existe en la base de datos. Verifique que las migraciones se hayan ejecutado correctamente.'
+            });
+        }
+
         const { page = 1, pageSize = 10, pedido_id, completado, fecha_entrega } = req.query;
 
         let query = db('entregas')
@@ -37,7 +65,17 @@ router.get('/', async (req, res) => {
         }
 
         if (fecha_entrega) {
-            query = query.whereRaw('DATE(entregas.fecha_entrega) = ?', [fecha_entrega]);
+            // Usar comparación compatible con ambos DB
+            if (db.client.config.client === 'pg') {
+                query = query.whereRaw('DATE(entregas.fecha_entrega) = ?', [fecha_entrega]);
+            } else {
+                const fechaFiltro = new Date(fecha_entrega + 'T00:00:00.000Z').toISOString().split('T')[0];
+                query = query.where(function () {
+                    this.whereRaw('DATE(entregas.fecha_entrega) = ?', [fechaFiltro])
+                        .orWhereRaw('entregas.fecha_entrega = ?', [fechaFiltro])
+                        .orWhereRaw('DATE(entregas.fecha_entrega) = DATE(?)', [fecha_entrega]);
+                });
+            }
         }
 
         // Obtener total para paginación
@@ -53,7 +91,11 @@ router.get('/', async (req, res) => {
         res.json({ data, total });
     } catch (error) {
         console.error('Error GET /entregas:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        console.error('Stack:', error.stack);
+        res.status(500).json({
+            error: 'Error interno del servidor',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -81,7 +123,11 @@ router.get('/pedido/:pedidoId', async (req, res) => {
         res.json(entregas);
     } catch (error) {
         console.error('Error GET /entregas/pedido/:pedidoId:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        console.error('Stack:', error.stack);
+        res.status(500).json({
+            error: 'Error interno del servidor',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -147,7 +193,11 @@ router.post('/', async (req, res) => {
         res.status(201).json({ id });
     } catch (error) {
         console.error('Error POST /entregas:', error);
-        res.status(500).json({ error: error.message });
+        console.error('Stack:', error.stack);
+        res.status(500).json({
+            error: 'Error interno del servidor',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -182,7 +232,11 @@ router.get('/:id', async (req, res) => {
         res.json(entrega);
     } catch (error) {
         console.error('Error GET /entregas/:id:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        console.error('Stack:', error.stack);
+        res.status(500).json({
+            error: 'Error interno del servidor',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -236,7 +290,11 @@ router.put('/:id', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('Error PUT /entregas/:id:', error);
-        res.status(500).json({ error: error.message });
+        console.error('Stack:', error.stack);
+        res.status(500).json({
+            error: 'Error interno del servidor',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -273,7 +331,11 @@ router.put('/:id/completado', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('Error PUT /entregas/:id/completado:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        console.error('Stack:', error.stack);
+        res.status(500).json({
+            error: 'Error interno del servidor',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -285,18 +347,59 @@ router.put('/:id/ok', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('Error PUT /entregas/:id/ok:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        console.error('Stack:', error.stack);
+        res.status(500).json({
+            error: 'Error interno del servidor',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
-// Eliminar entrega
-router.delete('/:id', async (req, res) => {
+// Endpoint de diagnóstico para verificar estado de la base de datos
+router.get('/diagnostico', async (req, res) => {
     try {
-        await db('entregas').where({ id: req.params.id }).del();
-        res.json({ success: true });
+        const diagnostico = {
+            tablaExiste: await verificarTablaEntregas(),
+            databaseType: db.client.config.client,
+            connection: db.client.config.connection.database || 'SQLite',
+            timestamp: new Date().toISOString()
+        };
+
+        // Verificar tablas relacionadas
+        const tablasRelacionadas = ['pedidos', 'clientes', 'armadores', 'tipos_transporte', 'transportes', 'estados'];
+        diagnostico.tablasRelacionadas = {};
+
+        for (const tabla of tablasRelacionadas) {
+            try {
+                if (db.client.config.client === 'pg') {
+                    const result = await db.raw(`SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '${tabla}')`);
+                    diagnostico.tablasRelacionadas[tabla] = result.rows[0].exists;
+                } else {
+                    const result = await db.raw(`SELECT name FROM sqlite_master WHERE type='table' AND name='${tabla}'`);
+                    diagnostico.tablasRelacionadas[tabla] = result.length > 0;
+                }
+            } catch (error) {
+                diagnostico.tablasRelacionadas[tabla] = `Error: ${error.message}`;
+            }
+        }
+
+        // Contar registros en entregas si la tabla existe
+        if (diagnostico.tablaExiste) {
+            try {
+                const count = await db('entregas').count('id as count').first();
+                diagnostico.registrosEntregas = count.count;
+            } catch (error) {
+                diagnostico.registrosEntregas = `Error: ${error.message}`;
+            }
+        }
+
+        res.json(diagnostico);
     } catch (error) {
-        console.error('Error DELETE /entregas/:id:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        console.error('Error en diagnóstico:', error);
+        res.status(500).json({
+            error: 'Error en diagnóstico',
+            details: error.message
+        });
     }
 });
 
