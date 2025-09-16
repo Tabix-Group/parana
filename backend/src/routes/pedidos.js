@@ -241,9 +241,24 @@ router.get('/:id', async (req, res) => {
 
 // Marcar/desmarcar pedido para logística
 router.put('/:id/logistica', async (req, res) => {
-  const { en_logistica } = req.body;
-  await db('pedidos').where({ id: req.params.id }).update({ en_logistica: !!en_logistica });
-  res.json({ success: true });
+  try {
+    const { en_logistica } = req.body;
+    const pedidoId = req.params.id;
+
+    console.log(`🔄 Actualizando pedido ${pedidoId} - en_logistica: ${en_logistica}`);
+
+    // Actualizar el pedido
+    await db('pedidos').where({ id: pedidoId }).update({ en_logistica: !!en_logistica });
+
+    // Si se está quitando de logística, las entregas desaparecerán automáticamente
+    // del endpoint /api/entregas/logistica porque filtra por pedidos.en_logistica = true
+
+    console.log(`✅ Pedido ${pedidoId} actualizado correctamente`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error PUT /pedidos/:id/logistica:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
 
 // Marcar pedido como completado

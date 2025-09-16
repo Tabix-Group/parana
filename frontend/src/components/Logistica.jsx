@@ -110,7 +110,7 @@ function Logistica() {
       const [pedidosRes, devolucionesRes, entregasRes, vendedoresRes, clientesRes, transportesRes, tiposTransporteRes, estadosRes, armadoresRes] = await Promise.all([
         api.get('/pedidos/logistica'),
         api.get('/devoluciones?pageSize=1000'),
-        api.get('/entregas?pageSize=1000'),
+        api.get('/entregas/logistica'),
         api.get('/vendedores', { params: { pageSize: 0 } }),
         api.get('/clientes?pageSize=1000'),
         api.get('/transportes?pageSize=1000'),

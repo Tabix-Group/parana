@@ -123,6 +123,44 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Obtener entregas para logística (solo las de pedidos que están en logística)
+router.get('/logistica', async (req, res) => {
+    try {
+        console.log('🔍 GET /entregas/logistica - Obteniendo entregas para logística...');
+
+        const entregas = await db('entregas')
+            .leftJoin('pedidos', 'entregas.pedido_id', 'pedidos.id')
+            .leftJoin('clientes', 'pedidos.cliente_id', 'clientes.id')
+            .leftJoin('armadores', 'entregas.armador_id', 'armadores.id')
+            .leftJoin('tipos_transporte', 'entregas.tipo_transporte_id', 'tipos_transporte.id')
+            .leftJoin('transportes', 'entregas.transporte_id', 'transportes.id')
+            .leftJoin('estados', 'entregas.estado_id', 'estados.id')
+            .select(
+                'entregas.*',
+                'pedidos.comprobante',
+                'pedidos.cant_bultos as pedido_total_bultos',
+                'clientes.nombre as cliente_nombre',
+                'armadores.nombre as armador_nombre',
+                'armadores.apellido as armador_apellido',
+                'tipos_transporte.nombre as tipo_transporte_nombre',
+                'transportes.nombre as transporte_nombre',
+                'estados.nombre as estado_nombre'
+            )
+            .where('pedidos.en_logistica', true) // Solo entregas de pedidos en logística
+            .orderBy('entregas.fecha_creacion', 'desc');
+
+        console.log(`✅ Encontradas ${entregas.length} entregas en logística`);
+        res.json(entregas);
+    } catch (error) {
+        console.error('❌ Error GET /entregas/logistica:', error);
+        console.error('Stack completo:', error.stack);
+        res.status(500).json({
+            error: 'Error interno del servidor',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
 // Obtener entregas de un pedido específico
 router.get('/pedido/:pedidoId', async (req, res) => {
     try {
