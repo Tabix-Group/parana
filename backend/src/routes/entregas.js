@@ -128,6 +128,28 @@ router.get('/logistica', async (req, res) => {
     try {
         console.log('🔍 GET /entregas/logistica - Obteniendo entregas para logística...');
 
+        // Primero verificar qué pedidos están en logística
+        const pedidosEnLogistica = await db('pedidos')
+            .where('en_logistica', true)
+            .select('id', 'comprobante', 'en_logistica');
+
+        console.log(`📊 Pedidos en logística encontrados: ${pedidosEnLogistica.length}`);
+        if (pedidosEnLogistica.length > 0) {
+            console.log('📋 IDs de pedidos en logística:', pedidosEnLogistica.map(p => p.id));
+        }
+
+        // Verificar entregas existentes
+        const todasEntregas = await db('entregas')
+            .select('id', 'pedido_id', 'numero_entrega')
+            .orderBy('fecha_creacion', 'desc')
+            .limit(10);
+
+        console.log(`📦 Últimas 10 entregas creadas:`, todasEntregas.map(e => ({
+            id: e.id,
+            pedido_id: e.pedido_id,
+            numero_entrega: e.numero_entrega
+        })));
+
         const entregas = await db('entregas')
             .leftJoin('pedidos', 'entregas.pedido_id', 'pedidos.id')
             .leftJoin('clientes', 'pedidos.cliente_id', 'clientes.id')
@@ -139,6 +161,7 @@ router.get('/logistica', async (req, res) => {
                 'entregas.*',
                 'pedidos.comprobante',
                 'pedidos.cant_bultos as pedido_total_bultos',
+                'pedidos.en_logistica',
                 'clientes.nombre as cliente_nombre',
                 'armadores.nombre as armador_nombre',
                 'armadores.apellido as armador_apellido',
@@ -150,6 +173,13 @@ router.get('/logistica', async (req, res) => {
             .orderBy('entregas.fecha_creacion', 'desc');
 
         console.log(`✅ Encontradas ${entregas.length} entregas en logística`);
+        if (entregas.length > 0) {
+            console.log('📋 Detalles de entregas encontradas:');
+            entregas.forEach(e => {
+                console.log(`  - ID: ${e.id}, Pedido: ${e.pedido_id}, Número: ${e.numero_entrega}, En logística: ${e.en_logistica}`);
+            });
+        }
+
         res.json(entregas);
     } catch (error) {
         console.error('❌ Error GET /entregas/logistica:', error);
@@ -197,6 +227,11 @@ router.get('/pedido/:pedidoId', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const entrega = { ...req.body };
+        console.log('📥 POST /entregas - Creando nueva entrega:', {
+            pedido_id: entrega.pedido_id,
+            cant_bultos: entrega.cant_bultos,
+            fecha_entrega: entrega.fecha_entrega
+        });
 
         // Validaciones
         if (!entrega.pedido_id) {
@@ -209,9 +244,17 @@ router.post('/', async (req, res) => {
             return res.status(404).json({ error: 'Pedido no encontrado' });
         }
 
+        console.log('📋 Pedido encontrado:', {
+            id: pedido.id,
+            comprobante: pedido.comprobante,
+            en_logistica: pedido.en_logistica,
+            cant_bultos: pedido.cant_bultos
+        });
+
         // Procesar fechas
         if (entrega.fecha_entrega) {
             entrega.fecha_entrega = entrega.fecha_entrega.split('T')[0];
+            console.log('📅 Fecha procesada:', entrega.fecha_entrega);
         }
 
         // Asegurar cant_bultos sea número
@@ -229,6 +272,7 @@ router.post('/', async (req, res) => {
             .first();
 
         entrega.numero_entrega = ultimaEntrega ? ultimaEntrega.numero_entrega + 1 : 1;
+        console.log('🔢 Número de entrega asignado:', entrega.numero_entrega);
 
         // Validar que la cantidad no exceda el total del pedido (advertencia, no bloqueo)
         const entregasExistentes = await db('entregas')
@@ -251,9 +295,10 @@ router.post('/', async (req, res) => {
             id = await db('entregas').insert(entrega);
         }
 
+        console.log('✅ Entrega creada exitosamente con ID:', id);
         res.status(201).json({ id });
     } catch (error) {
-        console.error('Error POST /entregas:', error);
+        console.error('❌ Error POST /entregas:', error);
         console.error('Stack:', error.stack);
         res.status(500).json({
             error: 'Error interno del servidor',

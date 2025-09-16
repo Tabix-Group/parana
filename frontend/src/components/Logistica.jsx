@@ -400,17 +400,30 @@ function Logistica() {
 
   const handleSaveNewEntrega = async () => {
     try {
+      // Asegurar que la fecha esté en formato correcto
+      let fechaEntrega = null;
+      if (newEntregaFechaEntrega) {
+        // Convertir a formato yyyy-MM-dd si viene con timezone
+        if (newEntregaFechaEntrega.includes('T')) {
+          fechaEntrega = newEntregaFechaEntrega.split('T')[0];
+        } else {
+          fechaEntrega = newEntregaFechaEntrega;
+        }
+      }
+
       const entregaData = {
         pedido_id: creatingEntregaFor.id,
         cant_bultos: Number(newEntregaCantidad) || 0,
         direccion: newEntregaDireccion,
-        fecha_entrega: newEntregaFechaEntrega || null,
+        fecha_entrega: fechaEntrega,
         transporte_id: newEntregaTransporte || null,
         tipo_transporte_id: newEntregaTipoTransporte || null,
         armador_id: newEntregaArmador || null,
         estado_id: newEntregaEstado || null,
         notas: newEntregaNotas
       };
+
+      console.log('📤 Creando entrega con datos:', entregaData);
 
       await api.post('/entregas', entregaData);
       setCreateEntregaModalOpen(false);
