@@ -6,18 +6,18 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', nombre, Codigo } = req.query;
   let query = db('clientes');
-  
-  // Filtro por nombre (búsqueda parcial)
-  if (nombre) query = query.where('nombre', 'like', `%${nombre}%`);
-  
+
+  // Filtro por nombre (búsqueda parcial case-insensitive)
+  if (nombre) query = query.where(db.raw('LOWER(nombre)'), 'like', `%${nombre.toLowerCase()}%`);
+
   // Filtro por código (búsqueda exacta)
   if (Codigo) query = query.where('Codigo', Codigo);
-  
+
   const totalResult = await db('clientes').modify(qb => {
-    if (nombre) qb.where('nombre', 'like', `%${nombre}%`);
+    if (nombre) qb.where(db.raw('LOWER(nombre)'), 'like', `%${nombre.toLowerCase()}%`);
     if (Codigo) qb.where('Codigo', Codigo);
   }).count({ count: '*' }).first();
-  
+
   const total = totalResult ? totalResult.count : 0;
   const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
   res.json({ data, total });
@@ -32,9 +32,9 @@ router.post('/', async (req, res) => {
       ...bodyWithoutId,
       Codigo: req.body.Codigo === '' || req.body.Codigo === undefined ? null : parseInt(req.body.Codigo, 10) || null
     };
-    
+
     console.log('Datos a insertar en clientes:', clienteData);
-    
+
     let newId;
     if (db.client.config.client === 'pg') {
       newId = (await db('clientes').insert(clienteData).returning('id'))[0].id;
@@ -45,7 +45,7 @@ router.post('/', async (req, res) => {
     res.status(200).json({ id: newId });
   } catch (err) {
     console.error('Error POST /clientes:', err);
-    
+
     // Si es un error de clave primaria duplicada, intentar solucionarlo
     if (err.code === '23505' && err.constraint === 'clientes_pkey') {
       console.log('Error de clave primaria duplicada. Intentando reiniciar secuencia...');
@@ -56,14 +56,14 @@ router.post('/', async (req, res) => {
         const nextId = maxId + 1;
         await db.raw(`SELECT setval(pg_get_serial_sequence('clientes', 'id'), ${nextId}, false)`);
         console.log(`Secuencia reiniciada. Próximo ID: ${nextId}`);
-        
+
         // Intentar insertar nuevamente
         const { id, ...bodyWithoutId } = req.body;
         const clienteData = {
           ...bodyWithoutId,
           Codigo: req.body.Codigo === '' || req.body.Codigo === undefined ? null : parseInt(req.body.Codigo, 10) || null
         };
-        
+
         const newId = (await db('clientes').insert(clienteData).returning('id'))[0].id;
         console.log('Cliente creado exitosamente después de reiniciar secuencia con ID:', newId);
         res.status(200).json({ id: newId });
@@ -89,7 +89,7 @@ router.put('/:id', async (req, res) => {
       ...req.body,
       Codigo: req.body.Codigo === '' || req.body.Codigo === undefined ? null : parseInt(req.body.Codigo, 10) || null
     };
-    
+
     await db('clientes').where({ id: req.params.id }).update(clienteData);
     res.status(200).json({ success: true });
   } catch (err) {

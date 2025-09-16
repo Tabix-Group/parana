@@ -60,7 +60,7 @@ export default function Pedidos() {
     comprobante: '',
     cliente_id: '',
     Codigo: '',
-    direccion: '',
+    // direccion: '', // REMOVIDO: No inicializar con dirección vacía
     armador_id: '',
     tipo_transporte_id: '',
     transporte_id: '',
@@ -76,37 +76,44 @@ export default function Pedidos() {
   // Abrir diálogo para nuevo o editar
   const handleOpen = (row = null) => {
     setEditRow(row);
-    setForm(row ? {
-      comprobante: row.comprobante || '',
-      cliente_id: row.cliente_id || '',
-      Codigo: row.Codigo || '',
-      direccion: row.direccion || '',
-      armador_id: row.armador_id || '',
-      tipo_transporte_id: row.tipo_transporte_id || '',
-      transporte_id: row.transporte_id || '',
-      vendedor_id: row.vendedor_id || '',
-      cant_bultos: row.cant_bultos || '',
-      tipo_bultos: row.tipo_bultos || '',
-      fecha_pedido: formatDateForInput(row.fecha_pedido) || '',
-      fecha_entrega: formatDateForInput(row.fecha_entrega) || '',
-      estado_id: row.estado_id || '',
-      notas: row.notas || ''
-    } : {
-      comprobante: '',
-      cliente_id: '',
-      Codigo: '',
-      direccion: '',
-      armador_id: '',
-      tipo_transporte_id: '',
-      transporte_id: '',
-      vendedor_id: '',
-      cant_bultos: '',
-      tipo_bultos: '',
-      fecha_pedido: '',
-      fecha_entrega: '',
-      estado_id: '',
-      notas: ''
-    });
+    if (row) {
+      // Editar pedido existente
+      setForm({
+        comprobante: row.comprobante || '',
+        cliente_id: row.cliente_id || '',
+        Codigo: row.Codigo || '',
+        direccion: row.direccion || '', // Mantener la dirección del pedido existente
+        armador_id: row.armador_id || '',
+        tipo_transporte_id: row.tipo_transporte_id || '',
+        transporte_id: row.transporte_id || '',
+        vendedor_id: row.vendedor_id || '',
+        cant_bultos: row.cant_bultos || '',
+        tipo_bultos: row.tipo_bultos || '',
+        fecha_pedido: formatDateForInput(row.fecha_pedido) || '',
+        fecha_entrega: formatDateForInput(row.fecha_entrega) || '',
+        estado_id: row.estado_id || '',
+        notas: row.notas || ''
+      });
+    } else {
+      // Nuevo pedido - buscar estado "En proceso" por defecto
+      const estadoEnProceso = estados.find(e => e.nombre && e.nombre.toLowerCase() === 'en proceso');
+      setForm({
+        comprobante: '',
+        cliente_id: '',
+        Codigo: '',
+        // direccion: '', // REMOVIDO: No inicializar con dirección vacía
+        armador_id: '',
+        tipo_transporte_id: '',
+        transporte_id: '',
+        vendedor_id: '',
+        cant_bultos: '',
+        tipo_bultos: '',
+        fecha_pedido: '',
+        fecha_entrega: '',
+        estado_id: estadoEnProceso ? estadoEnProceso.id : '',
+        notas: ''
+      });
+    }
     setOpen(true);
   };
 
@@ -115,7 +122,7 @@ export default function Pedidos() {
     setOpen(false);
     setEditRow(null);
     setClientes([]); // Limpiar lista de clientes
-    setForm({ comprobante: '', cliente_id: '', Codigo: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_pedido: '', fecha_entrega: '', estado_id: '', notas: '' });
+    setForm({ comprobante: '', cliente_id: '', Codigo: '', /* direccion: '', */ armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_pedido: '', fecha_entrega: '', estado_id: '', notas: '' });
   };
 
   // Manejar cambios en el form
@@ -132,22 +139,22 @@ export default function Pedidos() {
           .then(res => {
             const cliente = res.data.data && res.data.data.length > 0 ? res.data.data[0] : null;
             if (cliente) {
-              // Autocompletar todos los datos del cliente
+              // Autocompletar datos del cliente (excepto dirección)
               setForm(prev => ({
                 ...prev,
                 cliente_id: cliente.id,
                 Codigo: cliente.Codigo || value, // Mantener el código ingresado o usar el del cliente
-                direccion: cliente.direccion || '',
+                // direccion: cliente.direccion || '', // REMOVIDO: No autocompletar dirección
                 cliente_nombre: cliente.nombre || ''
               }));
               // También agregar el cliente a la lista para el autocomplete
               setClientes([cliente]);
             } else {
-              // Si no se encuentra cliente, limpiar los campos relacionados pero mantener el código
+              // Si no se encuentra cliente, limpiar los campos relacionados pero mantener el código y dirección
               setForm(prev => ({
                 ...prev,
                 cliente_id: '',
-                direccion: '',
+                // direccion: '', // REMOVIDO: Mantener la dirección que el usuario haya escrito
                 cliente_nombre: ''
               }));
             }
@@ -157,11 +164,11 @@ export default function Pedidos() {
           })
           .finally(() => setClientesLoading(false));
       } else if (value === '') {
-        // Si se borra el código, limpiar también los datos del cliente
+        // Si se borra el código, limpiar los datos del cliente pero mantener la dirección
         setForm(prev => ({
           ...prev,
           cliente_id: '',
-          direccion: '',
+          // direccion: '', // REMOVIDO: Mantener la dirección que el usuario haya escrito
           cliente_nombre: ''
         }));
         setClientes([]);
@@ -172,7 +179,7 @@ export default function Pedidos() {
         ...prev,
         cliente_id: value,
         Codigo: cliente && cliente.Codigo ? cliente.Codigo : '',
-        direccion: cliente && cliente.direccion ? cliente.direccion : '',
+        // direccion: cliente && cliente.direccion ? cliente.direccion : '', // REMOVIDO: No autocompletar dirección
         cliente_nombre: cliente && cliente.nombre ? cliente.nombre : ''
       }));
     } else {
@@ -207,7 +214,7 @@ export default function Pedidos() {
       setOpen(false);
       setEditRow(null);
       setClientes([]); // Limpiar lista de clientes
-      setForm({ comprobante: '', cliente_id: '', Codigo: '', direccion: '', armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_pedido: '', fecha_entrega: '', estado_id: '', notas: '' });
+      setForm({ comprobante: '', cliente_id: '', Codigo: '', /* direccion: '', */ armador_id: '', tipo_transporte_id: '', transporte_id: '', vendedor_id: '', cant_bultos: '', tipo_bultos: '', fecha_pedido: '', fecha_entrega: '', estado_id: '', notas: '' });
       // Refrescar datos
       API.get('/pedidos', {
         params: {
@@ -703,7 +710,7 @@ export default function Pedidos() {
                       ...prev,
                       cliente_id: value ? value.id : '',
                       Codigo: value && value.Codigo ? value.Codigo : '',
-                      direccion: value && value.direccion ? value.direccion : '',
+                      // direccion: value && value.direccion ? value.direccion : '', // REMOVIDO: No autocompletar dirección
                       cliente_nombre: value && value.nombre ? value.nombre : ''
                     }));
                   }}

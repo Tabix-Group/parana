@@ -195,6 +195,12 @@ function Logistica() {
       );
     }
 
+    if (filterComprobante) {
+      filtered = filtered.filter(item =>
+        item.nro_comprobante?.toLowerCase().includes(filterComprobante.toLowerCase())
+      );
+    }
+
     if (filterArmador) {
       filtered = filtered.filter(item => (item.armador || '').toLowerCase().includes(filterArmador.toLowerCase()));
     }
@@ -231,7 +237,7 @@ function Logistica() {
       filtered = filtered.filter(item => (item.transporte || '').toLowerCase().includes(filterTransporte.toLowerCase()));
     }
     setFilteredData(filtered);
-  }, [combinedData, filterVendedor, filterCliente, filterEstado, filterFechaEntrega, filterTipoTte, filterTransporte, filterArmador, filterCompletado, filterOk, vendedores, estados]);
+  }, [combinedData, filterVendedor, filterCliente, filterComprobante, filterEstado, filterFechaEntrega, filterTipoTte, filterTransporte, filterArmador, filterCompletado, filterOk, vendedores, estados]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -246,6 +252,7 @@ function Logistica() {
   const [editingArmador, setEditingArmador] = useState('');
   const [editingEstado, setEditingEstado] = useState('');
   const [editingCantidad, setEditingCantidad] = useState('');
+  const [editingFechaEntrega, setEditingFechaEntrega] = useState('');
   const handleEdit = (item) => {
     setEditingItem(item);
     setEditingTransporte(item.transporte_id || '');
@@ -255,6 +262,7 @@ function Logistica() {
     setEditingArmador(item.armador_id || item.armador || '');
     setEditingEstado(item.estado_id || '');
     setEditingCantidad(typeof item.cantidad !== 'undefined' && item.cantidad !== null ? item.cantidad : '');
+    setEditingFechaEntrega(item.fecha_entrega || '');
     setEditModalOpen(true);
   };
 
@@ -265,7 +273,8 @@ function Logistica() {
       const body = {
         transporte_id: editingTransporte || null,
         tipo_transporte_id: editingTipoTransporte || null,
-        direccion: editingDireccion
+        direccion: editingDireccion,
+        fecha_entrega: editingFechaEntrega || null
       };
       if (editingItem.tipo === 'Pedido') {
         body.notas = typeof editingNotas === 'string' ? editingNotas : '';
@@ -312,6 +321,9 @@ function Logistica() {
     setEditingTipoTransporte('');
     setEditingDireccion('');
     setEditingArmador('');
+    setEditingEstado('');
+    setEditingCantidad('');
+    setEditingFechaEntrega('');
   };
 
   const handleCompleted = async (item) => {
@@ -456,6 +468,13 @@ function Logistica() {
             sx={{ minWidth: 140 }}
           />
           <TextField
+            label="Filtrar por Comprobante"
+            value={filterComprobante}
+            onChange={e => setFilterComprobante(e.target.value)}
+            size="small"
+            sx={{ minWidth: 140 }}
+          />
+          <TextField
             label="Filtrar por Armador"
             value={filterArmador}
             onChange={e => setFilterArmador(e.target.value)}
@@ -525,6 +544,7 @@ function Logistica() {
           onClick={() => {
             setFilterVendedor('');
             setFilterCliente('');
+            setFilterComprobante('');
             setFilterArmador('');
             setFilterEstado('');
             setFilterFechaEntrega('');
@@ -685,7 +705,7 @@ function Logistica() {
       />
 
       <Dialog open={editModalOpen} onClose={handleCloseEdit}>
-        <DialogTitle>Editar Transporte, Dirección y Notas/Observaciones</DialogTitle>
+        <DialogTitle>Editar Transporte, Dirección, Fecha Entrega y Notas/Observaciones</DialogTitle>
         <DialogContent>
           <FormControl fullWidth margin="normal">
             <Select
@@ -724,6 +744,15 @@ function Logistica() {
             multiline
             minRows={1}
             maxRows={3}
+          />
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Fecha Entrega"
+            type="date"
+            value={editingFechaEntrega}
+            onChange={e => setEditingFechaEntrega(e.target.value)}
+            InputLabelProps={{ shrink: true }}
           />
           <FormControl fullWidth margin="normal">
             <Select
