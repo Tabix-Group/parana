@@ -24,18 +24,24 @@ const verificarTablaEntregas = async () => {
 // Listar entregas con paginación y filtros
 router.get('/', async (req, res) => {
     try {
-        // Verificar si la tabla existe
-        const tablaExiste = await verificarTablaEntregas();
-        if (!tablaExiste) {
-            console.error('La tabla entregas no existe en la base de datos');
-            return res.status(500).json({
-                error: 'Tabla entregas no encontrada',
-                details: 'La tabla entregas no existe en la base de datos. Verifique que las migraciones se hayan ejecutado correctamente.'
-            });
-        }
+        console.log('🔍 GET /entregas - Iniciando consulta...');
 
         const { page = 1, pageSize = 10, pedido_id, completado, fecha_entrega } = req.query;
 
+        // Verificar que la tabla existe intentando una consulta simple
+        try {
+            const countSimple = await db('entregas').count('id as count').first();
+            console.log(`📊 Tabla entregas verificada. Total registros: ${countSimple.count}`);
+        } catch (error) {
+            console.error('❌ Error accediendo tabla entregas:', error);
+            return res.status(500).json({
+                error: 'Error accediendo tabla entregas',
+                details: 'No se puede acceder a la tabla entregas. Verifique que la base de datos esté correctamente configurada.'
+            });
+        }
+
+        // Ahora intentar la consulta compleja con JOINs
+        console.log('🔍 Ejecutando consulta compleja con JOINs...');
         let query = db('entregas')
             .leftJoin('pedidos', 'entregas.pedido_id', 'pedidos.id')
             .leftJoin('clientes', 'pedidos.cliente_id', 'clientes.id')
@@ -54,6 +60,8 @@ router.get('/', async (req, res) => {
                 'transportes.nombre as transporte_nombre',
                 'estados.nombre as estado_nombre'
             );
+
+        console.log('🔍 Aplicando filtros...');
 
         // Filtros
         if (pedido_id) {
@@ -78,9 +86,13 @@ router.get('/', async (req, res) => {
             }
         }
 
+        console.log('🔍 Ejecutando consulta final...');
+
         // Obtener total para paginación
         const totalResult = await query.clone().countDistinct({ count: 'entregas.id' }).first();
         const total = totalResult ? totalResult.count : 0;
+
+        console.log(`📊 Total de registros con filtros: ${total}`);
 
         // Aplicar paginación y orden
         const data = await query
@@ -88,13 +100,22 @@ router.get('/', async (req, res) => {
             .limit(pageSize)
             .offset((page - 1) * pageSize);
 
+        console.log(`✅ Consulta completada exitosamente. Registros retornados: ${data.length}`);
+
         res.json({ data, total });
     } catch (error) {
-        console.error('Error GET /entregas:', error);
-        console.error('Stack:', error.stack);
+        console.error('❌ Error GET /entregas:', error);
+        console.error('Stack completo:', error.stack);
+        console.error('Tipo de BD:', db.client.config.client);
+        console.error('Mensaje de error:', error.message);
+
         res.status(500).json({
             error: 'Error interno del servidor',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+            details: process.env.NODE_ENV === 'development' ? error.message : 'Error en consulta de entregas',
+            debug: process.env.NODE_ENV === 'development' ? {
+                stack: error.stack,
+                databaseType: db.client.config.client
+            } : undefined
         });
     }
 });
@@ -358,16 +379,32 @@ router.put('/:id/ok', async (req, res) => {
 // Endpoint de diagnóstico para verificar estado de la base de datos
 router.get('/diagnostico', async (req, res) => {
     try {
+        console.log('🔍 Ejecutando diagnóstico de entregas...');
+
         const diagnostico = {
-            tablaExiste: await verificarTablaEntregas(),
             databaseType: db.client.config.client,
             connection: db.client.config.connection.database || 'SQLite',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            tablasRelacionadas: {},
+            registrosEntregas: null,
+            errores: []
         };
+
+        // Verificar tabla entregas directamente (sin usar verificarTablaEntregas)
+        try {
+            const count = await db('entregas').count('id as count').first();
+            diagnostico.tablaExiste = true;
+            diagnostico.registrosEntregas = count.count;
+            console.log(`✅ Tabla entregas existe. Registros: ${diagnostico.registrosEntregas}`);
+        } catch (error) {
+            diagnostico.tablaExiste = false;
+            diagnostico.registrosEntregas = `Error: ${error.message}`;
+            diagnostico.errores.push(`Error accediendo tabla entregas: ${error.message}`);
+            console.error('❌ Error accediendo tabla entregas:', error.message);
+        }
 
         // Verificar tablas relacionadas
         const tablasRelacionadas = ['pedidos', 'clientes', 'armadores', 'tipos_transporte', 'transportes', 'estados'];
-        diagnostico.tablasRelacionadas = {};
 
         for (const tabla of tablasRelacionadas) {
             try {
@@ -378,27 +415,51 @@ router.get('/diagnostico', async (req, res) => {
                     const result = await db.raw(`SELECT name FROM sqlite_master WHERE type='table' AND name='${tabla}'`);
                     diagnostico.tablasRelacionadas[tabla] = result.length > 0;
                 }
+                console.log(`✅ Tabla ${tabla}: ${diagnostico.tablasRelacionadas[tabla]}`);
             } catch (error) {
                 diagnostico.tablasRelacionadas[tabla] = `Error: ${error.message}`;
+                diagnostico.errores.push(`Error verificando tabla ${tabla}: ${error.message}`);
+                console.error(`❌ Error verificando tabla ${tabla}:`, error.message);
             }
         }
 
-        // Contar registros en entregas si la tabla existe
+        // Probar consulta simple
         if (diagnostico.tablaExiste) {
             try {
-                const count = await db('entregas').count('id as count').first();
-                diagnostico.registrosEntregas = count.count;
+                const testQuery = await db('entregas').select('id').limit(1);
+                diagnostico.consultaSimple = 'OK';
+                console.log('✅ Consulta simple funciona');
             } catch (error) {
-                diagnostico.registrosEntregas = `Error: ${error.message}`;
+                diagnostico.consultaSimple = `Error: ${error.message}`;
+                diagnostico.errores.push(`Error en consulta simple: ${error.message}`);
+                console.error('❌ Error en consulta simple:', error.message);
             }
         }
 
+        // Probar JOIN simple
+        if (diagnostico.tablaExiste && diagnostico.tablasRelacionadas.pedidos) {
+            try {
+                const testJoin = await db('entregas')
+                    .leftJoin('pedidos', 'entregas.pedido_id', 'pedidos.id')
+                    .select('entregas.id', 'pedidos.comprobante')
+                    .limit(1);
+                diagnostico.consultaJoin = 'OK';
+                console.log('✅ Consulta con JOIN funciona');
+            } catch (error) {
+                diagnostico.consultaJoin = `Error: ${error.message}`;
+                diagnostico.errores.push(`Error en consulta JOIN: ${error.message}`);
+                console.error('❌ Error en consulta JOIN:', error.message);
+            }
+        }
+
+        console.log('🎯 Diagnóstico completado');
         res.json(diagnostico);
     } catch (error) {
-        console.error('Error en diagnóstico:', error);
+        console.error('💥 Error fatal en diagnóstico:', error);
         res.status(500).json({
             error: 'Error en diagnóstico',
-            details: error.message
+            details: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
