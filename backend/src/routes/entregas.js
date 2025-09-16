@@ -128,28 +128,6 @@ router.get('/logistica', async (req, res) => {
     try {
         console.log('🔍 GET /entregas/logistica - Obteniendo entregas para logística...');
 
-        // Primero verificar qué pedidos están en logística
-        const pedidosEnLogistica = await db('pedidos')
-            .where('en_logistica', true)
-            .select('id', 'comprobante', 'en_logistica');
-
-        console.log(`📊 Pedidos en logística encontrados: ${pedidosEnLogistica.length}`);
-        if (pedidosEnLogistica.length > 0) {
-            console.log('📋 IDs de pedidos en logística:', pedidosEnLogistica.map(p => p.id));
-        }
-
-        // Verificar entregas existentes
-        const todasEntregas = await db('entregas')
-            .select('id', 'pedido_id', 'numero_entrega')
-            .orderBy('fecha_creacion', 'desc')
-            .limit(10);
-
-        console.log(`📦 Últimas 10 entregas creadas:`, todasEntregas.map(e => ({
-            id: e.id,
-            pedido_id: e.pedido_id,
-            numero_entrega: e.numero_entrega
-        })));
-
         const entregas = await db('entregas')
             .leftJoin('pedidos', 'entregas.pedido_id', 'pedidos.id')
             .leftJoin('clientes', 'pedidos.cliente_id', 'clientes.id')
@@ -161,7 +139,6 @@ router.get('/logistica', async (req, res) => {
                 'entregas.*',
                 'pedidos.comprobante',
                 'pedidos.cant_bultos as pedido_total_bultos',
-                'pedidos.en_logistica',
                 'clientes.nombre as cliente_nombre',
                 'armadores.nombre as armador_nombre',
                 'armadores.apellido as armador_apellido',
@@ -173,13 +150,6 @@ router.get('/logistica', async (req, res) => {
             .orderBy('entregas.fecha_creacion', 'desc');
 
         console.log(`✅ Encontradas ${entregas.length} entregas en logística`);
-        if (entregas.length > 0) {
-            console.log('📋 Detalles de entregas encontradas:');
-            entregas.forEach(e => {
-                console.log(`  - ID: ${e.id}, Pedido: ${e.pedido_id}, Número: ${e.numero_entrega}, En logística: ${e.en_logistica}`);
-            });
-        }
-
         res.json(entregas);
     } catch (error) {
         console.error('❌ Error GET /entregas/logistica:', error);
@@ -251,9 +221,13 @@ router.post('/', async (req, res) => {
             cant_bultos: pedido.cant_bultos
         });
 
-        // Procesar fechas
+        // Procesar fechas - manejar tanto formato ISO como yyyy-MM-dd
         if (entrega.fecha_entrega) {
-            entrega.fecha_entrega = entrega.fecha_entrega.split('T')[0];
+            // Si viene con 'T', es formato ISO completo, extraer solo la fecha
+            if (entrega.fecha_entrega.includes('T')) {
+                entrega.fecha_entrega = entrega.fecha_entrega.split('T')[0];
+            }
+            // Si ya viene en formato yyyy-MM-dd, mantenerlo
             console.log('📅 Fecha procesada:', entrega.fecha_entrega);
         }
 
@@ -273,19 +247,6 @@ router.post('/', async (req, res) => {
 
         entrega.numero_entrega = ultimaEntrega ? ultimaEntrega.numero_entrega + 1 : 1;
         console.log('🔢 Número de entrega asignado:', entrega.numero_entrega);
-
-        // Validar que la cantidad no exceda el total del pedido (advertencia, no bloqueo)
-        const entregasExistentes = await db('entregas')
-            .where('pedido_id', entrega.pedido_id)
-            .sum('cant_bultos as total');
-
-        const totalEntregasExistentes = entregasExistentes[0]?.total || 0;
-        const totalPedido = pedido.cant_bultos || 0;
-
-        if (totalEntregasExistentes + entrega.cant_bultos > totalPedido) {
-            console.log(`⚠️  Advertencia: La cantidad total de entregas (${totalEntregasExistentes + entrega.cant_bultos}) excede la cantidad del pedido (${totalPedido})`);
-            // No bloqueamos la creación, solo registramos la advertencia
-        }
 
         // Insertar la entrega
         let id;
