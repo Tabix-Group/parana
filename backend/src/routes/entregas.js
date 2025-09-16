@@ -150,6 +150,16 @@ router.get('/logistica', async (req, res) => {
             .orderBy('entregas.fecha_creacion', 'desc');
 
         console.log(`✅ Encontradas ${entregas.length} entregas en logística`);
+        if (entregas.length > 0) {
+            console.log('📋 Primera entrega encontrada:', {
+                id: entregas[0].id,
+                pedido_id: entregas[0].pedido_id,
+                numero_entrega: entregas[0].numero_entrega,
+                comprobante: entregas[0].comprobante,
+                cliente_nombre: entregas[0].cliente_nombre
+            });
+        }
+
         res.json(entregas);
     } catch (error) {
         console.error('❌ Error GET /entregas/logistica:', error);
