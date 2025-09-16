@@ -119,9 +119,14 @@ function Logistica() {
         api.get('/armadores?pageSize=1000')
       ]);
 
+      console.log('📦 Datos recibidos del backend:');
+      console.log('📋 Pedidos:', pedidosRes.data?.length || 0);
+      console.log('📋 Devoluciones:', devolucionesRes.data?.data?.length || 0);
+      console.log('📋 Entregas:', entregasRes.data?.length || 0, entregasRes.data);
+
       setPedidos(pedidosRes.data || []);
       setDevoluciones(devolucionesRes.data?.data || []);
-      setEntregas(entregasRes.data?.data || []);
+      setEntregas(entregasRes.data || []);
       setVendedores(vendedoresRes.data?.data || []);
       setClientes(clientesRes.data?.data || []);
       setTransportes(transportesRes.data?.data || []);
@@ -144,6 +149,9 @@ function Logistica() {
   };
 
   useEffect(() => {
+    console.log('🔄 Procesando datos combinados...');
+    console.log('📦 Entregas raw:', entregas);
+
     const combined = [
       ...pedidos
         .filter(p => {
@@ -198,26 +206,37 @@ function Logistica() {
           const tipo = (e.tipo_transporte_nombre || e.tipo_transporte || '').toString().toLowerCase();
           return !tipo.includes('retira');
         })
-        .map(e => ({
-          ...e,
-          tipo: 'Entrega',
-          subtipo: `Parcial ${e.numero_entrega || 1}`,
-          nro_comprobante: `${e.comprobante} (${e.numero_entrega || 1})`,
-          cliente: e.cliente_nombre || 'No disponible',
-          direccion: e.direccion || 'Sin dirección',
-          cantidad: e.cant_bultos || 0,
-          armador: ((e.armador_nombre || '') + (e.armador_apellido ? ` ${e.armador_apellido}` : '')).trim() || '',
-          armador_id: e.armador_id || null,
-          fecha_pedido: e.fecha_creacion || '',
-          fecha_entrega: e.fecha_entrega || '',
-          tipo_transporte: e.tipo_transporte_nombre || 'No disponible',
-          transporte: e.transporte_nombre || 'No disponible',
-          completado: e.completado || false,
-          notas: e.notas || '',
-          pedido_id: e.pedido_id,
-          numero_entrega: e.numero_entrega || 1
-        }))
+        .map(e => {
+          console.log('📋 Procesando entrega:', {
+            id: e.id,
+            numero_entrega: e.numero_entrega,
+            comprobante: e.comprobante,
+            subtipo: `Parcial ${e.numero_entrega || 1}`
+          });
+
+          return {
+            ...e,
+            tipo: 'Entrega',
+            subtipo: `Parcial ${e.numero_entrega || 1}`,
+            nro_comprobante: `${e.comprobante} (${e.numero_entrega || 1})`,
+            cliente: e.cliente_nombre || 'No disponible',
+            direccion: e.direccion || 'Sin dirección',
+            cantidad: e.cant_bultos || 0,
+            armador: ((e.armador_nombre || '') + (e.armador_apellido ? ` ${e.armador_apellido}` : '')).trim() || '',
+            armador_id: e.armador_id || null,
+            fecha_pedido: e.fecha_creacion || '',
+            fecha_entrega: e.fecha_entrega || '',
+            tipo_transporte: e.tipo_transporte_nombre || 'No disponible',
+            transporte: e.transporte_nombre || 'No disponible',
+            completado: e.completado || false,
+            notas: e.notas || '',
+            pedido_id: e.pedido_id,
+            numero_entrega: e.numero_entrega || 1
+          };
+        })
     ];
+
+    console.log('✅ Datos combinados finales:', combined.filter(item => item.tipo === 'Entrega'));
     setCombinedData(combined);
   }, [pedidos, devoluciones, entregas]);
 
@@ -792,6 +811,19 @@ function Logistica() {
                 const rowStyle = isCompleted
                   ? { backgroundColor: '#f5f5f5', opacity: 0.6, '&:hover': { backgroundColor: '#eeeeee' } }
                   : { '&:hover': { backgroundColor: '#f9f9f9' } };
+
+                // Debug logging for entrega rows
+                if (row.tipo === 'Entrega') {
+                  console.log('🎨 Renderizando fila de entrega:', {
+                    id: row.id,
+                    tipo: row.tipo,
+                    subtipo: row.subtipo,
+                    comprobante: row.comprobante,
+                    numero_entrega: row.numero_entrega,
+                    backgroundColor: '#fff3e0',
+                    borderLeft: '3px solid #ff9800'
+                  });
+                }
 
                 return (
                   <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={{
