@@ -3,24 +3,6 @@ import { db } from '../index.js';
 
 const router = express.Router();
 
-// Función auxiliar para verificar si la tabla existe
-const verificarTablaEntregas = async () => {
-    try {
-        if (db.client.config.client === 'pg') {
-            // PostgreSQL
-            const result = await db.raw("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'entregas')");
-            return result.rows[0].exists;
-        } else {
-            // SQLite
-            const result = await db.raw("SELECT name FROM sqlite_master WHERE type='table' AND name='entregas'");
-            return result.length > 0;
-        }
-    } catch (error) {
-        console.error('Error verificando tabla entregas:', error);
-        return false;
-    }
-};
-
 // Listar entregas con paginación y filtros
 router.get('/', async (req, res) => {
     try {
@@ -210,7 +192,7 @@ router.post('/', async (req, res) => {
 
         entrega.numero_entrega = ultimaEntrega ? ultimaEntrega.numero_entrega + 1 : 1;
 
-        // Validar que la cantidad no exceda el total del pedido
+        // Validar que la cantidad no exceda el total del pedido (advertencia, no bloqueo)
         const entregasExistentes = await db('entregas')
             .where('pedido_id', entrega.pedido_id)
             .sum('cant_bultos as total');
@@ -219,9 +201,8 @@ router.post('/', async (req, res) => {
         const totalPedido = pedido.cant_bultos || 0;
 
         if (totalEntregasExistentes + entrega.cant_bultos > totalPedido) {
-            return res.status(400).json({
-                error: `La cantidad total de entregas (${totalEntregasExistentes + entrega.cant_bultos}) no puede exceder la cantidad del pedido (${totalPedido})`
-            });
+            console.log(`⚠️  Advertencia: La cantidad total de entregas (${totalEntregasExistentes + entrega.cant_bultos}) excede la cantidad del pedido (${totalPedido})`);
+            // No bloqueamos la creación, solo registramos la advertencia
         }
 
         // Insertar la entrega
@@ -307,7 +288,7 @@ router.put('/:id', async (req, res) => {
             if (isNaN(datos.cant_bultos)) datos.cant_bultos = 0;
         }
 
-        // Validar cantidad si cambió
+        // Validar cantidad si cambió (advertencia, no bloqueo)
         if (datos.cant_bultos !== entregaActual.cant_bultos) {
             // Obtener el pedido
             const pedido = await db('pedidos').where({ id: entregaActual.pedido_id }).first();
@@ -322,9 +303,8 @@ router.put('/:id', async (req, res) => {
             const totalPedido = pedido.cant_bultos || 0;
 
             if (totalOtrasEntregas + datos.cant_bultos > totalPedido) {
-                return res.status(400).json({
-                    error: `La cantidad total de entregas (${totalOtrasEntregas + datos.cant_bultos}) no puede exceder la cantidad del pedido (${totalPedido})`
-                });
+                console.log(`⚠️  Advertencia: La cantidad total de entregas (${totalOtrasEntregas + datos.cant_bultos}) excede la cantidad del pedido (${totalPedido})`);
+                // No bloqueamos la edición, solo registramos la advertencia
             }
         }
 
@@ -393,94 +373,6 @@ router.put('/:id/ok', async (req, res) => {
         res.status(500).json({
             error: 'Error interno del servidor',
             details: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
-    }
-});
-
-// Endpoint de diagnóstico para verificar estado de la base de datos
-router.get('/diagnostico', async (req, res) => {
-    try {
-        console.log('🔍 Ejecutando diagnóstico de entregas...');
-
-        const diagnostico = {
-            databaseType: db.client.config.client,
-            connection: db.client.config.connection.database || 'SQLite',
-            timestamp: new Date().toISOString(),
-            tablasRelacionadas: {},
-            registrosEntregas: null,
-            errores: []
-        };
-
-        // Verificar tabla entregas directamente (sin usar verificarTablaEntregas)
-        try {
-            const count = await db('entregas').count('id as count').first();
-            diagnostico.tablaExiste = true;
-            diagnostico.registrosEntregas = count.count;
-            console.log(`✅ Tabla entregas existe. Registros: ${diagnostico.registrosEntregas}`);
-        } catch (error) {
-            diagnostico.tablaExiste = false;
-            diagnostico.registrosEntregas = `Error: ${error.message}`;
-            diagnostico.errores.push(`Error accediendo tabla entregas: ${error.message}`);
-            console.error('❌ Error accediendo tabla entregas:', error.message);
-        }
-
-        // Verificar tablas relacionadas
-        const tablasRelacionadas = ['pedidos', 'clientes', 'armadores', 'tipos_transporte', 'transportes', 'estados'];
-
-        for (const tabla of tablasRelacionadas) {
-            try {
-                if (db.client.config.client === 'pg') {
-                    const result = await db.raw(`SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '${tabla}')`);
-                    diagnostico.tablasRelacionadas[tabla] = result.rows[0].exists;
-                } else {
-                    const result = await db.raw(`SELECT name FROM sqlite_master WHERE type='table' AND name='${tabla}'`);
-                    diagnostico.tablasRelacionadas[tabla] = result.length > 0;
-                }
-                console.log(`✅ Tabla ${tabla}: ${diagnostico.tablasRelacionadas[tabla]}`);
-            } catch (error) {
-                diagnostico.tablasRelacionadas[tabla] = `Error: ${error.message}`;
-                diagnostico.errores.push(`Error verificando tabla ${tabla}: ${error.message}`);
-                console.error(`❌ Error verificando tabla ${tabla}:`, error.message);
-            }
-        }
-
-        // Probar consulta simple
-        if (diagnostico.tablaExiste) {
-            try {
-                const testQuery = await db('entregas').select('id').limit(1);
-                diagnostico.consultaSimple = 'OK';
-                console.log('✅ Consulta simple funciona');
-            } catch (error) {
-                diagnostico.consultaSimple = `Error: ${error.message}`;
-                diagnostico.errores.push(`Error en consulta simple: ${error.message}`);
-                console.error('❌ Error en consulta simple:', error.message);
-            }
-        }
-
-        // Probar JOIN simple
-        if (diagnostico.tablaExiste && diagnostico.tablasRelacionadas.pedidos) {
-            try {
-                const testJoin = await db('entregas')
-                    .leftJoin('pedidos', 'entregas.pedido_id', 'pedidos.id')
-                    .select('entregas.id', 'pedidos.comprobante')
-                    .limit(1);
-                diagnostico.consultaJoin = 'OK';
-                console.log('✅ Consulta con JOIN funciona');
-            } catch (error) {
-                diagnostico.consultaJoin = `Error: ${error.message}`;
-                diagnostico.errores.push(`Error en consulta JOIN: ${error.message}`);
-                console.error('❌ Error en consulta JOIN:', error.message);
-            }
-        }
-
-        console.log('🎯 Diagnóstico completado');
-        res.json(diagnostico);
-    } catch (error) {
-        console.error('💥 Error fatal en diagnóstico:', error);
-        res.status(500).json({
-            error: 'Error en diagnóstico',
-            details: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
