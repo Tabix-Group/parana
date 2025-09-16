@@ -50,6 +50,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Middleware de logging para todas las peticiones
+app.use((req, res, next) => {
+  console.log(`📨 ${req.method} ${req.path} - IP: ${req.ip} - User-Agent: ${req.get('User-Agent')}`);
+  next();
+});
+
 // Función para inicializar la base de datos con reintentos
 async function initializeDatabase(maxRetries = 3) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -100,6 +106,29 @@ console.log(`🌐 Puerto: ${port}`);
 initializeDatabase().then(() => {
   console.log('✅ Base de datos verificada, iniciando rutas...');
 
+  // Health check endpoint
+  app.get('/health', async (req, res) => {
+    try {
+      // Verificar conexión a BD
+      await db.raw('SELECT 1');
+      const entregasCount = await db('entregas').count('id as count').first();
+
+      res.json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        database: isPostgres ? 'PostgreSQL' : 'SQLite',
+        entregasCount: entregasCount.count,
+        uptime: process.uptime()
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 'ERROR',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Rutas
   app.use('/api/pedidos', pedidosRoutes);
   app.use('/api/clientes', clientesRoutes);
@@ -118,6 +147,7 @@ initializeDatabase().then(() => {
     console.log(`🚀 Backend escuchando en http://localhost:${port}`);
     console.log(`📊 Base de datos: ${isPostgres ? 'PostgreSQL (Railway)' : 'SQLite (Local)'}`);
     console.log('🎉 Servidor completamente operativo');
+    console.log(`🔗 Health check: http://localhost:${port}/health`);
   });
 }).catch((error) => {
   console.error('❌ Error fatal durante la inicialización:', error);
