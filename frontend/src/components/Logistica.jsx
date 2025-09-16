@@ -24,7 +24,7 @@ import {
   Typography,
   Menu
 } from '@mui/material';
-import { Edit, FileDownload } from '@mui/icons-material';
+import { Edit, FileDownload, Add } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -63,6 +63,7 @@ const compareDates = (dateString, filterDate) => {
 function Logistica() {
   const [pedidos, setPedidos] = useState([]);
   const [devoluciones, setDevoluciones] = useState([]);
+  const [entregas, setEntregas] = useState([]);
   const [combinedData, setCombinedData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [vendedores, setVendedores] = useState([]);
@@ -88,6 +89,16 @@ function Logistica() {
   const [editingTipoTransporte, setEditingTipoTransporte] = useState('');
   const [editingNotas, setEditingNotas] = useState('');
   const [exportAnchor, setExportAnchor] = useState(null);
+  const [createEntregaModalOpen, setCreateEntregaModalOpen] = useState(false);
+  const [creatingEntregaFor, setCreatingEntregaFor] = useState(null);
+  const [newEntregaCantidad, setNewEntregaCantidad] = useState('');
+  const [newEntregaDireccion, setNewEntregaDireccion] = useState('');
+  const [newEntregaFechaEntrega, setNewEntregaFechaEntrega] = useState('');
+  const [newEntregaTransporte, setNewEntregaTransporte] = useState('');
+  const [newEntregaTipoTransporte, setNewEntregaTipoTransporte] = useState('');
+  const [newEntregaArmador, setNewEntregaArmador] = useState('');
+  const [newEntregaEstado, setNewEntregaEstado] = useState('');
+  const [newEntregaNotas, setNewEntregaNotas] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -95,9 +106,10 @@ function Logistica() {
 
   const fetchData = async () => {
     try {
-      const [pedidosRes, devolucionesRes, vendedoresRes, clientesRes, transportesRes, tiposTransporteRes, estadosRes, armadoresRes] = await Promise.all([
+      const [pedidosRes, devolucionesRes, entregasRes, vendedoresRes, clientesRes, transportesRes, tiposTransporteRes, estadosRes, armadoresRes] = await Promise.all([
         api.get('/pedidos/logistica'),
         api.get('/devoluciones?pageSize=1000'),
+        api.get('/entregas?pageSize=1000'),
         api.get('/vendedores', { params: { pageSize: 0 } }),
         api.get('/clientes?pageSize=1000'),
         api.get('/transportes?pageSize=1000'),
@@ -108,6 +120,7 @@ function Logistica() {
 
       setPedidos(pedidosRes.data || []);
       setDevoluciones(devolucionesRes.data?.data || []);
+      setEntregas(entregasRes.data?.data || []);
       setVendedores(vendedoresRes.data?.data || []);
       setClientes(clientesRes.data?.data || []);
       setTransportes(transportesRes.data?.data || []);
@@ -119,6 +132,7 @@ function Logistica() {
       // En caso de error, asegurar que todos los states sean arrays vacíos
       setPedidos([]);
       setDevoluciones([]);
+      setEntregas([]);
       setVendedores([]);
       setClientes([]);
       setTransportes([]);
@@ -138,6 +152,7 @@ function Logistica() {
         .map(p => ({
           ...p,
           tipo: 'Pedido',
+          subtipo: 'Original',
           nro_comprobante: p.comprobante || 'Sin comprobante',
           cliente: p.cliente_nombre || 'No disponible',
           direccion: p.direccion || 'Sin dirección',
@@ -162,6 +177,7 @@ function Logistica() {
         .map(d => ({
           ...d,
           tipo: 'Devolución',
+          subtipo: 'Original',
           nro_comprobante: d.comprobante || 'Sin comprobante',
           cliente: d.cliente_nombre || 'No disponible',
           direccion: d.direccion || 'Sin dirección',
@@ -175,10 +191,34 @@ function Logistica() {
           transporte: d.transporte_nombre || 'No disponible',
           completado: d.completado || false,
           texto: d.texto || '' // Asegura que siempre exista el campo texto
+        })),
+      ...entregas
+        .filter(e => {
+          const tipo = (e.tipo_transporte_nombre || e.tipo_transporte || '').toString().toLowerCase();
+          return !tipo.includes('retira');
+        })
+        .map(e => ({
+          ...e,
+          tipo: 'Entrega',
+          subtipo: `Parcial ${e.numero_entrega || 1}`,
+          nro_comprobante: `${e.comprobante} (${e.numero_entrega || 1})`,
+          cliente: e.cliente_nombre || 'No disponible',
+          direccion: e.direccion || 'Sin dirección',
+          cantidad: e.cant_bultos || 0,
+          armador: ((e.armador_nombre || '') + (e.armador_apellido ? ` ${e.armador_apellido}` : '')).trim() || '',
+          armador_id: e.armador_id || null,
+          fecha_pedido: e.fecha_creacion || '',
+          fecha_entrega: e.fecha_entrega || '',
+          tipo_transporte: e.tipo_transporte_nombre || 'No disponible',
+          transporte: e.transporte_nombre || 'No disponible',
+          completado: e.completado || false,
+          notas: e.notas || '',
+          pedido_id: e.pedido_id,
+          numero_entrega: e.numero_entrega || 1
         }))
     ];
     setCombinedData(combined);
-  }, [pedidos, devoluciones]);
+  }, [pedidos, devoluciones, entregas]);
 
   useEffect(() => {
     let filtered = combinedData; // Mostrar todos, incluyendo completados
@@ -197,7 +237,8 @@ function Logistica() {
 
     if (filterComprobante) {
       filtered = filtered.filter(item =>
-        item.nro_comprobante?.toLowerCase().includes(filterComprobante.toLowerCase())
+        item.nro_comprobante?.toLowerCase().includes(filterComprobante.toLowerCase()) ||
+        (item.tipo === 'Entrega' && item.comprobante?.toLowerCase().includes(filterComprobante.toLowerCase()))
       );
     }
 
@@ -268,7 +309,15 @@ function Logistica() {
 
   const handleSaveEdit = async () => {
     try {
-      const endpoint = editingItem.tipo === 'Pedido' ? '/pedidos' : '/devoluciones';
+      let endpoint;
+      if (editingItem.tipo === 'Entrega') {
+        endpoint = '/entregas';
+      } else if (editingItem.tipo === 'Pedido') {
+        endpoint = '/pedidos';
+      } else {
+        endpoint = '/devoluciones';
+      }
+
       // Asegurar que los campos sean string y no undefined/null
       const body = {
         transporte_id: editingTransporte || null,
@@ -276,23 +325,29 @@ function Logistica() {
         direccion: editingDireccion,
         fecha_entrega: editingFechaEntrega || null
       };
-      if (editingItem.tipo === 'Pedido') {
+
+      if (editingItem.tipo === 'Entrega') {
+        body.notas = typeof editingNotas === 'string' ? editingNotas : '';
+      } else if (editingItem.tipo === 'Pedido') {
         body.notas = typeof editingNotas === 'string' ? editingNotas : '';
       } else {
         body.texto = typeof editingNotas === 'string' ? editingNotas : '';
       }
+
       // Incluir armador_id si se definió (puede ser null para limpiar)
       if (editingArmador === '' || editingArmador === null) {
         body.armador_id = null;
       } else if (typeof editingArmador === 'string' || typeof editingArmador === 'number') {
         body.armador_id = editingArmador;
       }
+
       // Incluir estado si fue modificado
       if (editingEstado === '' || editingEstado === null) {
         body.estado_id = null;
       } else if (typeof editingEstado === 'string' || typeof editingEstado === 'number') {
         body.estado_id = editingEstado;
       }
+
       // Incluir cantidad (cant_bultos) si fue modificado
       if (editingCantidad === '' || editingCantidad === null) {
         // don't include field if empty string - server will handle coercion/backfill
@@ -301,10 +356,12 @@ function Logistica() {
         const n = Number(editingCantidad);
         body.cant_bultos = Number.isNaN(n) ? editingCantidad : n;
       }
+
       // Eliminar campos undefined/null excepto los que deben ir null
       Object.keys(body).forEach(key => {
         if (body[key] === undefined) delete body[key];
       });
+
       await api.put(`${endpoint}/${editingItem.id}`, body);
       setEditModalOpen(false);
       setEditingItem(null);
@@ -326,9 +383,76 @@ function Logistica() {
     setEditingFechaEntrega('');
   };
 
+  const handleCreateEntrega = (pedido) => {
+    setCreatingEntregaFor(pedido);
+    // Pre-llenar con datos del pedido
+    setNewEntregaCantidad('');
+    setNewEntregaDireccion(pedido.direccion || '');
+    setNewEntregaFechaEntrega(pedido.fecha_entrega || '');
+    setNewEntregaTransporte(pedido.transporte_id || '');
+    setNewEntregaTipoTransporte(pedido.tipo_transporte_id || '');
+    setNewEntregaArmador(pedido.armador_id || '');
+    setNewEntregaEstado(pedido.estado_id || '');
+    setNewEntregaNotas('');
+    setCreateEntregaModalOpen(true);
+  };
+
+  const handleSaveNewEntrega = async () => {
+    try {
+      const entregaData = {
+        pedido_id: creatingEntregaFor.id,
+        cant_bultos: Number(newEntregaCantidad) || 0,
+        direccion: newEntregaDireccion,
+        fecha_entrega: newEntregaFechaEntrega || null,
+        transporte_id: newEntregaTransporte || null,
+        tipo_transporte_id: newEntregaTipoTransporte || null,
+        armador_id: newEntregaArmador || null,
+        estado_id: newEntregaEstado || null,
+        notas: newEntregaNotas
+      };
+
+      await api.post('/entregas', entregaData);
+      setCreateEntregaModalOpen(false);
+      setCreatingEntregaFor(null);
+      // Limpiar campos
+      setNewEntregaCantidad('');
+      setNewEntregaDireccion('');
+      setNewEntregaFechaEntrega('');
+      setNewEntregaTransporte('');
+      setNewEntregaTipoTransporte('');
+      setNewEntregaArmador('');
+      setNewEntregaEstado('');
+      setNewEntregaNotas('');
+      fetchData();
+    } catch (error) {
+      console.error('Error creating entrega:', error);
+    }
+  };
+
+  const handleCloseCreateEntrega = () => {
+    setCreateEntregaModalOpen(false);
+    setCreatingEntregaFor(null);
+    setNewEntregaCantidad('');
+    setNewEntregaDireccion('');
+    setNewEntregaFechaEntrega('');
+    setNewEntregaTransporte('');
+    setNewEntregaTipoTransporte('');
+    setNewEntregaArmador('');
+    setNewEntregaEstado('');
+    setNewEntregaNotas('');
+  };
+
   const handleCompleted = async (item) => {
     try {
-      const endpoint = item.tipo === 'Pedido' ? '/pedidos' : '/devoluciones';
+      let endpoint;
+      if (item.tipo === 'Entrega') {
+        endpoint = '/entregas';
+      } else if (item.tipo === 'Pedido') {
+        endpoint = '/pedidos';
+      } else {
+        endpoint = '/devoluciones';
+      }
+
       const newCompletedState = !item.completado; // Toggle del estado
 
       if (newCompletedState) {
@@ -347,21 +471,49 @@ function Logistica() {
           ? { ...row, completado: newCompletedState }
           : row
       ));
+
+      // Si es un pedido que se está desmarcando como completado,
+      // también desmarcar todas sus entregas
+      if (!newCompletedState && item.tipo === 'Pedido') {
+        try {
+          const entregasResponse = await api.get(`/entregas?pedido_id=${item.id}`);
+          const entregas = entregasResponse.data?.data || [];
+
+          for (const entrega of entregas) {
+            if (entrega.completado) {
+              await api.put(`/entregas/${entrega.id}`, { completado: false });
+            }
+          }
+
+          // Actualizar estado local de las entregas
+          setCombinedData(prev => prev.map(row =>
+            row.tipo === 'Entrega' && row.pedido_id === item.id
+              ? { ...row, completado: false }
+              : row
+          ));
+        } catch (error) {
+          console.error('Error updating entregas:', error);
+        }
+      }
+
+      fetchData(); // Refrescar datos para asegurar consistencia
     } catch (error) {
       console.error('Error toggling completed state:', error);
+      // Si hay error, refrescar datos
+      fetchData();
     }
   };
 
   // Exportar a Excel
   const handleExportExcel = () => {
     const exportData = filteredData.map(row => ({
-      'Nro Comprobante': row.nro_comprobante,
+      'Nro Comprobante': row.tipo === 'Entrega' ? row.comprobante : row.nro_comprobante,
       'Tipo': row.tipo,
+      'Subtipo': row.subtipo || 'Original',
       'Cliente': row.cliente,
       'Dirección': row.direccion,
       'Armador': row.armador,
       'Cantidad': row.cantidad,
-      //'Fecha Pedido' removed
       'Fecha Entrega': formatDate(row.fecha_entrega),
       'Ok': row.ok ? 'Sí' : 'No',
       'Vendedor': Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
@@ -381,8 +533,8 @@ function Logistica() {
   const handleExportPDF = () => {
     const doc = new jsPDF('landscape', 'mm', 'a4');
     const exportData = filteredData.map(row => [
-      row.nro_comprobante,
-      row.tipo,
+      row.tipo === 'Entrega' ? row.comprobante : row.nro_comprobante,
+      `${row.tipo}${row.subtipo && row.subtipo !== 'Original' ? ` - ${row.subtipo}` : ''}`,
       row.cliente,
       row.armador,
       row.direccion,
@@ -628,8 +780,18 @@ function Logistica() {
                   : { '&:hover': { backgroundColor: '#f9f9f9' } };
 
                 return (
-                  <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={rowStyle}>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.nro_comprobante}</TableCell>
+                  <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={{
+                    ...rowStyle,
+                    ...(row.tipo === 'Entrega' && { backgroundColor: '#fff3e0', borderLeft: '3px solid #ff9800' })
+                  }}>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                      {row.tipo === 'Entrega' ? row.comprobante : row.nro_comprobante}
+                      {row.tipo === 'Entrega' && (
+                        <Typography variant="caption" sx={{ display: 'block', color: '#ff9800', fontSize: '0.6rem' }}>
+                          {row.subtipo}
+                        </Typography>
+                      )}
+                    </TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
                       {row.armador_id ? (Array.isArray(armadores) ? (armadores.find(a => a.id === row.armador_id)?.nombre ? `${armadores.find(a => a.id === row.armador_id)?.nombre}${armadores.find(a => a.id === row.armador_id)?.apellido ? ' ' + armadores.find(a => a.id === row.armador_id)?.apellido : ''}` : row.armador) : row.armador) : (row.armador || '')}
@@ -645,15 +807,28 @@ function Logistica() {
                       {row.tipo === 'Pedido' ? (row.notas || '') : (row.texto || '')}
                     </TableCell>
                     <TableCell sx={{ padding: '4px' }}>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleEdit(row)}
-                        color="primary"
-                        sx={{ padding: '4px', opacity: isCompleted ? 0.5 : 1 }}
-                        disabled={isCompleted}
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        {row.tipo === 'Pedido' && !isCompleted && (
+                          <IconButton
+                            size="small"
+                            onClick={() => handleCreateEntrega(row)}
+                            color="success"
+                            sx={{ padding: '4px' }}
+                            title="Crear entrega parcial"
+                          >
+                            <Add fontSize="small" />
+                          </IconButton>
+                        )}
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEdit(row)}
+                          color="primary"
+                          sx={{ padding: '4px', opacity: isCompleted ? 0.5 : 1 }}
+                          disabled={isCompleted}
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                      </Box>
                     </TableCell>
                     <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                       <Checkbox
@@ -661,7 +836,14 @@ function Logistica() {
                         checked={row.ok || false}
                         onChange={async () => {
                           try {
-                            const endpoint = row.tipo === 'Pedido' ? '/pedidos' : '/devoluciones';
+                            let endpoint;
+                            if (row.tipo === 'Entrega') {
+                              endpoint = '/entregas';
+                            } else if (row.tipo === 'Pedido') {
+                              endpoint = '/pedidos';
+                            } else {
+                              endpoint = '/devoluciones';
+                            }
                             await api.put(`${endpoint}/${row.id}/ok`, { ok: !row.ok });
                             // Optimistic update
                             setCombinedData(prev => prev.map(r => r.id === row.id && r.tipo === row.tipo ? { ...r, ok: !r.ok } : r));
@@ -685,6 +867,11 @@ function Logistica() {
                             color: isCompleted ? '#666' : '#2e7d32'
                           }
                         }}
+                        title={
+                          row.tipo === 'Pedido' && entregas.some(e => e.pedido_id === row.id)
+                            ? `Pedido con ${entregas.filter(e => e.pedido_id === row.id).length} entregas parciales`
+                            : ''
+                        }
                       />
                     </TableCell>
                   </TableRow>
@@ -705,7 +892,12 @@ function Logistica() {
       />
 
       <Dialog open={editModalOpen} onClose={handleCloseEdit}>
-        <DialogTitle>Editar Transporte, Dirección, Fecha Entrega y Notas/Observaciones</DialogTitle>
+        <DialogTitle>
+          {editingItem?.tipo === 'Entrega'
+            ? `Editar Entrega Parcial ${editingItem?.subtipo || ''}`
+            : 'Editar Transporte, Dirección, Fecha Entrega y Notas/Observaciones'
+          }
+        </DialogTitle>
         <DialogContent>
           <FormControl fullWidth margin="normal">
             <Select
@@ -790,7 +982,10 @@ function Logistica() {
           <TextField
             fullWidth
             margin="normal"
-            label={editingItem?.tipo === 'Pedido' ? 'Notas' : 'Observaciones'}
+            label={
+              editingItem?.tipo === 'Entrega' ? 'Notas de la Entrega' :
+                editingItem?.tipo === 'Pedido' ? 'Notas' : 'Observaciones'
+            }
             value={editingNotas}
             onChange={e => setEditingNotas(e.target.value)}
             multiline
@@ -802,6 +997,121 @@ function Logistica() {
           <Button onClick={handleCloseEdit}>Cancelar</Button>
           <Button onClick={handleSaveEdit} variant="contained">
             Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={createEntregaModalOpen} onClose={handleCloseCreateEntrega} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Crear Nueva Entrega Parcial
+          {creatingEntregaFor && (
+            <Typography variant="subtitle2" color="text.secondary">
+              Pedido: {creatingEntregaFor.comprobante} - Cliente: {creatingEntregaFor.cliente}
+            </Typography>
+          )}
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Cantidad (bultos)"
+            type="number"
+            value={newEntregaCantidad}
+            onChange={e => setNewEntregaCantidad(e.target.value)}
+            inputProps={{ min: 1 }}
+            required
+            helperText={creatingEntregaFor ? `Cantidad total del pedido: ${creatingEntregaFor.cantidad}` : ''}
+          />
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Dirección"
+            value={newEntregaDireccion}
+            onChange={e => setNewEntregaDireccion(e.target.value)}
+            multiline
+            minRows={1}
+            maxRows={3}
+          />
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Fecha Entrega"
+            type="date"
+            value={newEntregaFechaEntrega}
+            onChange={e => setNewEntregaFechaEntrega(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+          <FormControl fullWidth margin="normal">
+            <Select
+              value={newEntregaTipoTransporte}
+              onChange={(e) => setNewEntregaTipoTransporte(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="">Seleccionar Tipo de Transporte</MenuItem>
+              {Array.isArray(tiposTransporte) && tiposTransporte.map((tipo) => (
+                <MenuItem key={tipo.id} value={tipo.id}>
+                  {tipo.nombre}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal">
+            <Select
+              value={newEntregaTransporte}
+              onChange={(e) => setNewEntregaTransporte(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="">Seleccionar Transporte</MenuItem>
+              {Array.isArray(transportes) && transportes.map((transporte) => (
+                <MenuItem key={transporte.id} value={transporte.id}>
+                  {transporte.nombre}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal">
+            <Select
+              value={newEntregaArmador ?? ''}
+              onChange={(e) => setNewEntregaArmador(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="">Sin Armador</MenuItem>
+              {Array.isArray(armadores) && armadores.map(a => (
+                <MenuItem key={a.id} value={a.id}>{`${a.nombre || ''}${a.apellido ? ' ' + a.apellido : ''}`}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal">
+            <Select
+              value={newEntregaEstado ?? ''}
+              onChange={(e) => setNewEntregaEstado(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="">Sin Estado</MenuItem>
+              {Array.isArray(estados) && estados.map(e => (
+                <MenuItem key={e.id} value={e.id}>{e.nombre}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Notas de la Entrega"
+            value={newEntregaNotas}
+            onChange={e => setNewEntregaNotas(e.target.value)}
+            multiline
+            minRows={2}
+            maxRows={4}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCreateEntrega}>Cancelar</Button>
+          <Button
+            onClick={handleSaveNewEntrega}
+            variant="contained"
+            disabled={!newEntregaCantidad || newEntregaCantidad <= 0}
+          >
+            Crear Entrega
           </Button>
         </DialogActions>
       </Dialog>

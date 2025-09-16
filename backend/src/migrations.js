@@ -31,7 +31,7 @@ export async function createTables(db) {
           t.integer('Codigo');
         });
       }
-      
+
       // Reiniciar la secuencia de auto-incremento para PostgreSQL
       if (db.client.config.client === 'pg') {
         try {
@@ -136,21 +136,21 @@ export async function createTables(db) {
           t.integer('Codigo').nullable().comment('Código del cliente asociado al pedido');
         });
       }
-      
+
       const hasFechaPedido = await db.schema.hasColumn('pedidos', 'fecha_pedido');
       if (!hasFechaPedido) {
         await db.schema.table('pedidos', t => {
           t.date('fecha_pedido').nullable().comment('Fecha en que se realizó el pedido');
         });
       }
-      
+
       const hasEnLogistica = await db.schema.hasColumn('pedidos', 'en_logistica');
       if (!hasEnLogistica) {
         await db.schema.table('pedidos', t => {
           t.boolean('en_logistica').defaultTo(false).comment('Si el pedido está enviado a logística');
         });
       }
-      
+
       const hasCompletado = await db.schema.hasColumn('pedidos', 'completado');
       if (!hasCompletado) {
         await db.schema.table('pedidos', t => {
@@ -164,7 +164,7 @@ export async function createTables(db) {
           t.boolean('ok').defaultTo(false).comment('Marca si el pedido fue verificado OK');
         });
       }
-      
+
       // Reiniciar la secuencia de auto-incremento para PostgreSQL
       if (db.client.config.client === 'pg') {
         try {
@@ -176,6 +176,72 @@ export async function createTables(db) {
         } catch (err) {
           console.log('Error al reiniciar secuencia de pedidos:', err.message);
         }
+      }
+    }
+  });
+  // Entregas (entregas parciales de pedidos)
+  await db.schema.hasTable('entregas').then(async exists => {
+    if (!exists) {
+      return db.schema.createTable('entregas', t => {
+        t.increments('id').primary();
+        t.integer('pedido_id').notNullable().references('id').inTable('pedidos').onDelete('CASCADE');
+        t.integer('cant_bultos').notNullable().defaultTo(0);
+        t.string('direccion', 255);
+        t.integer('armador_id').nullable().references('id').inTable('armadores').onDelete('SET NULL');
+        t.integer('tipo_transporte_id').nullable().references('id').inTable('tipos_transporte').onDelete('SET NULL');
+        t.integer('transporte_id').nullable().references('id').inTable('transportes').onDelete('SET NULL');
+        t.integer('estado_id').nullable().references('id').inTable('estados').onDelete('SET NULL');
+        t.date('fecha_entrega');
+        t.text('notas');
+        t.boolean('completado').defaultTo(false).comment('Si la entrega parcial está completada');
+        t.boolean('ok').defaultTo(false).comment('Marca si la entrega fue verificada OK');
+        t.timestamp('fecha_creacion').defaultTo(db.fn.now());
+        t.integer('numero_entrega').comment('Número secuencial de la entrega dentro del pedido');
+      });
+    } else {
+      // Verificar y agregar columnas faltantes si la tabla ya existe
+      const columnsToCheck = [
+        { name: 'cant_bultos', type: 'integer', defaultValue: 0 },
+        { name: 'direccion', type: 'string', length: 255 },
+        { name: 'armador_id', type: 'integer' },
+        { name: 'tipo_transporte_id', type: 'integer' },
+        { name: 'transporte_id', type: 'integer' },
+        { name: 'estado_id', type: 'integer' },
+        { name: 'fecha_entrega', type: 'date' },
+        { name: 'notas', type: 'text' },
+        { name: 'completado', type: 'boolean', defaultValue: false },
+        { name: 'ok', type: 'boolean', defaultValue: false },
+        { name: 'numero_entrega', type: 'integer' }
+      ];
+
+      for (const col of columnsToCheck) {
+        const hasColumn = await db.schema.hasColumn('entregas', col.name);
+        if (!hasColumn) {
+          await db.schema.table('entregas', table => {
+            if (col.type === 'integer') {
+              const column = table.integer(col.name);
+              if (col.defaultValue !== undefined) column.defaultTo(col.defaultValue);
+              if (col.name.includes('_id')) column.references('id').inTable(col.name.replace('_id', 's')).onDelete('SET NULL');
+            } else if (col.type === 'string') {
+              table.string(col.name, col.length || 255);
+            } else if (col.type === 'date') {
+              table.date(col.name);
+            } else if (col.type === 'text') {
+              table.text(col.name);
+            } else if (col.type === 'boolean') {
+              const column = table.boolean(col.name);
+              if (col.defaultValue !== undefined) column.defaultTo(col.defaultValue);
+            }
+          });
+        }
+      }
+
+      // Verificar si existe la columna fecha_creacion
+      const hasFechaCreacion = await db.schema.hasColumn('entregas', 'fecha_creacion');
+      if (!hasFechaCreacion) {
+        await db.schema.table('entregas', t => {
+          t.timestamp('fecha_creacion').defaultTo(db.fn.now());
+        });
       }
     }
   });

@@ -248,8 +248,34 @@ router.put('/:id/logistica', async (req, res) => {
 
 // Marcar pedido como completado
 router.put('/:id/completado', async (req, res) => {
-  await db('pedidos').where({ id: req.params.id }).update({ completado: true });
-  res.json({ success: true });
+  try {
+    const pedidoId = req.params.id;
+
+    // Verificar si el pedido tiene entregas parciales
+    const entregasCount = await db('entregas').where('pedido_id', pedidoId).count('id as count').first();
+
+    if (entregasCount.count > 0) {
+      // Si tiene entregas parciales, verificar si todas están completadas
+      const entregasCompletadas = await db('entregas')
+        .where('pedido_id', pedidoId)
+        .where('completado', true)
+        .count('id as count')
+        .first();
+
+      if (entregasCompletadas.count !== entregasCount.count) {
+        return res.status(400).json({
+          error: 'No se puede marcar como completado. El pedido tiene entregas parciales pendientes.'
+        });
+      }
+    }
+
+    // Si no tiene entregas o todas están completadas, marcar como completado
+    await db('pedidos').where({ id: pedidoId }).update({ completado: true });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error PUT /pedidos/:id/completado:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
 
 // Marcar/Desmarcar campo OK

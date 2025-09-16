@@ -13,6 +13,7 @@ import devolucionesRoutes from './routes/devoluciones.js';
 import usuariosRoutes from './routes/usuarios.js';
 import loginRoutes from './routes/login.js';
 import reportesRoutes from './routes/reportes.js';
+import entregasRoutes from './routes/entregas.js';
 
 // Detectar si estamos en Railway/Postgres
 const isPostgres = process.env.DATABASE_URL || (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE && process.env.PGPORT);
@@ -22,26 +23,26 @@ const port = process.env.PORT || 4000;
 
 export const db = isPostgres
   ? knex({
-      client: 'pg',
-      connection: process.env.DATABASE_URL
-        ? process.env.DATABASE_URL
-        : {
-            host: process.env.PGHOST,
-            user: process.env.PGUSER,
-            password: process.env.PGPASSWORD,
-            database: process.env.PGDATABASE,
-            port: process.env.PGPORT
-          },
-      // Para Railway, forzar SSL si es necesario
-      ...(process.env.DATABASE_URL ? { ssl: { rejectUnauthorized: false } } : {})
-    })
-  : knex({
-      client: 'sqlite3',
-      connection: {
-        filename: './data.sqlite3'
+    client: 'pg',
+    connection: process.env.DATABASE_URL
+      ? process.env.DATABASE_URL
+      : {
+        host: process.env.PGHOST,
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD,
+        database: process.env.PGDATABASE,
+        port: process.env.PGPORT
       },
-      useNullAsDefault: true
-    });
+    // Para Railway, forzar SSL si es necesario
+    ...(process.env.DATABASE_URL ? { ssl: { rejectUnauthorized: false } } : {})
+  })
+  : knex({
+    client: 'sqlite3',
+    connection: {
+      filename: './data.sqlite3'
+    },
+    useNullAsDefault: true
+  });
 
 app.use(cors({
   origin: '*',
@@ -65,6 +66,7 @@ app.use('/api/devoluciones', devolucionesRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/login', loginRoutes);
 app.use('/api/reportes', reportesRoutes);
+app.use('/api/entregas', entregasRoutes);
 
 app.listen(port, () => {
   console.log(`Backend escuchando en http://localhost:${port}`);
