@@ -166,8 +166,6 @@ function Logistica() {
           cliente: p.cliente_nombre || 'No disponible',
           direccion: p.direccion || 'Sin dirección',
           cantidad: p.cant_bultos || 0,
-          // Preferir campos de armador si vienen desde el backend, sino fallback a cliente_nombre
-          // Construir nombre de armador si existe; si no, dejar vacío (no usar cliente como fallback)
           armador: ((p.armador_nombre || '') + (p.armador_apellido ? ` ${p.armador_apellido}` : '')).trim() || (p.armador || ''),
           armador_id: p.armador_id || p.armador || null,
           fecha_pedido: p.fecha_pedido || p.fecha,
@@ -175,7 +173,7 @@ function Logistica() {
           tipo_transporte: p.tipo_transporte_nombre || 'No disponible',
           transporte: p.transporte_nombre || 'No disponible',
           completado: p.completado || false,
-          notas: p.notas || '' // Asegura que siempre exista el campo notas
+          notas: p.notas || ''
         })),
       ...devoluciones
         .filter(d => {
@@ -191,7 +189,6 @@ function Logistica() {
           cliente: d.cliente_nombre || 'No disponible',
           direccion: d.direccion || 'Sin dirección',
           cantidad: d.cant_bultos || 0,
-          // Construir nombre de armador si existe; si no, dejar vacío (no usar cliente como fallback)
           armador: ((d.armador_nombre || '') + (d.armador_apellido ? ` ${d.armador_apellido}` : '')).trim() || (d.armador || ''),
           armador_id: d.armador_id || d.armador || null,
           fecha_pedido: d.fecha_pedido || d.fecha,
@@ -199,7 +196,7 @@ function Logistica() {
           tipo_transporte: d.tipo_transporte_nombre || 'No disponible',
           transporte: d.transporte_nombre || 'No disponible',
           completado: d.completado || false,
-          texto: d.texto || '' // Asegura que siempre exista el campo texto
+          texto: d.texto || ''
         })),
       ...entregas
         .filter(e => {
@@ -211,7 +208,9 @@ function Logistica() {
             id: e.id,
             numero_entrega: e.numero_entrega,
             comprobante: e.comprobante,
-            subtipo: `Parcial ${e.numero_entrega || 1}`
+            subtipo: `Parcial ${e.numero_entrega || 1}`,
+            tipo_transporte: e.tipo_transporte_nombre,
+            en_logistica_check: e.pedido_id ? 'Tiene pedido_id' : 'Sin pedido_id'
           });
 
           return {
@@ -236,7 +235,16 @@ function Logistica() {
         })
     ];
 
-    console.log('✅ Datos combinados finales:', combined.filter(item => item.tipo === 'Entrega'));
+    console.log('✅ Datos combinados finales:', {
+      total: combined.length,
+      pedidos: combined.filter(item => item.tipo === 'Pedido').length,
+      entregas: combined.filter(item => item.tipo === 'Entrega').length,
+      entregas_detalle: combined.filter(item => item.tipo === 'Entrega').map(e => ({
+        id: e.id,
+        subtipo: e.subtipo,
+        comprobante: e.comprobante
+      }))
+    });
     setCombinedData(combined);
   }, [pedidos, devoluciones, entregas]);
 
@@ -744,49 +752,28 @@ function Logistica() {
 
       </Box>
 
-      {/* Botón de exportación con contadores a la derecha */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
-        <Button
-          variant="contained"
-          startIcon={<FileDownload />}
-          onClick={handleExportClick}
-          sx={{ fontWeight: 600, px: 2.5, py: 1.2, borderRadius: 2 }}
-        >
-          Exportar
-        </Button>
-        <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={handleExportClose}>
-          <MenuItem onClick={() => { handleExportExcel(); handleExportClose(); }}>Exportar a Excel</MenuItem>
-          <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
-        </Menu>
-        <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
-          <Typography variant="body2" sx={{
-            backgroundColor: '#e3f2fd',
-            padding: '4px 12px',
-            borderRadius: '16px',
-            color: '#1976d2',
-            fontSize: '0.75rem'
-          }}>
-            Pendientes: {filteredData.filter(item => !item.completado).length}
-          </Typography>
-          <Typography variant="body2" sx={{
-            backgroundColor: '#f3e5f5',
-            padding: '4px 12px',
-            borderRadius: '16px',
-            color: '#7b1fa2',
-            fontSize: '0.75rem'
-          }}>
-            Completados: {filteredData.filter(item => item.completado).length}
-          </Typography>
-          <Typography variant="body2" sx={{
-            backgroundColor: '#e8f5e9',
-            padding: '4px 12px',
-            borderRadius: '16px',
-            color: '#2e7d32',
-            fontSize: '0.75rem'
-          }}>
-            Total Cantidad: {filteredData.reduce((s, it) => s + (Number(it.cantidad) ? Number(it.cantidad) : 0), 0)}
-          </Typography>
-        </Box>
+      {/* Indicador de entregas parciales */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 1, alignItems: 'center' }}>
+        <Typography variant="body2" sx={{
+          backgroundColor: '#fff3e0',
+          padding: '6px 12px',
+          borderRadius: '12px',
+          color: '#ff9800',
+          fontSize: '0.8rem',
+          fontWeight: 'bold',
+          border: '2px solid #ff9800'
+        }}>
+          📦 Entregas Parciales: {filteredData.filter(item => item.tipo === 'Entrega').length}
+        </Typography>
+        <Typography variant="body2" sx={{
+          backgroundColor: '#e3f2fd',
+          padding: '6px 12px',
+          borderRadius: '12px',
+          color: '#1976d2',
+          fontSize: '0.8rem'
+        }}>
+          🔍 Total Filtrado: {filteredData.length}
+        </Typography>
       </Box>
 
       <TableContainer component={Paper}>
@@ -804,9 +791,19 @@ function Logistica() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredData
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row, index) => {
+            {(() => {
+              console.log('🎨 Renderizando tabla con datos filtrados:', {
+                total: filteredData.length,
+                entregas: filteredData.filter(item => item.tipo === 'Entrega').length,
+                primeros_items: filteredData.slice(0, 3).map(item => ({
+                  tipo: item.tipo,
+                  subtipo: item.subtipo,
+                  comprobante: item.comprobante
+                }))
+              });
+              return filteredData
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((row, index) => {
                 const isCompleted = row.completado;
                 const rowStyle = isCompleted
                   ? { backgroundColor: '#f5f5f5', opacity: 0.6, '&:hover': { backgroundColor: '#eeeeee' } }
@@ -831,11 +828,26 @@ function Logistica() {
                     ...(row.tipo === 'Entrega' && { backgroundColor: '#fff3e0', borderLeft: '3px solid #ff9800' })
                   }}>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {row.tipo === 'Entrega' ? row.comprobante : row.nro_comprobante}
-                      {row.tipo === 'Entrega' && (
-                        <Typography variant="caption" sx={{ display: 'block', color: '#ff9800', fontSize: '0.6rem' }}>
-                          {row.subtipo}
-                        </Typography>
+                      {row.tipo === 'Entrega' ? (
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#ff9800' }}>
+                            {row.comprobante}
+                          </Typography>
+                          <Typography variant="caption" sx={{
+                            display: 'block',
+                            color: '#ff9800',
+                            fontSize: '0.65rem',
+                            fontWeight: 'bold',
+                            backgroundColor: '#fff3e0',
+                            padding: '2px 6px',
+                            borderRadius: '8px',
+                            border: '1px solid #ff9800'
+                          }}>
+                            🔄 {row.subtipo}
+                          </Typography>
+                        </Box>
+                      ) : (
+                        row.nro_comprobante
                       )}
                     </TableCell>
                     <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
@@ -922,7 +934,8 @@ function Logistica() {
                     </TableCell>
                   </TableRow>
                 );
-              })}
+              });
+            })()}
           </TableBody>
         </Table>
       </TableContainer>
