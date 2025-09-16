@@ -119,11 +119,6 @@ function Logistica() {
         api.get('/armadores?pageSize=1000')
       ]);
 
-      console.log('📦 Datos recibidos del backend:');
-      console.log('📋 Pedidos:', pedidosRes.data?.length || 0);
-      console.log('📋 Devoluciones:', devolucionesRes.data?.data?.length || 0);
-      console.log('📋 Entregas:', entregasRes.data?.length || 0, entregasRes.data);
-
       setPedidos(pedidosRes.data || []);
       setDevoluciones(devolucionesRes.data?.data || []);
       setEntregas(entregasRes.data || []);
@@ -149,9 +144,6 @@ function Logistica() {
   };
 
   useEffect(() => {
-    console.log('🔄 Procesando datos combinados...');
-    console.log('📦 Entregas raw:', entregas);
-
     const combined = [
       ...pedidos
         .filter(p => {
@@ -204,15 +196,6 @@ function Logistica() {
           return !tipo.includes('retira');
         })
         .map(e => {
-          console.log('📋 Procesando entrega:', {
-            id: e.id,
-            numero_entrega: e.numero_entrega,
-            comprobante: e.comprobante,
-            subtipo: `Parcial ${e.numero_entrega || 1}`,
-            tipo_transporte: e.tipo_transporte_nombre,
-            en_logistica_check: e.pedido_id ? 'Tiene pedido_id' : 'Sin pedido_id'
-          });
-
           return {
             ...e,
             tipo: 'Entrega',
@@ -235,16 +218,6 @@ function Logistica() {
         })
     ];
 
-    console.log('✅ Datos combinados finales:', {
-      total: combined.length,
-      pedidos: combined.filter(item => item.tipo === 'Pedido').length,
-      entregas: combined.filter(item => item.tipo === 'Entrega').length,
-      entregas_detalle: combined.filter(item => item.tipo === 'Entrega').map(e => ({
-        id: e.id,
-        subtipo: e.subtipo,
-        comprobante: e.comprobante
-      }))
-    });
     setCombinedData(combined);
   }, [pedidos, devoluciones, entregas]);
 
@@ -449,8 +422,6 @@ function Logistica() {
         estado_id: newEntregaEstado || null,
         notas: newEntregaNotas
       };
-
-      console.log('📤 Creando entrega con datos:', entregaData);
 
       await api.post('/entregas', entregaData);
       setCreateEntregaModalOpen(false);
@@ -792,149 +763,127 @@ function Logistica() {
           </TableHead>
           <TableBody>
             {(() => {
-              console.log('🎨 Renderizando tabla con datos filtrados:', {
-                total: filteredData.length,
-                entregas: filteredData.filter(item => item.tipo === 'Entrega').length,
-                primeros_items: filteredData.slice(0, 3).map(item => ({
-                  tipo: item.tipo,
-                  subtipo: item.subtipo,
-                  comprobante: item.comprobante
-                }))
-              });
               return filteredData
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, index) => {
-                const isCompleted = row.completado;
-                const rowStyle = isCompleted
-                  ? { backgroundColor: '#f5f5f5', opacity: 0.6, '&:hover': { backgroundColor: '#eeeeee' } }
-                  : { '&:hover': { backgroundColor: '#f9f9f9' } };
+                  const isCompleted = row.completado;
+                  const rowStyle = isCompleted
+                    ? { backgroundColor: '#f5f5f5', opacity: 0.6, '&:hover': { backgroundColor: '#eeeeee' } }
+                    : { '&:hover': { backgroundColor: '#f9f9f9' } };
 
-                // Debug logging for entrega rows
-                if (row.tipo === 'Entrega') {
-                  console.log('🎨 Renderizando fila de entrega:', {
-                    id: row.id,
-                    tipo: row.tipo,
-                    subtipo: row.subtipo,
-                    comprobante: row.comprobante,
-                    numero_entrega: row.numero_entrega,
-                    backgroundColor: '#fff3e0',
-                    borderLeft: '3px solid #ff9800'
-                  });
-                }
-
-                return (
-                  <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={{
-                    ...rowStyle,
-                    ...(row.tipo === 'Entrega' && { backgroundColor: '#fff3e0', borderLeft: '3px solid #ff9800' })
-                  }}>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {row.tipo === 'Entrega' ? (
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#ff9800' }}>
-                            {row.comprobante}
-                          </Typography>
-                          <Typography variant="caption" sx={{
-                            display: 'block',
-                            color: '#ff9800',
-                            fontSize: '0.65rem',
-                            fontWeight: 'bold',
-                            backgroundColor: '#fff3e0',
-                            padding: '2px 6px',
-                            borderRadius: '8px',
-                            border: '1px solid #ff9800'
-                          }}>
-                            🔄 {row.subtipo}
-                          </Typography>
-                        </Box>
-                      ) : (
-                        row.nro_comprobante
-                      )}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                      {row.armador_id ? (Array.isArray(armadores) ? (armadores.find(a => a.id === row.armador_id)?.nombre ? `${armadores.find(a => a.id === row.armador_id)?.nombre}${armadores.find(a => a.id === row.armador_id)?.apellido ? ' ' + armadores.find(a => a.id === row.armador_id)?.apellido : ''}` : row.armador) : row.armador) : (row.armador || '')}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_entrega)}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor'}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado'}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.tipo_transporte}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.transporte}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit', maxWidth: 180, whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
-                      {row.tipo === 'Pedido' ? (row.notas || '') : (row.texto || '')}
-                    </TableCell>
-                    <TableCell sx={{ padding: '4px' }}>
-                      <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        {row.tipo === 'Pedido' && !isCompleted && (
+                  return (
+                    <TableRow key={`${row.tipo}-${row.id}-${index}`} sx={{
+                      ...rowStyle,
+                      ...(row.tipo === 'Entrega' && { backgroundColor: '#fff3e0', borderLeft: '3px solid #ff9800' })
+                    }}>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                        {row.tipo === 'Entrega' ? (
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#ff9800' }}>
+                              {row.comprobante}
+                            </Typography>
+                            <Typography variant="caption" sx={{
+                              display: 'block',
+                              color: '#ff9800',
+                              fontSize: '0.65rem',
+                              fontWeight: 'bold',
+                              backgroundColor: '#fff3e0',
+                              padding: '2px 6px',
+                              borderRadius: '8px',
+                              border: '1px solid #ff9800'
+                            }}>
+                              🔄 {row.subtipo}
+                            </Typography>
+                          </Box>
+                        ) : (
+                          row.nro_comprobante
+                        )}
+                      </TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
+                        {row.armador_id ? (Array.isArray(armadores) ? (armadores.find(a => a.id === row.armador_id)?.nombre ? `${armadores.find(a => a.id === row.armador_id)?.nombre}${armadores.find(a => a.id === row.armador_id)?.apellido ? ' ' + armadores.find(a => a.id === row.armador_id)?.apellido : ''}` : row.armador) : row.armador) : (row.armador || '')}
+                      </TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_entrega)}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor'}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado'}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.tipo_transporte}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.transporte}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit', maxWidth: 180, whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
+                        {row.tipo === 'Pedido' ? (row.notas || '') : (row.texto || '')}
+                      </TableCell>
+                      <TableCell sx={{ padding: '4px' }}>
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          {row.tipo === 'Pedido' && !isCompleted && (
+                            <IconButton
+                              size="small"
+                              onClick={() => handleCreateEntrega(row)}
+                              color="success"
+                              sx={{ padding: '4px' }}
+                              title="Crear entrega parcial"
+                            >
+                              <Add fontSize="small" />
+                            </IconButton>
+                          )}
                           <IconButton
                             size="small"
-                            onClick={() => handleCreateEntrega(row)}
-                            color="success"
-                            sx={{ padding: '4px' }}
-                            title="Crear entrega parcial"
+                            onClick={() => handleEdit(row)}
+                            color="primary"
+                            sx={{ padding: '4px', opacity: isCompleted ? 0.5 : 1 }}
+                            disabled={isCompleted}
                           >
-                            <Add fontSize="small" />
+                            <Edit fontSize="small" />
                           </IconButton>
-                        )}
-                        <IconButton
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                        <Checkbox
                           size="small"
-                          onClick={() => handleEdit(row)}
-                          color="primary"
-                          sx={{ padding: '4px', opacity: isCompleted ? 0.5 : 1 }}
-                          disabled={isCompleted}
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </TableCell>
-                    <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                      <Checkbox
-                        size="small"
-                        checked={row.ok || false}
-                        onChange={async () => {
-                          try {
-                            let endpoint;
-                            if (row.tipo === 'Entrega') {
-                              endpoint = '/entregas';
-                            } else if (row.tipo === 'Pedido') {
-                              endpoint = '/pedidos';
-                            } else {
-                              endpoint = '/devoluciones';
+                          checked={row.ok || false}
+                          onChange={async () => {
+                            try {
+                              let endpoint;
+                              if (row.tipo === 'Entrega') {
+                                endpoint = '/entregas';
+                              } else if (row.tipo === 'Pedido') {
+                                endpoint = '/pedidos';
+                              } else {
+                                endpoint = '/devoluciones';
+                              }
+                              await api.put(`${endpoint}/${row.id}/ok`, { ok: !row.ok });
+                              // Optimistic update
+                              setCombinedData(prev => prev.map(r => r.id === row.id && r.tipo === row.tipo ? { ...r, ok: !r.ok } : r));
+                            } catch (err) {
+                              console.error('Error toggling ok:', err);
                             }
-                            await api.put(`${endpoint}/${row.id}/ok`, { ok: !row.ok });
-                            // Optimistic update
-                            setCombinedData(prev => prev.map(r => r.id === row.id && r.tipo === row.tipo ? { ...r, ok: !r.ok } : r));
-                          } catch (err) {
-                            console.error('Error toggling ok:', err);
+                          }}
+                          color={row.ok ? 'success' : 'default'}
+                          sx={{ color: row.ok ? '#2e7d32' : 'inherit' }}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                        <Checkbox
+                          size="small"
+                          checked={row.completado || false}
+                          onChange={() => handleCompleted(row)}
+                          color={isCompleted ? "default" : "success"}
+                          sx={{
+                            color: isCompleted ? '#666' : 'inherit',
+                            '&.Mui-checked': {
+                              color: isCompleted ? '#666' : '#2e7d32'
+                            }
+                          }}
+                          title={
+                            row.tipo === 'Pedido' && entregas.some(e => e.pedido_id === row.id)
+                              ? `Pedido con ${entregas.filter(e => e.pedido_id === row.id).length} entregas parciales`
+                              : ''
                           }
-                        }}
-                        color={row.ok ? 'success' : 'default'}
-                        sx={{ color: row.ok ? '#2e7d32' : 'inherit' }}
-                      />
-                    </TableCell>
-                    <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                      <Checkbox
-                        size="small"
-                        checked={row.completado || false}
-                        onChange={() => handleCompleted(row)}
-                        color={isCompleted ? "default" : "success"}
-                        sx={{
-                          color: isCompleted ? '#666' : 'inherit',
-                          '&.Mui-checked': {
-                            color: isCompleted ? '#666' : '#2e7d32'
-                          }
-                        }}
-                        title={
-                          row.tipo === 'Pedido' && entregas.some(e => e.pedido_id === row.id)
-                            ? `Pedido con ${entregas.filter(e => e.pedido_id === row.id).length} entregas parciales`
-                            : ''
-                        }
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              });
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                });
             })()}
           </TableBody>
         </Table>
