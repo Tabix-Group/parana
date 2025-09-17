@@ -469,12 +469,10 @@ function Logistica() {
 
       if (newCompletedState) {
         // Marcar como completado usando el endpoint específico
-        await api.put(`${endpoint}/${item.id}/completado`);
+        await api.put(`${endpoint}/${item.id}/completado`, { completado: true });
       } else {
-        // Desmarcar como completado usando el endpoint general
-        await api.put(`${endpoint}/${item.id}`, {
-          completado: false
-        });
+        // Desmarcar como completado usando el endpoint específico
+        await api.put(`${endpoint}/${item.id}/completado`, { completado: false });
       }
 
       // Actualizar el estado local
