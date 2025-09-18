@@ -8,4 +8,5 @@ cmds = ["npm ci"]
 cmds = ["npm run build"]
 
 [start]
+# Force redeploy - updated config
 cmd = "npm start"
