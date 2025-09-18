@@ -703,6 +703,19 @@ function Logistica() {
         />
         <Button
           variant="outlined"
+          startIcon={<FileDownload />}
+          onClick={handleExportClick}
+          size="small"
+        >
+          Exportar
+        </Button>
+        <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={handleExportClose}>
+          <MenuItem onClick={() => { handleExportExcel(); handleExportClose(); }}>Exportar a Excel</MenuItem>
+          <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
+        </Menu>
+
+        <Button
+          variant="outlined"
           onClick={() => {
             setFilterVendedor('');
             setFilterCliente('');
