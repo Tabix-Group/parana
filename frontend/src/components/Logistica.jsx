@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Paper,
   Table,
@@ -60,12 +60,28 @@ const compareDates = (dateString, filterDate) => {
   }
 };
 
+// Hook personalizado para debounce
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = React.useState(value);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 function Logistica() {
   const [pedidos, setPedidos] = useState([]);
   const [devoluciones, setDevoluciones] = useState([]);
   const [entregas, setEntregas] = useState([]);
   const [combinedData, setCombinedData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
   const [vendedores, setVendedores] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [transportes, setTransportes] = useState([]);
@@ -100,6 +116,30 @@ function Logistica() {
   const [newEntregaArmador, setNewEntregaArmador] = useState('');
   const [newEntregaEstado, setNewEntregaEstado] = useState('');
   const [newEntregaNotas, setNewEntregaNotas] = useState('');
+
+  // Debounce para filtros de texto (300ms)
+  const debouncedFilterVendedor = useDebounce(filterVendedor, 300);
+  const debouncedFilterCliente = useDebounce(filterCliente, 300);
+  const debouncedFilterComprobante = useDebounce(filterComprobante, 300);
+  const debouncedFilterArmador = useDebounce(filterArmador, 300);
+  const debouncedFilterTipoTte = useDebounce(filterTipoTte, 300);
+  const debouncedFilterTransporte = useDebounce(filterTransporte, 300);
+
+  // Mapas memoizados para lookups rápidos O(1) en lugar de O(n)
+  const vendedoresMap = useMemo(() => {
+    if (!Array.isArray(vendedores)) return {};
+    return Object.fromEntries(vendedores.map(v => [v.id, v.nombre]));
+  }, [vendedores]);
+
+  const estadosMap = useMemo(() => {
+    if (!Array.isArray(estados)) return {};
+    return Object.fromEntries(estados.map(e => [e.id, e.nombre]));
+  }, [estados]);
+
+  const armadoresMap = useMemo(() => {
+    if (!Array.isArray(armadores)) return {};
+    return Object.fromEntries(armadores.map(a => [a.id, `${a.nombre || ''}${a.apellido ? ' ' + a.apellido : ''}`]));
+  }, [armadores]);
 
   useEffect(() => {
     fetchData();
@@ -143,6 +183,7 @@ function Logistica() {
     }
   };
 
+  // Memoizar combinedData para evitar re-cálculos innecesarios
   useEffect(() => {
     const combined = [
       ...pedidos
@@ -221,30 +262,31 @@ function Logistica() {
     setCombinedData(combined);
   }, [pedidos, devoluciones, entregas]);
 
-  useEffect(() => {
+  // Memoizar filteredData para evitar re-filtrado innecesario
+  const filteredData = useMemo(() => {
     let filtered = combinedData; // Mostrar todos, incluyendo completados
 
-    if (filterVendedor && Array.isArray(vendedores)) {
+    if (debouncedFilterVendedor && Array.isArray(vendedores)) {
       filtered = filtered.filter(item =>
-        vendedores.find(v => v.id === item.vendedor_id)?.nombre?.toLowerCase().includes(filterVendedor.toLowerCase())
+        vendedores.find(v => v.id === item.vendedor_id)?.nombre?.toLowerCase().includes(debouncedFilterVendedor.toLowerCase())
       );
     }
 
-    if (filterCliente) {
+    if (debouncedFilterCliente) {
       filtered = filtered.filter(item =>
-        item.cliente?.toLowerCase().includes(filterCliente.toLowerCase())
+        item.cliente?.toLowerCase().includes(debouncedFilterCliente.toLowerCase())
       );
     }
 
-    if (filterComprobante) {
+    if (debouncedFilterComprobante) {
       filtered = filtered.filter(item =>
-        item.nro_comprobante?.toLowerCase().includes(filterComprobante.toLowerCase()) ||
-        (item.tipo === 'Entrega' && item.comprobante?.toLowerCase().includes(filterComprobante.toLowerCase()))
+        item.nro_comprobante?.toLowerCase().includes(debouncedFilterComprobante.toLowerCase()) ||
+        (item.tipo === 'Entrega' && item.comprobante?.toLowerCase().includes(debouncedFilterComprobante.toLowerCase()))
       );
     }
 
-    if (filterArmador) {
-      filtered = filtered.filter(item => (item.armador || '').toLowerCase().includes(filterArmador.toLowerCase()));
+    if (debouncedFilterArmador) {
+      filtered = filtered.filter(item => (item.armador || '').toLowerCase().includes(debouncedFilterArmador.toLowerCase()));
     }
 
     if (filterCompletado) {
@@ -272,14 +314,15 @@ function Logistica() {
       filtered = filtered.filter(item => compareDates(item.fecha_entrega, filterFechaEntrega));
     }
 
-    if (filterTipoTte) {
-      filtered = filtered.filter(item => (item.tipo_transporte || '').toLowerCase().includes(filterTipoTte.toLowerCase()));
+    if (debouncedFilterTipoTte) {
+      filtered = filtered.filter(item => (item.tipo_transporte || '').toLowerCase().includes(debouncedFilterTipoTte.toLowerCase()));
     }
-    if (filterTransporte) {
-      filtered = filtered.filter(item => (item.transporte || '').toLowerCase().includes(filterTransporte.toLowerCase()));
+    if (debouncedFilterTransporte) {
+      filtered = filtered.filter(item => (item.transporte || '').toLowerCase().includes(debouncedFilterTransporte.toLowerCase()));
     }
-    setFilteredData(filtered);
-  }, [combinedData, filterVendedor, filterCliente, filterComprobante, filterEstado, filterFechaEntrega, filterTipoTte, filterTransporte, filterArmador, filterCompletado, filterOk, vendedores, estados]);
+    
+    return filtered;
+  }, [combinedData, debouncedFilterVendedor, debouncedFilterCliente, debouncedFilterComprobante, filterEstado, filterFechaEntrega, debouncedFilterTipoTte, debouncedFilterTransporte, debouncedFilterArmador, filterCompletado, filterOk, vendedores, estados]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -364,8 +407,11 @@ function Logistica() {
       });
 
       await api.put(`${endpoint}/${editingItem.id}`, body);
+      
       setEditModalOpen(false);
       setEditingItem(null);
+      
+      // Refrescar solo el item editado en lugar de todos los datos
       fetchData();
     } catch (error) {
       console.error('Error updating item:', error);
@@ -467,50 +513,52 @@ function Logistica() {
 
       const newCompletedState = !item.completado; // Toggle del estado
 
-      if (newCompletedState) {
-        // Marcar como completado usando el endpoint específico
-        await api.put(`${endpoint}/${item.id}/completado`, { completado: true });
-      } else {
-        // Desmarcar como completado usando el endpoint específico
-        await api.put(`${endpoint}/${item.id}/completado`, { completado: false });
-      }
-
-      // Actualizar el estado local
+      // Optimistic update - actualizar estado local inmediatamente
       setCombinedData(prev => prev.map(row =>
         row.id === item.id && row.tipo === item.tipo
           ? { ...row, completado: newCompletedState }
           : row
       ));
 
-      // Si es un pedido que se está desmarcando como completado,
-      // también desmarcar todas sus entregas
-      if (!newCompletedState && item.tipo === 'Pedido') {
-        try {
-          const entregasResponse = await api.get(`/entregas?pedido_id=${item.id}`);
-          const entregas = entregasResponse.data?.data || [];
+      if (newCompletedState) {
+        // Marcar como completado usando el endpoint específico
+        await api.put(`${endpoint}/${item.id}/completado`, { completado: true });
+      } else {
+        // Desmarcar como completado usando el endpoint específico
+        await api.put(`${endpoint}/${item.id}/completado`, { completado: false });
+        
+        // Si es un pedido que se está desmarcando como completado,
+        // también desmarcar todas sus entregas
+        if (item.tipo === 'Pedido') {
+          try {
+            const entregasResponse = await api.get(`/entregas?pedido_id=${item.id}`);
+            const entregas = entregasResponse.data?.data || [];
 
-          for (const entrega of entregas) {
-            if (entrega.completado) {
-              await api.put(`/entregas/${entrega.id}`, { completado: false });
+            for (const entrega of entregas) {
+              if (entrega.completado) {
+                await api.put(`/entregas/${entrega.id}/completado`, { completado: false });
+              }
             }
-          }
 
-          // Actualizar estado local de las entregas
-          setCombinedData(prev => prev.map(row =>
-            row.tipo === 'Entrega' && row.pedido_id === item.id
-              ? { ...row, completado: false }
-              : row
-          ));
-        } catch (error) {
-          console.error('Error updating entregas:', error);
+            // Actualizar estado local de las entregas
+            setCombinedData(prev => prev.map(row =>
+              row.tipo === 'Entrega' && row.pedido_id === item.id
+                ? { ...row, completado: false }
+                : row
+            ));
+          } catch (error) {
+            console.error('Error updating entregas:', error);
+          }
         }
       }
-
-      fetchData(); // Refrescar datos para asegurar consistencia
     } catch (error) {
       console.error('Error toggling completed state:', error);
-      // Si hay error, refrescar datos
-      fetchData();
+      // Revertir en caso de error
+      setCombinedData(prev => prev.map(row =>
+        row.id === item.id && row.tipo === item.tipo
+          ? { ...row, completado: item.completado }
+          : row
+      ));
     }
   };
 
@@ -526,8 +574,8 @@ function Logistica() {
       'Cantidad': row.cantidad,
       'Fecha Entrega': formatDate(row.fecha_entrega),
       'Ok': row.ok ? 'Sí' : 'No',
-      'Vendedor': Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
-      'Estado': Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado',
+      'Vendedor': vendedoresMap[row.vendedor_id] || 'Sin vendedor',
+      'Estado': estadosMap[row.estado_id] || 'Sin estado',
       'Tipo Tte': row.tipo_transporte,
       'Transporte': row.transporte
     }));
@@ -551,8 +599,8 @@ function Logistica() {
       row.cantidad,
       formatDate(row.fecha_entrega),
       row.ok ? 'Sí' : 'No',
-      Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor',
-      Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado',
+      vendedoresMap[row.vendedor_id] || 'Sin vendedor',
+      estadosMap[row.estado_id] || 'Sin estado',
       row.tipo_transporte,
       row.transporte
     ]);
@@ -812,13 +860,13 @@ function Logistica() {
                       </TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.cliente}</TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>
-                        {row.armador_id ? (Array.isArray(armadores) ? (armadores.find(a => a.id === row.armador_id)?.nombre ? `${armadores.find(a => a.id === row.armador_id)?.nombre}${armadores.find(a => a.id === row.armador_id)?.apellido ? ' ' + armadores.find(a => a.id === row.armador_id)?.apellido : ''}` : row.armador) : row.armador) : (row.armador || '')}
+                        {armadoresMap[row.armador_id] || row.armador || ''}
                       </TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_entrega)}</TableCell>
-                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(vendedores) ? vendedores.find(v => v.id === row.vendedor_id)?.nombre || 'Sin vendedor' : 'Sin vendedor'}</TableCell>
-                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{Array.isArray(estados) ? estados.find(e => e.id === row.estado_id)?.nombre || 'Sin estado' : 'Sin estado'}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{vendedoresMap[row.vendedor_id] || 'Sin vendedor'}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{estadosMap[row.estado_id] || 'Sin estado'}</TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.tipo_transporte}</TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.transporte}</TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit', maxWidth: 180, whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
@@ -862,11 +910,26 @@ function Logistica() {
                               } else {
                                 endpoint = '/devoluciones';
                               }
-                              await api.put(`${endpoint}/${row.id}/ok`, { ok: !row.ok });
-                              // Optimistic update
-                              setCombinedData(prev => prev.map(r => r.id === row.id && r.tipo === row.tipo ? { ...r, ok: !r.ok } : r));
+                              
+                              const newOkState = !row.ok;
+                              
+                              // Optimistic update - actualizar estado local inmediatamente
+                              setCombinedData(prev => prev.map(r => 
+                                r.id === row.id && r.tipo === row.tipo 
+                                  ? { ...r, ok: newOkState } 
+                                  : r
+                              ));
+                              
+                              // Luego sincronizar con el servidor
+                              await api.put(`${endpoint}/${row.id}/ok`, { ok: newOkState });
                             } catch (err) {
                               console.error('Error toggling ok:', err);
+                              // Revertir en caso de error
+                              setCombinedData(prev => prev.map(r => 
+                                r.id === row.id && r.tipo === row.tipo 
+                                  ? { ...r, ok: row.ok } 
+                                  : r
+                              ));
                             }
                           }}
                           color={row.ok ? 'success' : 'default'}
