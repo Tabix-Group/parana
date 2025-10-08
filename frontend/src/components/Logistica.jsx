@@ -204,7 +204,10 @@ function Logistica() {
           fecha_pedido: p.fecha_pedido || p.fecha,
           fecha_entrega: p.fecha_entrega || '',
           tipo_transporte: p.tipo_transporte_nombre || 'No disponible',
+          tipo_transporte_id: p.tipo_transporte_id || null,
           transporte: p.transporte_nombre || 'No disponible',
+          transporte_id: p.transporte_id || null,
+          estado_id: p.estado_id || null,
           completado: p.completado || false,
           notas: p.notas || ''
         })),
@@ -227,7 +230,10 @@ function Logistica() {
           fecha_pedido: d.fecha_pedido || d.fecha,
           fecha_entrega: d.fecha_entrega || '',
           tipo_transporte: d.tipo_transporte_nombre || 'No disponible',
+          tipo_transporte_id: d.tipo_transporte_id || null,
           transporte: d.transporte_nombre || 'No disponible',
+          transporte_id: d.transporte_id || null,
+          estado_id: d.estado_id || null,
           completado: d.completado || false,
           texto: d.texto || ''
         })),
@@ -250,7 +256,10 @@ function Logistica() {
             fecha_pedido: e.fecha_creacion || '',
             fecha_entrega: e.fecha_entrega || '',
             tipo_transporte: e.tipo_transporte_nombre || 'No disponible',
+            tipo_transporte_id: e.tipo_transporte_id || null,
             transporte: e.transporte_nombre || 'No disponible',
+            transporte_id: e.transporte_id || null,
+            estado_id: e.estado_id || null,
             completado: e.completado || false,
             notas: e.notas || '',
             pedido_id: e.pedido_id,
@@ -342,9 +351,20 @@ function Logistica() {
     setEditingItem(item);
     setEditingTransporte(item.transporte_id || '');
     setEditingTipoTransporte(item.tipo_transporte_id || '');
-    setEditingNotas(item.tipo === 'Pedido' ? (item.notas || '') : (item.texto || ''));
+    
+    // Manejar correctamente notas/texto según el tipo
+    if (item.tipo === 'Pedido') {
+      setEditingNotas(item.notas || '');
+    } else if (item.tipo === 'Entrega') {
+      setEditingNotas(item.notas || '');
+    } else if (item.tipo === 'Devolución') {
+      setEditingNotas(item.texto || '');
+    } else {
+      setEditingNotas('');
+    }
+    
     setEditingDireccion(item.direccion || '');
-    setEditingArmador(item.armador_id || item.armador || '');
+    setEditingArmador(item.armador_id || '');
     setEditingEstado(item.estado_id || '');
     setEditingCantidad(typeof item.cantidad !== 'undefined' && item.cantidad !== null ? item.cantidad : '');
     setEditingFechaEntrega(item.fecha_entrega || '');
@@ -366,7 +386,7 @@ function Logistica() {
       const body = {
         transporte_id: editingTransporte || null,
         tipo_transporte_id: editingTipoTransporte || null,
-        direccion: editingDireccion,
+        direccion: editingDireccion || '',
         fecha_entrega: editingFechaEntrega || null
       };
 
@@ -374,7 +394,7 @@ function Logistica() {
         body.notas = typeof editingNotas === 'string' ? editingNotas : '';
       } else if (editingItem.tipo === 'Pedido') {
         body.notas = typeof editingNotas === 'string' ? editingNotas : '';
-      } else {
+      } else if (editingItem.tipo === 'Devolución') {
         body.texto = typeof editingNotas === 'string' ? editingNotas : '';
       }
 
@@ -406,6 +426,8 @@ function Logistica() {
         if (body[key] === undefined) delete body[key];
       });
 
+      console.log('Enviando actualización:', { endpoint, id: editingItem.id, body });
+      
       await api.put(`${endpoint}/${editingItem.id}`, body);
       
       setEditModalOpen(false);
@@ -415,6 +437,8 @@ function Logistica() {
       fetchData();
     } catch (error) {
       console.error('Error updating item:', error);
+      console.error('Error details:', error.response?.data);
+      alert(`Error al actualizar: ${error.response?.data?.message || error.message}`);
     }
   };
 
