@@ -8,10 +8,10 @@ import {
 
 import {
   Logout, ArrowDropDown, ChevronLeft, ChevronRight, AccountCircleRounded,
-  DashboardCustomizeRounded, Inventory2Rounded, PaidRounded,
-  LocalShippingRounded, SettingsRounded, ShoppingBagRounded,
-  AssignmentTurnedInRounded, PeopleAltRounded, ReceiptLongRounded, FactCheckRounded
+  DashboardCustomizeRounded
 } from '@mui/icons-material';
+
+import { FileText, CheckSquare, DollarSign, CheckCircle, Truck, Settings, LayoutDashboard } from 'lucide-react';
 
 import { useAuth } from '../auth.jsx';
 
@@ -19,18 +19,18 @@ const drawerWidth = 240;
 const collapsedWidth = 72;
 
 const transitionStyle = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-const bgActive = '#e0f2fe';
-const textActive = '#0c4a6e';
-const textDefault = '#1e293b';
-const hoverBg = '#f1f5f9';
+const bgActive = '#f1f5f9';
+const textActive = '#0f172a';
+const textDefault = '#64748b';
+const hoverBg = '#e2e8f0';
 
 const menuItems = [
-  { label: 'Pedidos', path: '/pedidos-totales', icon: <ReceiptLongRounded sx={{ color: '#60a5fa' }} /> },
-  { label: 'Parciales', path: '/parciales', icon: <FactCheckRounded sx={{ color: '#34d399' }} /> },
-  { label: 'Movimientos de Cobros y Materiales', path: '/devoluciones', icon: <PaidRounded sx={{ color: '#f87171' }} /> },
-  { label: 'Retiran', path: '/retiran', icon: <AssignmentTurnedInRounded sx={{ color: '#fbbf24' }} /> },
-  { label: 'Logística', path: '/logistica', icon: <LocalShippingRounded sx={{ color: '#a78bfa' }} /> },
-  { label: 'Configuración', path: '/', icon: <SettingsRounded sx={{ color: '#94a3b8' }} /> },
+  { label: 'Pedidos', path: '/pedidos-totales', icon: <FileText size={20} style={{ color: 'inherit' }} /> },
+  { label: 'Parciales', path: '/parciales', icon: <CheckSquare size={20} style={{ color: 'inherit' }} /> },
+  { label: 'Movimientos de Cobros y Materiales', path: '/devoluciones', icon: <DollarSign size={20} style={{ color: 'inherit' }} /> },
+  { label: 'Retiran', path: '/retiran', icon: <CheckCircle size={20} style={{ color: 'inherit' }} /> },
+  { label: 'Logística', path: '/logistica', icon: <Truck size={20} style={{ color: 'inherit' }} /> },
+  { label: 'Configuración', path: '/', icon: <Settings size={20} style={{ color: 'inherit' }} /> },
 ];
 
 const getPageTitle = (pathname) => {
@@ -73,14 +73,14 @@ export default function Layout({ children }) {
             overflowX: 'hidden',
             boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
             borderRight: '1px solid #e2e8f0',
-            background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+            background: '#ffffff',
           },
         }}
       >
         <Toolbar sx={{ minHeight: 72, px: openSidebar ? 2 : 1.5, justifyContent: openSidebar ? 'space-between' : 'center' }}>
           {openSidebar && (
             <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', fontFamily: 'Inter, Segoe UI, Roboto, sans-serif', display: 'flex', alignItems: 'center' }}>
-              <DashboardCustomizeRounded sx={{ mr: 1, color: '#3b82f6' }} /> Panel
+              <LayoutDashboard size={24} style={{ marginRight: 8, color: '#3b82f6' }} /> Panel
             </Typography>
           )}
           <IconButton onClick={toggleDrawer} size="small">
@@ -110,10 +110,9 @@ export default function Layout({ children }) {
                       bgcolor: isActive ? bgActive : 'transparent',
                       transition: transitionStyle,
                       '&:hover': {
-                        bgcolor: 'linear-gradient(90deg, #f1f5f9 0%, #e0f2fe 100%)',
+                        bgcolor: hoverBg,
                         color: textActive,
-                        transform: 'translateX(4px) scale(1.02)',
-                        boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)',
+                        transform: 'translateX(2px)',
                       },
                       '& .MuiListItemIcon-root': {
                         minWidth: 0,
@@ -129,7 +128,7 @@ export default function Layout({ children }) {
                       <ListItemText
                         primary={label}
                         primaryTypographyProps={{
-                          fontSize: 15,
+                          fontSize: 14,
                           fontWeight: isActive ? 600 : 500,
                           sx: { opacity: openSidebar ? 1 : 0, transition: transitionStyle },
                         }}
@@ -148,8 +147,8 @@ export default function Layout({ children }) {
           position="static"
           elevation={0}
           sx={{
-            bgcolor: 'linear-gradient(90deg, #ffffff 0%, #f8fafc 100%)',
-            color: '#1e293b',
+            bgcolor: '#fff',
+            color: '#22336b',
             borderBottom: '1px solid #e0e3e7',
             zIndex: 1201,
           }}
@@ -158,7 +157,7 @@ export default function Layout({ children }) {
             <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
               <Typography
                 variant="h6"
-                sx={{ fontWeight: 700, fontSize: 22, fontFamily: 'Inter, Segoe UI, Roboto, sans-serif', color: '#0f172a', flex: '1 1 0', textAlign: 'left' }}
+                sx={{ fontWeight: 700, fontSize: 18, fontFamily: 'Inter, Segoe UI, Roboto, sans-serif', color: '#0f172a', flex: '1 1 0', textAlign: 'left' }}
               >
                 {getPageTitle(location.pathname)}
               </Typography>
@@ -191,10 +190,10 @@ export default function Layout({ children }) {
                     <AccountCircleRounded sx={{ color: '#fff', fontSize: 24 }} />
                   </Avatar>
                   <Box sx={{ textAlign: 'left', maxWidth: 120, overflow: 'hidden' }}>
-                    <Typography noWrap sx={{ fontSize: 15, fontWeight: 600 }}>
+                    <Typography noWrap sx={{ fontSize: 14, fontWeight: 600 }}>
                       {user.nombre}
                     </Typography>
-                    <Typography noWrap sx={{ fontSize: 13, color: '#2563eb', fontWeight: 500 }}>
+                    <Typography noWrap sx={{ fontSize: 12, color: '#2563eb', fontWeight: 500 }}>
                       {user.rol}
                     </Typography>
                   </Box>
@@ -255,9 +254,9 @@ export default function Layout({ children }) {
             py: 1,
             fontSize: 14,
             fontWeight: 500,
-            color: '#1e293b',
+            color: '#22336b',
             borderTop: '1px solid #e0e3e7',
-            bgcolor: 'linear-gradient(90deg, #f8fafc 0%, #ffffff 100%)',
+            bgcolor: '#f8fafc',
             zIndex: 1201,
           }}
         >

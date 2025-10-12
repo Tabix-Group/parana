@@ -4,41 +4,41 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#3b82f6', // Azul más vibrante
+      main: '#2563eb', // Indigo-600
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#1e293b', // Slate-800 para más contraste
+      main: '#0f172a', // Slate-900
       contrastText: '#ffffff',
     },
     background: {
-      default: '#f8fafc', // Fondo ligeramente más claro
+      default: '#f9fafb', // Gray-50
       paper: '#ffffff',
     },
     text: {
-      primary: '#1e293b',
-      secondary: '#3b82f6',
+      primary: '#0f172a',
+      secondary: '#2563eb',
       disabled: '#94a3b8',
     },
     error: { main: '#ef4444' },
     warning: { main: '#f59e0b' },
-    info: { main: '#06b6d4' }, // Cyan para info
+    info: { main: '#3b82f6' },
     success: { main: '#10b981' },
     divider: '#e2e8f0',
   },
   typography: {
-    fontFamily: "'Poppins', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif",
-    h1: { fontWeight: 700, fontSize: 38, letterSpacing: -0.5 },
-    h2: { fontWeight: 700, fontSize: 32, letterSpacing: -0.3 },
-    h3: { fontWeight: 700, fontSize: 26 },
-    h4: { fontWeight: 700, fontSize: 22 },
-    h5: { fontWeight: 700, fontSize: 20 },
-    h6: { fontWeight: 700, fontSize: 18 },
-    body1: { fontSize: 16, fontWeight: 400 },
-    body2: { fontSize: 15 },
-    subtitle1: { fontSize: 15, fontWeight: 500 },
-    subtitle2: { fontSize: 14, fontWeight: 500 },
-    button: { fontSize: 15, fontWeight: 600, textTransform: 'none' },
+    fontFamily: 'Inter, Segoe UI, Roboto, Arial, sans-serif',
+    h1: { fontWeight: 700, fontSize: 36, letterSpacing: -0.5 },
+    h2: { fontWeight: 700, fontSize: 30, letterSpacing: -0.3 },
+    h3: { fontWeight: 700, fontSize: 24 },
+    h4: { fontWeight: 700, fontSize: 20 },
+    h5: { fontWeight: 700, fontSize: 18 },
+    h6: { fontWeight: 700, fontSize: 16 },
+    body1: { fontSize: 15, fontWeight: 400 },
+    body2: { fontSize: 14 },
+    subtitle1: { fontSize: 14, fontWeight: 500 },
+    subtitle2: { fontSize: 13, fontWeight: 500 },
+    button: { fontSize: 14, fontWeight: 600, textTransform: 'none' },
   },
   shape: {
     borderRadius: 10,
