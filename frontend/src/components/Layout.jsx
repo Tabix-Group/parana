@@ -25,12 +25,12 @@ const textDefault = '#1e293b';
 const hoverBg = '#f1f5f9';
 
 const menuItems = [
-  { label: 'Pedidos', path: '/pedidos-totales', icon: <ReceiptLongRounded sx={{ color: '#a5d8ff' }} /> },
-  { label: 'Parciales', path: '/parciales', icon: <FactCheckRounded sx={{ color: '#b9fbc0' }} /> },
-  { label: 'Movimientos de Cobros y Materiales', path: '/devoluciones', icon: <PaidRounded sx={{ color: '#ffd6e0' }} /> },
-  { label: 'Retiran', path: '/retiran', icon: <AssignmentTurnedInRounded sx={{ color: '#c7f9cc' }} /> },
-  { label: 'Logística', path: '/logistica', icon: <LocalShippingRounded sx={{ color: '#ffe5b4' }} /> },
-  { label: 'Configuración', path: '/', icon: <SettingsRounded sx={{ color: '#dbeafe' }} /> },
+  { label: 'Pedidos', path: '/pedidos-totales', icon: <ReceiptLongRounded sx={{ color: '#60a5fa' }} /> },
+  { label: 'Parciales', path: '/parciales', icon: <FactCheckRounded sx={{ color: '#34d399' }} /> },
+  { label: 'Movimientos de Cobros y Materiales', path: '/devoluciones', icon: <PaidRounded sx={{ color: '#f87171' }} /> },
+  { label: 'Retiran', path: '/retiran', icon: <AssignmentTurnedInRounded sx={{ color: '#fbbf24' }} /> },
+  { label: 'Logística', path: '/logistica', icon: <LocalShippingRounded sx={{ color: '#a78bfa' }} /> },
+  { label: 'Configuración', path: '/', icon: <SettingsRounded sx={{ color: '#94a3b8' }} /> },
 ];
 
 const getPageTitle = (pathname) => {
@@ -73,7 +73,7 @@ export default function Layout({ children }) {
             overflowX: 'hidden',
             boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
             borderRight: '1px solid #e2e8f0',
-            background: '#ffffff',
+            background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
           },
         }}
       >
@@ -110,9 +110,10 @@ export default function Layout({ children }) {
                       bgcolor: isActive ? bgActive : 'transparent',
                       transition: transitionStyle,
                       '&:hover': {
-                        bgcolor: hoverBg,
+                        bgcolor: 'linear-gradient(90deg, #f1f5f9 0%, #e0f2fe 100%)',
                         color: textActive,
-                        transform: 'translateX(2px)',
+                        transform: 'translateX(4px) scale(1.02)',
+                        boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)',
                       },
                       '& .MuiListItemIcon-root': {
                         minWidth: 0,
@@ -147,8 +148,8 @@ export default function Layout({ children }) {
           position="static"
           elevation={0}
           sx={{
-            bgcolor: '#fff',
-            color: '#22336b',
+            bgcolor: 'linear-gradient(90deg, #ffffff 0%, #f8fafc 100%)',
+            color: '#1e293b',
             borderBottom: '1px solid #e0e3e7',
             zIndex: 1201,
           }}
@@ -254,9 +255,9 @@ export default function Layout({ children }) {
             py: 1,
             fontSize: 14,
             fontWeight: 500,
-            color: '#22336b',
+            color: '#1e293b',
             borderTop: '1px solid #e0e3e7',
-            bgcolor: '#f8fafc',
+            bgcolor: 'linear-gradient(90deg, #f8fafc 0%, #ffffff 100%)',
             zIndex: 1201,
           }}
         >

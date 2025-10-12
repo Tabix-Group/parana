@@ -4,30 +4,30 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#2563eb', // Indigo-600
+      main: '#3b82f6', // Azul más vibrante
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#0f172a', // Slate-900
+      main: '#1e293b', // Slate-800 para más contraste
       contrastText: '#ffffff',
     },
     background: {
-      default: '#f9fafb', // Gray-50
+      default: '#f8fafc', // Fondo ligeramente más claro
       paper: '#ffffff',
     },
     text: {
-      primary: '#0f172a',
-      secondary: '#2563eb',
+      primary: '#1e293b',
+      secondary: '#3b82f6',
       disabled: '#94a3b8',
     },
     error: { main: '#ef4444' },
     warning: { main: '#f59e0b' },
-    info: { main: '#3b82f6' },
+    info: { main: '#06b6d4' }, // Cyan para info
     success: { main: '#10b981' },
     divider: '#e2e8f0',
   },
   typography: {
-    fontFamily: 'Inter, Segoe UI, Roboto, Arial, sans-serif',
+    fontFamily: "'Poppins', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif",
     h1: { fontWeight: 700, fontSize: 38, letterSpacing: -0.5 },
     h2: { fontWeight: 700, fontSize: 32, letterSpacing: -0.3 },
     h3: { fontWeight: 700, fontSize: 26 },
