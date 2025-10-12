@@ -123,7 +123,9 @@ export default function Layout({ children }) {
                       },
                     }}
                   >
-                    {icon}
+                    <Box sx={{ mr: openSidebar ? 1.5 : 0, display: 'flex', alignItems: 'center' }}>
+                      {icon}
+                    </Box>
                     {openSidebar && (
                       <ListItemText
                         primary={label}
