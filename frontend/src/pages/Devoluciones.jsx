@@ -66,7 +66,7 @@ export default function Devoluciones() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(100);
   const [editRow, setEditRow] = useState(null);
-  const [form, setForm] = useState({ pedido_id: '', Codigo: '', cliente_id: '', transporte_id: '', tipo: '', recibido: false, fecha: '', texto: '' });
+  const [form, setForm] = useState({ pedido_id: null, Codigo: '', cliente_id: null, transporte_id: null, tipo: '', recibido: false, fecha: '', texto: '', fecha_pedido: '' });
   const [pedidos, setPedidos] = useState([]);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
@@ -159,27 +159,28 @@ export default function Devoluciones() {
     }
   };
   const handleSubmit = async () => {
-    console.log('Form antes de enviar:', form);
+    console.log('Form completo antes de enviar:', form);
+    console.log('pedido_id específicamente:', form.pedido_id, 'tipo:', typeof form.pedido_id);
     
-    // Ajustar para que los campos numéricos opcionales vayan como null si están vacíos
+    // Enviar los datos directamente, el backend se encargará de limpiarlos
     const dataToSend = {
-      ...form,
-      pedido_id: form.pedido_id === '' || form.pedido_id === null || form.pedido_id === undefined ? null : Number(form.pedido_id),
-      Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null,
-      cliente_id: form.cliente_id === '' || form.cliente_id === null ? null : Number(form.cliente_id),
-      transporte_id: form.transporte_id === '' || form.transporte_id === null ? null : Number(form.transporte_id)
+      ...form
     };
     
-    console.log('Datos a enviar:', dataToSend);
-    console.log('pedido_id específicamente:', dataToSend.pedido_id, 'tipo:', typeof dataToSend.pedido_id);
+    console.log('Datos enviando al backend:', dataToSend);
     
-    if (editRow) {
-      await API.put(`/devoluciones/${editRow.id}`, dataToSend);
-    } else {
-      await API.post('/devoluciones', dataToSend);
+    try {
+      if (editRow) {
+        await API.put(`/devoluciones/${editRow.id}`, dataToSend);
+      } else {
+        await API.post('/devoluciones', dataToSend);
+      }
+      setOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error('Error al guardar devolución:', error);
+      alert('Error al guardar: ' + (error.response?.data?.error || error.message));
     }
-    setOpen(false);
-    fetchData();
   };
   const handleDelete = async id => { if (window.confirm('¿Borrar devolución?')) { await API.delete(`/devoluciones/${id}`); fetchData(); } };
 
@@ -349,9 +350,10 @@ export default function Devoluciones() {
                     if (col.id === 'acciones') cellSx = { ...cellSx, minWidth: 70, textAlign: 'center' };
                     if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'center' };
                     if (col.id === 'pedido_id') {
-                      // Buscar el comprobante del pedido
-                      const pedido = pedidos.find(p => p.id === row.pedido_id);
-                      return <TableCell key={col.id} sx={cellSx}>{pedido ? pedido.comprobante : ''}</TableCell>;
+                      // Buscar el comprobante del pedido - comparar con conversión a número para evitar problemas de tipos
+                      const pedido = pedidos.find(p => Number(p.id) === Number(row.pedido_id));
+                      console.log('Buscando pedido:', { row_pedido_id: row.pedido_id, pedido_encontrado: pedido?.comprobante });
+                      return <TableCell key={col.id} sx={cellSx}>{pedido ? pedido.comprobante : (row.pedido_id ? `ID: ${row.pedido_id}` : '')}</TableCell>;
                     }
                     if (col.id === 'Codigo') {
                       return <TableCell key={col.id} sx={cellSx}>{row.Codigo || ''}</TableCell>;
@@ -469,12 +471,14 @@ export default function Devoluciones() {
           <Autocomplete
             options={pedidos}
             getOptionLabel={option => option.comprobante || ''}
-            value={pedidos.find(p => p.id === form.pedido_id) || null}
+            value={pedidos.find(p => Number(p.id) === Number(form.pedido_id)) || null}
             onChange={(_, newValue) => {
               console.log('Pedido seleccionado:', newValue);
+              console.log('ID del pedido:', newValue?.id, 'tipo:', typeof newValue?.id);
               setForm(prev => {
                 const newForm = { ...prev, pedido_id: newValue ? newValue.id : null };
                 console.log('Nuevo form después de seleccionar pedido:', newForm);
+                console.log('pedido_id en form:', newForm.pedido_id, 'tipo:', typeof newForm.pedido_id);
                 return newForm;
               });
             }}
@@ -491,7 +495,7 @@ export default function Devoluciones() {
             renderInput={params => (
               <TextField {...params} label="Pedido (opcional)" variant="outlined" fullWidth />
             )}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
+            isOptionEqualToValue={(option, value) => Number(option.id) === Number(value.id)}
             sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
             filterOptions={(options) => options}
           />

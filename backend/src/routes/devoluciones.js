@@ -26,20 +26,31 @@ router.post('/', async (req, res) => {
   try {
     console.log('Datos recibidos en POST /devoluciones:', req.body);
     
-    // Asegurar que completado esté definido como false por defecto
-    const devolucionData = {
-      ...req.body,
-      completado: req.body.completado !== undefined ? req.body.completado : false
+    // Limpiar y validar campos que deben ser números o null
+    const cleanData = {
+      pedido_id: req.body.pedido_id && req.body.pedido_id !== '' && !isNaN(req.body.pedido_id) ? Number(req.body.pedido_id) : null,
+      Codigo: req.body.Codigo && req.body.Codigo !== '' && !isNaN(req.body.Codigo) ? Number(req.body.Codigo) : null,
+      cliente_id: req.body.cliente_id && req.body.cliente_id !== '' && !isNaN(req.body.cliente_id) ? Number(req.body.cliente_id) : null,
+      transporte_id: req.body.transporte_id && req.body.transporte_id !== '' && !isNaN(req.body.transporte_id) ? Number(req.body.transporte_id) : null,
+      tipo: req.body.tipo || null,
+      recibido: req.body.recibido === true || req.body.recibido === 'true',
+      fecha: req.body.fecha || null,
+      fecha_pedido: req.body.fecha_pedido || null,
+      texto: req.body.texto || null,
+      en_logistica: req.body.en_logistica === true || req.body.en_logistica === 'true',
+      completado: req.body.completado === true || req.body.completado === 'true'
     };
     
-    console.log('Datos a insertar en devoluciones:', devolucionData);
+    console.log('Datos limpiados a insertar en devoluciones:', cleanData);
     
     let id;
     if (db.client.config.client === 'pg') {
-      id = (await db('devoluciones').insert(devolucionData).returning('id'))[0].id;
+      id = (await db('devoluciones').insert(cleanData).returning('id'))[0].id;
     } else {
-      id = await db('devoluciones').insert(devolucionData);
+      id = await db('devoluciones').insert(cleanData);
     }
+    
+    console.log('Devolución creada con ID:', id);
     res.status(200).json({ id });
   } catch (err) {
     console.error('Error POST /devoluciones:', err);
@@ -114,8 +125,32 @@ router.put('/:id/ok', async (req, res) => {
 
 // Editar devolucion
 router.put('/:id', async (req, res) => {
-  await db('devoluciones').where({ id: req.params.id }).update(req.body);
-  res.status(200).json({ success: true });
+  try {
+    console.log('Datos recibidos en PUT /devoluciones/:id', req.body);
+    
+    // Limpiar y validar campos que deben ser números o null
+    const cleanData = {
+      pedido_id: req.body.pedido_id && req.body.pedido_id !== '' && !isNaN(req.body.pedido_id) ? Number(req.body.pedido_id) : null,
+      Codigo: req.body.Codigo && req.body.Codigo !== '' && !isNaN(req.body.Codigo) ? Number(req.body.Codigo) : null,
+      cliente_id: req.body.cliente_id && req.body.cliente_id !== '' && !isNaN(req.body.cliente_id) ? Number(req.body.cliente_id) : null,
+      transporte_id: req.body.transporte_id && req.body.transporte_id !== '' && !isNaN(req.body.transporte_id) ? Number(req.body.transporte_id) : null,
+      tipo: req.body.tipo || null,
+      recibido: req.body.recibido === true || req.body.recibido === 'true',
+      fecha: req.body.fecha || null,
+      fecha_pedido: req.body.fecha_pedido || null,
+      texto: req.body.texto || null,
+      en_logistica: req.body.en_logistica === true || req.body.en_logistica === 'true',
+      completado: req.body.completado === true || req.body.completado === 'true'
+    };
+    
+    console.log('Datos limpiados a actualizar:', cleanData);
+    
+    await db('devoluciones').where({ id: req.params.id }).update(cleanData);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('Error PUT /devoluciones/:id', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Borrar devolucion
