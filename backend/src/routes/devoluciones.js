@@ -88,6 +88,13 @@ router.put('/:id/logistica', async (req, res) => {
   res.json({ success: true });
 });
 
+// Marcar/desmarcar devolución como recibida
+router.put('/:id/recibido', async (req, res) => {
+  const { recibido } = req.body;
+  await db('devoluciones').where({ id: req.params.id }).update({ recibido: !!recibido });
+  res.json({ success: true });
+});
+
 // Marcar devolución como completada
 router.put('/:id/completado', async (req, res) => {
   await db('devoluciones').where({ id: req.params.id }).update({ completado: true });

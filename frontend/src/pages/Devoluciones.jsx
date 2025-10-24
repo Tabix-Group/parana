@@ -92,12 +92,25 @@ export default function Devoluciones() {
   const handleChangeRowsPerPage = e => { setPageSize(+e.target.value); setPage(0); };
   const handleOpen = (row = null) => {
     setEditRow(row);
-    setForm(row ? { ...row } : { pedido_id: '', Codigo: '', cliente_id: '', transporte_id: '', tipo: '', recibido: false, fecha: '', texto: '', en_logistica: false });
+    // Si es una nueva devolución, establecer fecha_pedido con la fecha actual
+    const fechaHoy = new Date().toISOString().split('T')[0];
+    setForm(row ? { ...row } : { 
+      pedido_id: null, 
+      Codigo: '', 
+      cliente_id: null, 
+      transporte_id: null, 
+      tipo: '', 
+      recibido: false, 
+      fecha: '', 
+      fecha_pedido: fechaHoy, // Fecha actual por defecto
+      texto: '', 
+      en_logistica: false 
+    });
     setOpen(true);
   };
   const handleClose = () => setOpen(false);
   const handleChange = e => {
-    const { name, value } = e.target;
+    const { name, value, checked, type } = e.target;
     if (name === 'Codigo') {
       setForm(prev => ({ ...prev, Codigo: value }));
       if (value && value.trim() !== '' && /^[0-9]+$/.test(value)) {
@@ -113,7 +126,7 @@ export default function Devoluciones() {
               }));
               setClientes([cliente]);
             } else {
-              setForm(prev => ({ ...prev, cliente_id: '' }));
+              setForm(prev => ({ ...prev, cliente_id: null }));
             }
           })
           .catch(error => {
@@ -121,7 +134,7 @@ export default function Devoluciones() {
           })
           .finally(() => setClientesLoading(false));
       } else if (value === '') {
-        setForm(prev => ({ ...prev, cliente_id: '' }));
+        setForm(prev => ({ ...prev, cliente_id: null }));
         setClientes([]);
       }
     } else if (name === 'cliente_id') {
@@ -131,6 +144,9 @@ export default function Devoluciones() {
         cliente_id: value,
         Codigo: cliente && cliente.Codigo ? cliente.Codigo : '',
       }));
+    } else if (type === 'checkbox') {
+      // Manejar checkbox
+      setForm(prev => ({ ...prev, [name]: checked }));
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
     }
@@ -139,7 +155,7 @@ export default function Devoluciones() {
     // Ajustar para que los campos numéricos opcionales vayan como null si están vacíos
     const dataToSend = {
       ...form,
-      pedido_id: form.pedido_id === '' ? null : form.pedido_id,
+      pedido_id: form.pedido_id === '' || form.pedido_id === null || form.pedido_id === undefined ? null : form.pedido_id,
       Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null,
       cliente_id: form.cliente_id === '' ? null : form.cliente_id,
       transporte_id: form.transporte_id === '' ? null : form.transporte_id
@@ -161,6 +177,17 @@ export default function Devoluciones() {
       fetchData();
     } catch (error) {
       console.error('Error al cambiar estado de logística:', error);
+      alert('Error al cambiar el estado: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  // Manejar cambio de estado "recibido"
+  const handleRecibidoToggle = async (id, checked) => {
+    try {
+      await API.put(`/devoluciones/${id}/recibido`, { recibido: checked });
+      fetchData();
+    } catch (error) {
+      console.error('Error al cambiar estado de recibido:', error);
       alert('Error al cambiar el estado: ' + (error.response?.data?.message || error.message));
     }
   };
@@ -336,7 +363,21 @@ export default function Devoluciones() {
                       );
                     }
                     if (col.id === 'recibido') {
-                      return <TableCell key={col.id} sx={cellSx}>{row.recibido ? 'Sí' : 'No'}</TableCell>;
+                      return (
+                        <TableCell key={col.id} sx={cellSx}>
+                          <Checkbox
+                            checked={!!row.recibido}
+                            onChange={(e) => handleRecibidoToggle(row.id, e.target.checked)}
+                            size="small"
+                            sx={{ 
+                              color: '#2563eb', 
+                              '&.Mui-checked': { color: '#2563eb' },
+                              '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.04)' }
+                            }}
+                            title={row.recibido ? "Marcar como no recibido" : "Marcar como recibido"}
+                          />
+                        </TableCell>
+                      );
                     }
                     if (col.id === 'fecha_pedido') {
                       return <TableCell key={col.id} sx={cellSx}>{formatDate(row.fecha_pedido)}</TableCell>;
@@ -409,7 +450,7 @@ export default function Devoluciones() {
             getOptionLabel={option => option.comprobante || ''}
             value={pedidos.find(p => p.id === form.pedido_id) || null}
             onChange={(_, newValue) => {
-              setForm({ ...form, pedido_id: newValue ? newValue.id : '' });
+              setForm({ ...form, pedido_id: newValue ? newValue.id : null });
             }}
             renderInput={params => (
               <TextField {...params} label="Pedido (opcional)" variant="outlined" fullWidth />
@@ -422,7 +463,7 @@ export default function Devoluciones() {
             getOptionLabel={option => option.nombre || ''}
             value={clientes.find(c => c.id === form.cliente_id) || null}
             onChange={(_, newValue) => {
-              setForm({ ...form, cliente_id: newValue ? newValue.id : '' });
+              setForm({ ...form, cliente_id: newValue ? newValue.id : null });
             }}
             onInputChange={(_, value) => {
               if (value && value.length > 2) {
@@ -443,7 +484,7 @@ export default function Devoluciones() {
             getOptionLabel={option => option.nombre || ''}
             value={transportes.find(t => t.id === form.transporte_id) || null}
             onChange={(_, newValue) => {
-              setForm({ ...form, transporte_id: newValue ? newValue.id : '' });
+              setForm({ ...form, transporte_id: newValue ? newValue.id : null });
             }}
             renderInput={params => (
               <TextField {...params} label="Transporte (opcional)" variant="outlined" fullWidth />
@@ -460,14 +501,20 @@ export default function Devoluciones() {
               <MenuItem value="retiro_material">Retiro de material</MenuItem>
             </Select>
           </FormControl>
-          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
-            <InputLabel shrink>Recibido</InputLabel>
-            <Select name="recibido" value={form.recibido} onChange={handleChange} label="Recibido">
-              <MenuItem value={true}>Sí</MenuItem>
-              <MenuItem value={false}>No</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField label="Fecha Pedido" name="fecha_pedido" type="date" value={form.fecha_pedido || ''} onChange={handleChange} InputLabelProps={{ shrink: true }} fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
+          <Box sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, px: 2, py: 1.5, display: 'flex', alignItems: 'center' }}>
+            <Checkbox
+              name="recibido"
+              checked={form.recibido || false}
+              onChange={handleChange}
+              sx={{ 
+                color: '#2563eb', 
+                '&.Mui-checked': { color: '#2563eb' }
+              }}
+            />
+            <Typography sx={{ ml: 1, fontSize: 14, color: '#22336b', fontWeight: 500 }}>
+              Recibido
+            </Typography>
+          </Box>
           <TextField label="Fecha Entrega" name="fecha" type="date" value={form.fecha || ''} onChange={handleChange} InputLabelProps={{ shrink: true }} fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
           <TextField label="Observaciones" name="texto" value={form.texto} onChange={handleChange} fullWidth multiline minRows={2} sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, mt: 0, mb: 0 }} />
         </DialogContent>
