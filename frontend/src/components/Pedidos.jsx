@@ -8,6 +8,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import API from '../api';
+import { useAuth } from '../auth.jsx';
 
 // Función para formatear fechas a dd/mm/yy evitando desplazamientos de zona horaria
 const formatDate = (input) => {
@@ -53,6 +54,9 @@ const columns = [
 const pageSizes = [10, 15, 25, 50, 100];
 
 export default function Pedidos() {
+  const { user } = useAuth();
+  const isVentas = user?.rol?.toLowerCase() === 'ventas';
+  
   // Estado para el diálogo de edición/alta
   const [open, setOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
@@ -430,14 +434,16 @@ export default function Pedidos() {
       {/* Acciones principales */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => handleOpen()}
-            sx={{ fontWeight: 700, px: 2.5, py: 1.2, borderRadius: 2, boxShadow: '0 2px 8px 0 rgba(34,51,107,0.10)' }}
-          >
-            Nuevo Pedido
-          </Button>
+          {!isVentas && (
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => handleOpen()}
+              sx={{ fontWeight: 700, px: 2.5, py: 1.2, borderRadius: 2, boxShadow: '0 2px 8px 0 rgba(34,51,107,0.10)' }}
+            >
+              Nuevo Pedido
+            </Button>
+          )}
           <Button
             variant="outlined"
             startIcon={<FileDownload />}
@@ -538,6 +544,10 @@ export default function Pedidos() {
               {columns.map(col => {
                 // Ocultar la columna tipo_bultos
                 if (col.id === 'tipo_bultos') return null;
+                // Ocultar columna de acciones para usuarios Ventas
+                if (isVentas && col.id === 'acciones') return null;
+                // Ocultar columna de logística para usuarios Ventas
+                if (isVentas && col.id === 'en_logistica') return null;
 
                 let cellSx = {
                   cursor: col.id !== 'acciones' ? 'pointer' : 'default',
@@ -590,6 +600,10 @@ export default function Pedidos() {
                 {columns.map(col => {
                   // Ocultar la columna tipo_bultos
                   if (col.id === 'tipo_bultos') return null;
+                  // Ocultar columna de acciones para usuarios Ventas
+                  if (isVentas && col.id === 'acciones') return null;
+                  // Ocultar columna de logística para usuarios Ventas
+                  if (isVentas && col.id === 'en_logistica') return null;
 
                   let cellSx = { fontSize: 10, color: '#22336b', py: 0.4, px: 0.6 };
                   if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'left' };

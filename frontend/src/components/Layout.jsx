@@ -56,6 +56,12 @@ export default function Layout({ children }) {
 
   const drawerWidthCurrent = openSidebar ? drawerWidth : collapsedWidth;
 
+  // Filtrar menú según rol del usuario
+  const isVentas = user?.rol?.toLowerCase() === 'ventas';
+  const filteredMenuItems = isVentas 
+    ? menuItems.filter(item => item.path === '/pedidos-totales')
+    : menuItems;
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f9fafb' }}>
       <CssBaseline />
@@ -89,7 +95,7 @@ export default function Layout({ children }) {
         </Toolbar>
         <Divider />
         <List>
-          {menuItems.map(({ label, path, icon }) => {
+          {filteredMenuItems.map(({ label, path, icon }) => {
             const isActive = location.pathname === path;
             return (
               <ListItem key={path} disablePadding sx={{ display: 'block' }}>

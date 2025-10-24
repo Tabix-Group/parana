@@ -33,18 +33,32 @@ function LoginWrapper() {
 }
 
 function ProtectedLayout() {
+  const { user } = useAuth();
+  const isVentas = user?.rol?.toLowerCase() === 'ventas';
+  
   return (
     <PrivateRoute>
       <Layout>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/pedidos-totales" element={<PedidosTotales />} />
-          <Route path="/parciales" element={<PedidosParciales />} />
-          <Route path="/devoluciones" element={<Devoluciones />} />
-          <Route path="/retiran" element={<RetiranPage />} />
-          <Route path="/reportes" element={<Reportes />} />
-          <Route path="/logistica" element={<LogisticaPage />} />
-          <Route path="*" element={<Navigate to="/" />} />
+          {isVentas ? (
+            // Usuarios con rol Ventas solo pueden acceder a pedidos-totales
+            <>
+              <Route path="/pedidos-totales" element={<PedidosTotales />} />
+              <Route path="*" element={<Navigate to="/pedidos-totales" replace />} />
+            </>
+          ) : (
+            // Usuarios con otros roles tienen acceso completo
+            <>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/pedidos-totales" element={<PedidosTotales />} />
+              <Route path="/parciales" element={<PedidosParciales />} />
+              <Route path="/devoluciones" element={<Devoluciones />} />
+              <Route path="/retiran" element={<RetiranPage />} />
+              <Route path="/reportes" element={<Reportes />} />
+              <Route path="/logistica" element={<LogisticaPage />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </>
+          )}
         </Routes>
       </Layout>
     </PrivateRoute>
