@@ -69,11 +69,11 @@ export default function Devoluciones() {
 
   useEffect(() => { fetchData(); fetchPedidos(); fetchClientes(); fetchTransportes(); }, [page, pageSize, filter]);
   const fetchTransportes = async () => {
-    const res = await API.get('/transportes');
+    const res = await API.get('/transportes', { params: { pageSize: 10000 } });
     setTransportes(res.data.data);
   };
   const fetchClientes = async () => {
-    const res = await API.get('/clientes');
+    const res = await API.get('/clientes', { params: { pageSize: 10000 } });
     setClientes(res.data.data);
   };
 
@@ -85,7 +85,7 @@ export default function Devoluciones() {
     setTotal(Number(res.data.total));
   };
   const fetchPedidos = async () => {
-    const res = await API.get('/pedidos');
+    const res = await API.get('/pedidos', { params: { pageSize: 10000 } });
     setPedidos(res.data.data);
   };
   const handleChangePage = (_, newPage) => setPage(newPage);
@@ -157,9 +157,12 @@ export default function Devoluciones() {
       ...form,
       pedido_id: form.pedido_id === '' || form.pedido_id === null || form.pedido_id === undefined ? null : form.pedido_id,
       Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null,
-      cliente_id: form.cliente_id === '' ? null : form.cliente_id,
-      transporte_id: form.transporte_id === '' ? null : form.transporte_id
+      cliente_id: form.cliente_id === '' || form.cliente_id === null ? null : form.cliente_id,
+      transporte_id: form.transporte_id === '' || form.transporte_id === null ? null : form.transporte_id
     };
+    
+    console.log('Datos a enviar:', dataToSend); // Debug
+    
     if (editRow) {
       await API.put(`/devoluciones/${editRow.id}`, dataToSend);
     } else {
@@ -344,8 +347,16 @@ export default function Devoluciones() {
                       return <TableCell key={col.id} sx={cellSx}>{row.Codigo || ''}</TableCell>;
                     }
                     if (col.id === 'cliente_id') {
-                      // Buscar el nombre del cliente
-                      const cliente = clientes.find(c => c.id === row.cliente_id);
+                      // Buscar el nombre del cliente por Codigo o por cliente_id
+                      let cliente = null;
+                      if (row.Codigo) {
+                        // Buscar por Codigo
+                        cliente = clientes.find(c => c.Codigo === row.Codigo);
+                      }
+                      if (!cliente && row.cliente_id) {
+                        // Si no se encuentra por Codigo, buscar por cliente_id
+                        cliente = clientes.find(c => c.id === row.cliente_id);
+                      }
                       return <TableCell key={col.id} sx={cellSx}>{cliente ? cliente.nombre : ''}</TableCell>;
                     }
                     if (col.id === 'transporte_id') {
@@ -450,27 +461,40 @@ export default function Devoluciones() {
             getOptionLabel={option => option.comprobante || ''}
             value={pedidos.find(p => p.id === form.pedido_id) || null}
             onChange={(_, newValue) => {
-              setForm({ ...form, pedido_id: newValue ? newValue.id : null });
+              setForm(prev => ({ ...prev, pedido_id: newValue ? newValue.id : null }));
+            }}
+            onInputChange={(_, value) => {
+              if (value && value.length > 0) {
+                API.get('/pedidos', { params: { comprobante: value, pageSize: 100 } })
+                  .then(res => setPedidos(res.data.data));
+              } else if (value === '') {
+                // Si el campo está vacío, cargar todos los pedidos
+                API.get('/pedidos', { params: { pageSize: 10000 } })
+                  .then(res => setPedidos(res.data.data));
+              }
             }}
             renderInput={params => (
               <TextField {...params} label="Pedido (opcional)" variant="outlined" fullWidth />
             )}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
+            filterOptions={(options) => options}
           />
           <Autocomplete
             options={clientes}
             getOptionLabel={option => option.nombre || ''}
             value={clientes.find(c => c.id === form.cliente_id) || null}
             onChange={(_, newValue) => {
-              setForm({ ...form, cliente_id: newValue ? newValue.id : null });
+              setForm(prev => ({ ...prev, cliente_id: newValue ? newValue.id : null }));
             }}
             onInputChange={(_, value) => {
-              if (value && value.length > 2) {
-                API.get('/clientes', { params: { nombre: value, pageSize: 20 } })
+              if (value && value.length > 0) {
+                API.get('/clientes', { params: { nombre: value, pageSize: 100 } })
                   .then(res => setClientes(res.data.data));
-              } else {
-                setClientes([]);
+              } else if (value === '') {
+                // Si el campo está vacío, cargar todos los clientes
+                API.get('/clientes', { params: { pageSize: 10000 } })
+                  .then(res => setClientes(res.data.data));
               }
             }}
             renderInput={params => (
@@ -478,19 +502,31 @@ export default function Devoluciones() {
             )}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
+            filterOptions={(options) => options}
           />
           <Autocomplete
             options={transportes}
             getOptionLabel={option => option.nombre || ''}
             value={transportes.find(t => t.id === form.transporte_id) || null}
             onChange={(_, newValue) => {
-              setForm({ ...form, transporte_id: newValue ? newValue.id : null });
+              setForm(prev => ({ ...prev, transporte_id: newValue ? newValue.id : null }));
+            }}
+            onInputChange={(_, value) => {
+              if (value && value.length > 0) {
+                API.get('/transportes', { params: { nombre: value, pageSize: 100 } })
+                  .then(res => setTransportes(res.data.data));
+              } else if (value === '') {
+                // Si el campo está vacío, cargar todos los transportes
+                API.get('/transportes', { params: { pageSize: 10000 } })
+                  .then(res => setTransportes(res.data.data));
+              }
             }}
             renderInput={params => (
               <TextField {...params} label="Transporte (opcional)" variant="outlined" fullWidth />
             )}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
+            filterOptions={(options) => options}
           />
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
             <InputLabel shrink>Tipo</InputLabel>
