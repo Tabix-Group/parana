@@ -22,8 +22,15 @@ const formatDate = (dateString) => {
       return `${day}/${month}/${year.slice(-2)}`;
     }
     
-    // Para otros formatos, usar Date pero evitar zona horaria
-    const date = new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00'));
+    // Si es un timestamp ISO, extraer solo la parte de la fecha
+    if (typeof dateString === 'string' && dateString.includes('T')) {
+      const datePart = dateString.split('T')[0];
+      const [year, month, day] = datePart.split('-');
+      return `${day}/${month}/${year.slice(-2)}`;
+    }
+    
+    // Para otros formatos, intentar parsear pero sin zona horaria
+    const date = new Date(dateString + 'T00:00:00');
     if (isNaN(date.getTime())) return '';
     
     const day = date.getDate().toString().padStart(2, '0');
@@ -152,16 +159,19 @@ export default function Devoluciones() {
     }
   };
   const handleSubmit = async () => {
+    console.log('Form antes de enviar:', form);
+    
     // Ajustar para que los campos numéricos opcionales vayan como null si están vacíos
     const dataToSend = {
       ...form,
-      pedido_id: form.pedido_id === '' || form.pedido_id === null || form.pedido_id === undefined ? null : form.pedido_id,
+      pedido_id: form.pedido_id === '' || form.pedido_id === null || form.pedido_id === undefined ? null : Number(form.pedido_id),
       Codigo: form.Codigo && form.Codigo !== '' ? Number(form.Codigo) : null,
-      cliente_id: form.cliente_id === '' || form.cliente_id === null ? null : form.cliente_id,
-      transporte_id: form.transporte_id === '' || form.transporte_id === null ? null : form.transporte_id
+      cliente_id: form.cliente_id === '' || form.cliente_id === null ? null : Number(form.cliente_id),
+      transporte_id: form.transporte_id === '' || form.transporte_id === null ? null : Number(form.transporte_id)
     };
     
-    console.log('Datos a enviar:', dataToSend); // Debug
+    console.log('Datos a enviar:', dataToSend);
+    console.log('pedido_id específicamente:', dataToSend.pedido_id, 'tipo:', typeof dataToSend.pedido_id);
     
     if (editRow) {
       await API.put(`/devoluciones/${editRow.id}`, dataToSend);
@@ -461,7 +471,12 @@ export default function Devoluciones() {
             getOptionLabel={option => option.comprobante || ''}
             value={pedidos.find(p => p.id === form.pedido_id) || null}
             onChange={(_, newValue) => {
-              setForm(prev => ({ ...prev, pedido_id: newValue ? newValue.id : null }));
+              console.log('Pedido seleccionado:', newValue);
+              setForm(prev => {
+                const newForm = { ...prev, pedido_id: newValue ? newValue.id : null };
+                console.log('Nuevo form después de seleccionar pedido:', newForm);
+                return newForm;
+              });
             }}
             onInputChange={(_, value) => {
               if (value && value.length > 0) {

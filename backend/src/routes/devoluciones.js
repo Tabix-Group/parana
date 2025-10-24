@@ -24,11 +24,15 @@ router.get('/', async (req, res) => {
 // Crear devolucion
 router.post('/', async (req, res) => {
   try {
+    console.log('Datos recibidos en POST /devoluciones:', req.body);
+    
     // Asegurar que completado esté definido como false por defecto
     const devolucionData = {
       ...req.body,
       completado: req.body.completado !== undefined ? req.body.completado : false
     };
+    
+    console.log('Datos a insertar en devoluciones:', devolucionData);
     
     let id;
     if (db.client.config.client === 'pg') {

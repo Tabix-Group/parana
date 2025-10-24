@@ -6,9 +6,9 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', nombre } = req.query;
   let query = db('transportes');
-  if (nombre) query = query.where('nombre', 'like', `%${nombre}%`);
+  if (nombre) query = query.whereRaw('LOWER(nombre) LIKE ?', [`%${nombre.toLowerCase()}%`]);
   const totalResult = await db('transportes').modify(qb => {
-    if (nombre) qb.where('nombre', 'like', `%${nombre}%`);
+    if (nombre) qb.whereRaw('LOWER(nombre) LIKE ?', [`%${nombre.toLowerCase()}%`]);
   }).count({ count: '*' }).first();
   const total = totalResult ? totalResult.count : 0;
   const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
