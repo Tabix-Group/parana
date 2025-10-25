@@ -363,13 +363,13 @@ export default function Pedidos() {
 
   // Función para obtener el color del borde según el estado
   const getBorderColor = (estado) => {
-    if (!estado) return 'transparent';
+    if (!estado) return '#FF0000'; // Rojo para probar si el estilo se aplica
     const estadoLower = estado.toLowerCase();
     if (estadoLower.includes('cancelado')) return '#FFDDAA'; // Naranja pastel
     if (estadoLower.includes('proceso')) return '#FFFFAA'; // Amarillo pastel
     if (estadoLower.includes('parcial')) return '#AAFFFF'; // Celeste pastel
     if (estadoLower.includes('completo') || estadoLower.includes('completado')) return '#AAFFAA'; // Verde pastel
-    return 'transparent';
+    return '#FF0000'; // Rojo para probar
   };
 
   // Exportar a Excel
