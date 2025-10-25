@@ -363,13 +363,13 @@ export default function Pedidos() {
 
   // Función para obtener el color del borde según el estado
   const getBorderColor = (estado) => {
-    switch (estado) {
-      case 'Cancelado': return '#FFB366'; // Naranja pastel
-      case 'En proceso': return '#FFFF99'; // Amarillo pastel
-      case 'Parcial': return '#99FFFF'; // Celeste pastel
-      case 'Completo': return '#99FF99'; // Verde pastel
-      default: return 'transparent';
-    }
+    if (!estado) return 'transparent';
+    const estadoLower = estado.toLowerCase();
+    if (estadoLower.includes('cancelado')) return '#FFDDAA'; // Naranja pastel
+    if (estadoLower.includes('proceso')) return '#FFFFAA'; // Amarillo pastel
+    if (estadoLower.includes('parcial')) return '#AAFFFF'; // Celeste pastel
+    if (estadoLower.includes('completo') || estadoLower.includes('completado')) return '#AAFFAA'; // Verde pastel
+    return 'transparent';
   };
 
   // Exportar a Excel
@@ -606,7 +606,7 @@ export default function Pedidos() {
                   background: idx % 2 === 0 ? '#fff' : '#f8fafc',
                   transition: 'background 0.18s',
                   '&:hover': { background: '#e8f0fe' },
-                  borderLeft: '4px solid ' + getBorderColor(row.estado_nombre)
+                  boxShadow: `inset 4px 0 0 ${getBorderColor(row.estado_nombre)}`
                 }}
               >
                 {columns.map(col => {
