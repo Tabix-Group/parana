@@ -361,6 +361,17 @@ export default function Pedidos() {
   // ...aquí van los hooks y lógica existentes...
   // El único return debe estar al final de la función Pedidos
 
+  // Función para obtener el color del borde según el estado
+  const getBorderColor = (estado) => {
+    switch (estado) {
+      case 'Cancelado': return '#FFB366'; // Naranja pastel
+      case 'En proceso': return '#FFFF99'; // Amarillo pastel
+      case 'Parcial': return '#99FFFF'; // Celeste pastel
+      case 'Completo': return '#99FF99'; // Verde pastel
+      default: return 'transparent';
+    }
+  };
+
   // Exportar a Excel
   const handleExportExcel = () => {
     // Generar datos para exportar
@@ -594,7 +605,8 @@ export default function Pedidos() {
                 sx={{
                   background: idx % 2 === 0 ? '#fff' : '#f8fafc',
                   transition: 'background 0.18s',
-                  '&:hover': { background: '#e8f0fe' }
+                  '&:hover': { background: '#e8f0fe' },
+                  borderLeft: '4px solid ' + getBorderColor(row.estado_nombre)
                 }}
               >
                 {columns.map(col => {
