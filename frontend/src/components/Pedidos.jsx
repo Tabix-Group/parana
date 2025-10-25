@@ -631,8 +631,8 @@ export default function Pedidos() {
                   if (col.id === 'fecha_entrega') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 90, textAlign: 'left' };
                   if (col.id === 'estado_nombre') cellSx = { ...cellSx, minWidth: 55, width: 65, maxWidth: 75, textAlign: 'left' };
                   if (col.id === 'notas') cellSx = { ...cellSx, minWidth: 70, width: 80, maxWidth: 100, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' };
-                  if (col.id === 'acciones') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'center' };
-                  if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, textAlign: 'center' };
+                  if (col.id === 'acciones') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'center', borderRight: '4px solid ' + getBorderColor(row.estado_nombre) };
+                  if (col.id === 'en_logistica') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, textAlign: 'center', borderRight: '4px solid ' + getBorderColor(row.estado_nombre) };
 
                   if (col.id === 'acciones') {
                     return (
