@@ -363,13 +363,13 @@ export default function Pedidos() {
 
   // Función para obtener el color del borde según el estado
   const getBorderColor = (estado) => {
-    if (!estado) return '#FF0000'; // Rojo para probar si el estilo se aplica
+    if (!estado) return 'transparent';
     const estadoLower = estado.toLowerCase();
     if (estadoLower.includes('cancelado')) return '#FFDDAA'; // Naranja pastel
     if (estadoLower.includes('proceso')) return '#FFFFAA'; // Amarillo pastel
     if (estadoLower.includes('parcial')) return '#AAFFFF'; // Celeste pastel
     if (estadoLower.includes('completo') || estadoLower.includes('completado')) return '#AAFFAA'; // Verde pastel
-    return '#FF0000'; // Rojo para probar
+    return 'transparent';
   };
 
   // Exportar a Excel
@@ -605,8 +605,7 @@ export default function Pedidos() {
                 sx={{
                   background: idx % 2 === 0 ? '#fff' : '#f8fafc',
                   transition: 'background 0.18s',
-                  '&:hover': { background: '#e8f0fe' },
-                  boxShadow: `inset 4px 0 0 ${getBorderColor(row.estado_nombre)}`
+                  '&:hover': { background: '#e8f0fe' }
                 }}
               >
                 {columns.map(col => {
@@ -618,7 +617,7 @@ export default function Pedidos() {
                   if (isVentas && col.id === 'en_logistica') return null;
 
                   let cellSx = { fontSize: 10, color: '#22336b', py: 0.4, px: 0.6 };
-                  if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'left' };
+                  if (col.id === 'comprobante') cellSx = { ...cellSx, minWidth: 60, width: 70, maxWidth: 80, textAlign: 'left', borderLeft: '4px solid ' + getBorderColor(row.estado_nombre) };
                   if (col.id === 'Codigo') cellSx = { ...cellSx, minWidth: 50, width: 60, maxWidth: 70, textAlign: 'left' };
                   if (col.id === 'cliente_nombre') cellSx = { ...cellSx, minWidth: 90, width: 100, maxWidth: 120, textAlign: 'left' };
                   if (col.id === 'direccion') cellSx = { ...cellSx, minWidth: 80, width: 90, maxWidth: 100, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' };
