@@ -359,21 +359,34 @@ export default function Devoluciones() {
                       return <TableCell key={col.id} sx={cellSx}>{row.Codigo || ''}</TableCell>;
                     }
                     if (col.id === 'cliente_id') {
-                      // Buscar el nombre del cliente por Codigo o por cliente_id
-                      let cliente = null;
-                      if (row.Codigo) {
-                        // Buscar por Codigo
-                        cliente = clientes.find(c => c.Codigo === row.Codigo);
+                      // Primero intentar usar cliente_nombre del backend, luego buscar en array local
+                      let clienteNombre = row.cliente_nombre || '';
+                      
+                      if (!clienteNombre) {
+                        let cliente = null;
+                        if (row.Codigo) {
+                          // Buscar por Codigo
+                          cliente = clientes.find(c => c.Codigo === row.Codigo);
+                        }
+                        if (!cliente && row.cliente_id) {
+                          // Si no se encuentra por Codigo, buscar por cliente_id
+                          cliente = clientes.find(c => c.id === row.cliente_id);
+                        }
+                        clienteNombre = cliente ? cliente.nombre : '';
                       }
-                      if (!cliente && row.cliente_id) {
-                        // Si no se encuentra por Codigo, buscar por cliente_id
-                        cliente = clientes.find(c => c.id === row.cliente_id);
-                      }
-                      return <TableCell key={col.id} sx={cellSx}>{cliente ? cliente.nombre : ''}</TableCell>;
+                      
+                      return <TableCell key={col.id} sx={cellSx}>{clienteNombre}</TableCell>;
                     }
                     if (col.id === 'transporte_id') {
-                      const transporte = transportes.find(t => t.id === row.transporte_id);
-                      return <TableCell key={col.id} sx={cellSx}>{transporte ? transporte.nombre : ''}</TableCell>;
+                      // Primero intentar usar transporte_nombre del backend, luego buscar en array local
+                      let transporteNombre = row.transporte_nombre || '';
+                      
+                      if (!transporteNombre) {
+                        const transporte = transportes.find(t => t.id === row.transporte_id);
+                        transporteNombre = transporte ? transporte.nombre : '';
+                      }
+                      
+                      return <TableCell key={col.id} sx={cellSx}>{transporteNombre}</TableCell>;
                     }
                     if (col.id === 'acciones') {
                       return (

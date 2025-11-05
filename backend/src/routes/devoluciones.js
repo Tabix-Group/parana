@@ -7,9 +7,28 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', tipo, recibido } = req.query;
   // Para devoluciones, mostrar TODAS (completadas y no completadas)
-  let query = db('devoluciones');
-  if (tipo) query = query.where('tipo', tipo);
-  if (recibido !== undefined) query = query.where('recibido', recibido === 'true');
+  let query = db('devoluciones')
+    .select([
+      'devoluciones.*',
+      'clientes.nombre as cliente_nombre',
+      'clientes.Codigo as cliente_codigo',
+      'clientes.direccion as cliente_direccion',
+      'transportes.nombre as transporte_nombre',
+      'pedidos.comprobante as pedido_comprobante',
+      'devoluciones.fecha_pedido as fecha_pedido',
+      'devoluciones.fecha as fecha_entrega',
+      'armadores.nombre as armador_nombre',
+      'armadores.apellido as armador_apellido',
+      'estados.nombre as estado_nombre'
+    ])
+    .leftJoin('clientes', 'devoluciones.cliente_id', 'clientes.id')
+    .leftJoin('transportes', 'devoluciones.transporte_id', 'transportes.id')
+    .leftJoin('pedidos', 'devoluciones.pedido_id', 'pedidos.id')
+    .leftJoin('armadores', 'pedidos.armador_id', 'armadores.id')
+    .leftJoin('estados', 'pedidos.estado_id', 'estados.id');
+    
+  if (tipo) query = query.where('devoluciones.tipo', tipo);
+  if (recibido !== undefined) query = query.where('devoluciones.recibido', recibido === 'true');
   
   const totalResult = await db('devoluciones').modify(qb => {
     if (tipo) qb.where('tipo', tipo);
@@ -17,7 +36,7 @@ router.get('/', async (req, res) => {
   }).count({ count: '*' }).first();
   
   const total = totalResult ? totalResult.count : 0;
-  const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize).select('*');
+  const data = await query.orderBy('devoluciones.' + sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
   res.json({ data, total });
 });
 
