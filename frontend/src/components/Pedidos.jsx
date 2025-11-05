@@ -3,7 +3,7 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination,
   IconButton, Button, TextField, Select, MenuItem, InputLabel, FormControl, Dialog, DialogTitle, DialogContent, DialogActions, Menu, Box, Autocomplete, Checkbox, Typography
 } from '@mui/material';
-import { Edit, Delete, Add, FileDownload } from '@mui/icons-material';
+import { Edit, Delete, Add, FileDownload, CheckCircle, Schedule } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -670,7 +670,20 @@ export default function Pedidos() {
                   } else {
                     return (
                       <TableCell key={col.id} sx={cellSx}>
-                        {col.id === 'fecha_entrega' || col.id === 'fecha_pedido' ? formatDate(row[col.id]) : row[col.id]}
+                        {col.id === 'comprobante' ? (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            {row.ok ? (
+                              <CheckCircle sx={{ fontSize: 14, color: '#4caf50' }} titleAccess="Entregado" />
+                            ) : (
+                              <Schedule sx={{ fontSize: 14, color: '#ff9800' }} titleAccess="Pendiente" />
+                            )}
+                            <span>{row[col.id]}</span>
+                          </Box>
+                        ) : col.id === 'fecha_entrega' || col.id === 'fecha_pedido' ? (
+                          formatDate(row[col.id])
+                        ) : (
+                          row[col.id]
+                        )}
                       </TableCell>
                     );
                   }
