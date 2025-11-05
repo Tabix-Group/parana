@@ -599,14 +599,22 @@ export default function Pedidos() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((row, idx) => (
+            {data.map((row, idx) => {
+              // Determinar color de borde según estado de entrega
+              const entregaBorderColor = row.ok ? '#4caf50' : '#ff9800'; // Verde si entregado, naranja si pendiente
+              const entregaTooltip = row.ok ? 'Pedido entregado' : 'Pedido pendiente de entrega';
+              
+              return (
               <TableRow
                 key={row.id}
                 sx={{
                   background: idx % 2 === 0 ? '#fff' : '#f8fafc',
                   transition: 'background 0.18s',
-                  '&:hover': { background: '#e8f0fe' }
+                  '&:hover': { background: '#e8f0fe' },
+                  borderRight: `5px solid ${entregaBorderColor}`,
+                  position: 'relative'
                 }}
+                title={entregaTooltip}
               >
                 {columns.map(col => {
                   // Ocultar la columna tipo_bultos
@@ -668,7 +676,8 @@ export default function Pedidos() {
                   }
                 })}
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
