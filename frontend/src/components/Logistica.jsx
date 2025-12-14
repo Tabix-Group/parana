@@ -97,7 +97,7 @@ function Logistica() {
   const [filterArmador, setFilterArmador] = useState('');
   const [filterCompletado, setFilterCompletado] = useState('pendiente');
   const [filterOk, setFilterOk] = useState('no_ok');
-  const [filterFechaEntrega, setFilterFechaEntrega] = useState(new Date().toISOString().split('T')[0]);
+  const [filterFechaEntrega, setFilterFechaEntrega] = useState('');
   const [filterTipoTte, setFilterTipoTte] = useState('');
   const [filterTransporte, setFilterTransporte] = useState('');
   const [editModalOpen, setEditModalOpen] = useState(false);
