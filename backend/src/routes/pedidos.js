@@ -205,7 +205,17 @@ router.get('/logistica', async (req, res) => {
   try {
     const pedidos = await db('pedidos')
       .select([
-        'pedidos.*',
+        'pedidos.id',
+        'pedidos.comprobante',
+        'pedidos.direccion',
+        'pedidos.fecha_entrega',
+        'pedidos.cant_bultos',
+        'pedidos.tipo_bultos',
+        'pedidos.notas',
+        'pedidos.en_logistica',
+        'pedidos.completado',
+        'pedidos.ok',
+        'pedidos.Codigo',
         'clientes.nombre as cliente_nombre',
         'clientes.Codigo as cliente_codigo',
         'clientes.direccion as cliente_direccion',

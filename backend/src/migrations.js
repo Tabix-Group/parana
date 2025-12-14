@@ -115,6 +115,15 @@ export async function createTables(db) {
         t.integer('estado_id').nullable().references('id').inTable('estados').onDelete('SET NULL');
         t.text('notas');
         t.integer('Codigo').nullable().comment('Código del cliente asociado al pedido');
+        t.boolean('en_logistica').defaultTo(false).comment('Si el pedido está enviado a logística');
+        t.boolean('completado').defaultTo(false).comment('Si el pedido está completado/entregado');
+        t.boolean('ok').defaultTo(false).comment('Marca si el pedido fue verificado OK');
+      }).then(() => {
+        // Agregar índices después de crear la tabla
+        return db.schema.table('pedidos', table => {
+          table.index('en_logistica');
+          table.index('fecha_entrega');
+        });
       });
     } else {
       // Si las columnas no existen, agregarlas
@@ -177,6 +186,24 @@ export async function createTables(db) {
           console.log('Error al reiniciar secuencia de pedidos:', err.message);
         }
       }
+    }
+
+    // Agregar índices para optimizar consultas
+    try {
+      // Índice en en_logistica para la consulta de logística
+      await db.schema.table('pedidos', table => {
+        table.index('en_logistica');
+      });
+    } catch (error) {
+      // El índice ya existe, ignorar
+    }
+    try {
+      // Índice en fecha_entrega para ordenamiento
+      await db.schema.table('pedidos', table => {
+        table.index('fecha_entrega');
+      });
+    } catch (error) {
+      // El índice ya existe, ignorar
     }
   });
   // Entregas (entregas parciales de pedidos)
