@@ -333,6 +333,18 @@ function Logistica() {
     return filtered;
   }, [combinedData, debouncedFilterVendedor, debouncedFilterCliente, debouncedFilterComprobante, filterEstado, filterFechaEntrega, debouncedFilterTipoTte, debouncedFilterTransporte, debouncedFilterArmador, filterCompletado, filterOk, vendedores, estados]);
 
+  // Reset page to 0 if current page is out of bounds after filtering
+  useEffect(() => {
+    if (page * rowsPerPage >= filteredData.length && filteredData.length > 0) {
+      setPage(0);
+    }
+  }, [filteredData.length, page, rowsPerPage]);
+
+  // Reset page to 0 when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedFilterVendedor, debouncedFilterCliente, debouncedFilterComprobante, filterEstado, filterFechaEntrega, debouncedFilterTipoTte, debouncedFilterTransporte, debouncedFilterArmador, filterCompletado, filterOk]);
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
