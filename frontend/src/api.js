@@ -22,7 +22,7 @@ function getApiBaseUrl() {
 
 const API = axios.create({
   baseURL: getApiBaseUrl(),
-  timeout: 10000, // 10 segundos timeout
+  timeout: 30000, // 30 segundos timeout
 });
 
 // Interceptor para logging de requests
