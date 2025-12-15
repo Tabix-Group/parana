@@ -97,7 +97,14 @@ function Logistica() {
   const [filterArmador, setFilterArmador] = useState('');
   const [filterCompletado, setFilterCompletado] = useState('pendiente');
   const [filterOk, setFilterOk] = useState('no_ok');
-  const [filterFechaEntrega, setFilterFechaEntrega] = useState('');
+  const [filterFechaEntrega, setFilterFechaEntrega] = useState(() => {
+    // Obtener fecha actual en zona horaria de Argentina (UTC-3)
+    const now = new Date();
+    const argentinaOffset = -3 * 60; // UTC-3 en minutos
+    const localOffset = now.getTimezoneOffset(); // offset local en minutos
+    const argentinaTime = new Date(now.getTime() + (localOffset + argentinaOffset) * 60000);
+    return argentinaTime.toISOString().split('T')[0];
+  });
   const [filterTipoTte, setFilterTipoTte] = useState('');
   const [filterTransporte, setFilterTransporte] = useState('');
   const [editModalOpen, setEditModalOpen] = useState(false);
