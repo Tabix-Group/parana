@@ -83,7 +83,46 @@ export default function Layout({ children }) {
   const [userAnchor, setUserAnchor] = React.useState(null)
   const [openSidebar, setOpenSidebar] = React.useState(true)
 
-  const toggleDrawer = () => setOpenSidebar((prev) => !prev)
+  // Auto-hide configuration: sidebar will auto-close after this timeout (ms)
+  const AUTO_HIDE_MS = 15000 // 15 seconds
+  const autoHideTimerRef = React.useRef(null)
+
+  const clearAutoHide = () => {
+    if (autoHideTimerRef.current) {
+      clearTimeout(autoHideTimerRef.current)
+      autoHideTimerRef.current = null
+    }
+  }
+
+  const startAutoHide = React.useCallback((shouldStart = true) => {
+    clearAutoHide()
+    if (shouldStart && openSidebar) {
+      autoHideTimerRef.current = setTimeout(() => {
+        setOpenSidebar(false)
+      }, AUTO_HIDE_MS)
+    }
+  }, [openSidebar])
+
+  const resetAutoHide = React.useCallback(() => {
+    // reset only if sidebar is open
+    if (openSidebar) startAutoHide(true)
+  }, [openSidebar, startAutoHide])
+
+  // toggle drawer: if opening, start auto-hide timer; if closing, clear it
+  const toggleDrawer = () => {
+    setOpenSidebar((prev) => {
+      const next = !prev
+      if (next) {
+        // opening
+        // start timer after opening
+        setTimeout(() => startAutoHide(true), 50)
+      } else {
+        // closing
+        clearAutoHide()
+      }
+      return next
+    })
+  }
   const handleUserMenu = (e) => setUserAnchor(e.currentTarget)
   const handleCloseUserMenu = () => setUserAnchor(null)
 
@@ -92,6 +131,30 @@ export default function Layout({ children }) {
   // Filtrar menú según rol del usuario
   const isVentas = user?.rol?.toLowerCase() === "ventas"
   const filteredMenuItems = isVentas ? menuItems.filter((item) => item.path === "/pedidos-totales") : menuItems
+
+  // Start auto-hide timer on mount and attach activity listeners
+  React.useEffect(() => {
+    // start initial timer
+    startAutoHide(true)
+
+    const onActivity = () => {
+      // on any user activity reset the auto-hide timer
+      resetAutoHide()
+    }
+
+    window.addEventListener('mousemove', onActivity)
+    window.addEventListener('keydown', onActivity)
+    window.addEventListener('touchstart', onActivity)
+    window.addEventListener('click', onActivity)
+
+    return () => {
+      clearAutoHide()
+      window.removeEventListener('mousemove', onActivity)
+      window.removeEventListener('keydown', onActivity)
+      window.removeEventListener('touchstart', onActivity)
+      window.removeEventListener('click', onActivity)
+    }
+  }, [resetAutoHide, startAutoHide])
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f8fafc" }}>
