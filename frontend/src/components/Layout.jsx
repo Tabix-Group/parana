@@ -84,7 +84,7 @@ export default function Layout({ children }) {
   const [openSidebar, setOpenSidebar] = React.useState(true)
 
   // Auto-hide configuration: sidebar will auto-close after this timeout (ms)
-  const AUTO_HIDE_MS = 15000 // 15 seconds
+  const AUTO_HIDE_MS = 3000 // 3 seconds
   const autoHideTimerRef = React.useRef(null)
 
   const clearAutoHide = () => {
