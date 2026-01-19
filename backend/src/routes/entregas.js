@@ -394,13 +394,16 @@ router.put('/:id/completado', async (req, res) => {
             .where('pedido_id', entrega.pedido_id)
             .select('completado');
 
-        const todasCompletadas = entregasPedido.length > 0 && entregasPedido.every(e => e.completado);
+        const algunaCompletada = entregasPedido.length > 0 && entregasPedido.some(e => e.completado);
 
         // Actualizar el estado del pedido
-        if (todasCompletadas) {
-            await db('pedidos').where({ id: entrega.pedido_id }).update({ completado: true });
+        if (algunaCompletada) {
+            await db('pedidos').where({ id: entrega.pedido_id }).update({ 
+                completado: true,
+                ok: true 
+            });
         } else {
-            // Si no todas están completadas, asegurarse de que el pedido no esté marcado como completado
+            // Si ninguna está completada, el pedido no está completado
             await db('pedidos').where({ id: entrega.pedido_id }).update({ completado: false });
         }
 

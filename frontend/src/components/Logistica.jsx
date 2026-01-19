@@ -557,12 +557,42 @@ function Logistica() {
 
       const newCompletedState = !item.completado; // Toggle del estado
 
-      // Optimistic update - actualizar estado local inmediatamente
-      setCombinedData(prev => prev.map(row =>
-        row.id === item.id && row.tipo === item.tipo
-          ? { ...row, completado: newCompletedState }
-          : row
-      ));
+      // Optimistic update - actualizar estado local inmediatamente y manejar relaciones padre-hijo
+      setCombinedData((prev) => {
+        const newData = prev.map((row) =>
+          row.id === item.id && row.tipo === item.tipo
+            ? { ...row, completado: newCompletedState }
+            : row
+        );
+
+        // Lógica para actualizar el pedido padre cuando cambia una entrega parcial
+        if (item.tipo === 'Entrega') {
+            if (newCompletedState) {
+                // Si se completa una parcial, el padre se completa y se pone OK
+                return newData.map(row => 
+                    row.tipo === 'Pedido' && row.id === item.pedido_id
+                    ? { ...row, completado: true, ok: true }
+                    : row
+                );
+            } else {
+                // Si se descompleta, verificamos si quedan otras completas
+                const hayOtrasCompletas = newData.some(row => 
+                    row.tipo === 'Entrega' && 
+                    row.pedido_id === item.pedido_id && 
+                    row.completado
+                );
+                
+                if (!hayOtrasCompletas) {
+                     return newData.map(row => 
+                        row.tipo === 'Pedido' && row.id === item.pedido_id
+                        ? { ...row, completado: false }
+                        : row
+                    );
+                }
+            }
+        }
+        return newData;
+      });
 
       if (newCompletedState) {
         // Marcar como completado usando el endpoint específico
