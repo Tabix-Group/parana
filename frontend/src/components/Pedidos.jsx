@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination,
-  IconButton, Button, TextField, Select, MenuItem, InputLabel, FormControl, Dialog, DialogTitle, DialogContent, DialogActions, Menu, Box, Autocomplete, Checkbox, Typography
+  IconButton, Button, TextField, Select, MenuItem, InputLabel, FormControl, Dialog, DialogTitle, DialogContent, DialogActions, Menu, Box, Autocomplete, Checkbox, Typography, CircularProgress, Divider
 } from '@mui/material';
 import { Edit, Delete, Add, FileDownload, CheckCircle, Schedule } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
@@ -296,6 +296,32 @@ export default function Pedidos() {
   // Debounced copy of filters to avoid firing API on every keystroke
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
   const [total, setTotal] = useState(0);
+
+  // Estados para detalle de entregas
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [entregasDetail, setEntregasDetail] = useState([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [selectedPedido, setSelectedPedido] = useState(null);
+
+  const handleRowClick = async (row) => {
+    setSelectedPedido(row);
+    setDetailOpen(true);
+    setLoadingDetail(true);
+    try {
+      const res = await API.get(`/entregas/pedido/${row.id}`);
+      setEntregasDetail(res.data);
+    } catch (err) {
+      console.error("Error fetching entregas details", err);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  const handleCloseDetail = () => {
+    setDetailOpen(false);
+    setSelectedPedido(null);
+    setEntregasDetail([]);
+  };
 
   // Debounce filters updates
   useEffect(() => {
@@ -607,10 +633,11 @@ export default function Pedidos() {
               return (
               <TableRow
                 key={row.id}
+                onClick={() => handleRowClick(row)}
                 sx={{
                   background: idx % 2 === 0 ? '#fff' : '#f8fafc',
                   transition: 'background 0.18s',
-                  '&:hover': { background: '#e8f0fe' },
+                  '&:hover': { background: '#e8f0fe', cursor: 'pointer' },
                   borderRight: `5px solid ${entregaBorderColor}`,
                   position: 'relative'
                 }}
@@ -646,8 +673,8 @@ export default function Pedidos() {
                     return (
                       <TableCell key={col.id} sx={cellSx}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0.3 }}>
-                          <IconButton onClick={() => handleOpen(row)} sx={{ color: '#2563eb', '&:hover': { bgcolor: '#e8f0fe' }, p: 0.4 }} size="small"><Edit fontSize="small" /></IconButton>
-                          <IconButton onClick={() => handleDelete(row.id)} sx={{ color: '#e53935', '&:hover': { bgcolor: '#fdeaea' }, p: 0.4 }} size="small"><Delete fontSize="small" /></IconButton>
+                          <IconButton onClick={(e) => { e.stopPropagation(); handleOpen(row); }} sx={{ color: '#2563eb', '&:hover': { bgcolor: '#e8f0fe' }, p: 0.4 }} size="small"><Edit fontSize="small" /></IconButton>
+                          <IconButton onClick={(e) => { e.stopPropagation(); handleDelete(row.id); }} sx={{ color: '#e53935', '&:hover': { bgcolor: '#fdeaea' }, p: 0.4 }} size="small"><Delete fontSize="small" /></IconButton>
                         </Box>
                       </TableCell>
                     );
@@ -656,6 +683,7 @@ export default function Pedidos() {
                       <TableCell key={col.id} sx={cellSx}>
                         <Checkbox
                           checked={row.en_logistica || false}
+                          onClick={(e) => e.stopPropagation()}
                           onChange={(e) => handleLogisticaToggle(row.id, e.target.checked)}
                           size="small"
                           sx={{
@@ -859,6 +887,74 @@ export default function Pedidos() {
           <Button onClick={handleClose} variant="outlined" color="secondary" sx={{ minWidth: 120, fontWeight: 600 }}>Cancelar</Button>
           <Button onClick={handleSubmit} variant="contained" color="primary" sx={{ minWidth: 120, fontWeight: 600, ml: 2 }}>Guardar</Button>
         </DialogActions>
+      </Dialog>
+
+      {/* Dialog for details */}
+      <Dialog open={detailOpen} onClose={handleCloseDetail} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" fontWeight={700}>
+                Detalle de Entregas - Pedido {selectedPedido?.comprobante}
+            </Typography>
+            <Button onClick={handleCloseDetail} color="secondary" size="small">Cerrar</Button>
+        </DialogTitle>
+        <DialogContent dividers>
+            {selectedPedido && (
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle1" fontWeight={600} color="primary">Información del Pedido</Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 1 }}>
+                        <Typography variant="body2"><strong>Cliente:</strong> {selectedPedido.cliente_nombre}</Typography>
+                        <Typography variant="body2"><strong>Fecha Pedido:</strong> {formatDate(selectedPedido.fecha_pedido)}</Typography>
+                        <Typography variant="body2"><strong>Dirección:</strong> {selectedPedido.direccion}</Typography>
+                        <Typography variant="body2"><strong>Estado:</strong> {selectedPedido.estado_nombre}</Typography>
+                         <Typography variant="body2"><strong>Total Bultos Pedido:</strong> {selectedPedido.cant_bultos}</Typography>
+                         <Typography variant="body2"><strong>Notas:</strong> {selectedPedido.notas}</Typography>
+                    </Box>
+                </Box>
+            )}
+            
+            <Divider sx={{ mb: 2 }} />
+
+            <Typography variant="subtitle1" fontWeight={600} color="primary" sx={{ mb: 1 }}>Historial de Entregas</Typography>
+            
+            {loadingDetail ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                    <CircularProgress />
+                </Box>
+            ) : entregasDetail.length > 0 ? (
+                <TableContainer component={Paper} variant="outlined">
+                    <Table size="small">
+                        <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+                            <TableRow>
+                                <TableCell><strong>Fecha Entrega</strong></TableCell>
+                                <TableCell align="center"><strong>Cant. Bultos</strong></TableCell>
+                                <TableCell><strong>Transporte</strong></TableCell>
+                                <TableCell><strong>Armador</strong></TableCell>
+                                <TableCell><strong>Estado</strong></TableCell>
+                                <TableCell><strong>Completado</strong></TableCell>
+                                <TableCell><strong>Notas Entrega</strong></TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {entregasDetail.map((entrega) => (
+                                <TableRow key={entrega.id}>
+                                    <TableCell>{formatDate(entrega.fecha_entrega)}</TableCell>
+                                    <TableCell align="center">{entrega.cant_bultos}</TableCell>
+                                    <TableCell>{entrega.transporte_nombre || '-'}</TableCell>
+                                    <TableCell>{entrega.armador_nombre} {entrega.armador_apellido}</TableCell>
+                                    <TableCell>{entrega.estado_nombre}</TableCell>
+                                    <TableCell>{entrega.completado ? 'Sí' : 'No'}</TableCell>
+                                     <TableCell>{entrega.notas}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            ) : (
+                <Typography color="text.secondary" align="center" sx={{ py: 3 }}>
+                    No hay entregas registradas para este pedido.
+                </Typography>
+            )}
+        </DialogContent>
       </Dialog>
     </>
   );
