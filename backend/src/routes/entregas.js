@@ -398,10 +398,22 @@ router.put('/:id/completado', async (req, res) => {
 
         // Actualizar el estado del pedido
         if (algunaCompletada) {
-            await db('pedidos').where({ id: entrega.pedido_id }).update({ 
+            // Buscar el id del estado 'Completo'
+            const estadoCompleto = await db('estados')
+                .where('nombre', 'Completo')
+                .orWhere('nombre', 'Completado')
+                .first();
+
+            const updateData = { 
                 completado: true,
                 ok: true 
-            });
+            };
+
+            if (estadoCompleto) {
+                updateData.estado_id = estadoCompleto.id;
+            }
+
+            await db('pedidos').where({ id: entrega.pedido_id }).update(updateData);
         } else {
             // Si ninguna está completada, el pedido no está completado
             await db('pedidos').where({ id: entrega.pedido_id }).update({ completado: false });
