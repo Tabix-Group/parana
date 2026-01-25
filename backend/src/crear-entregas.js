@@ -79,6 +79,9 @@ export async function crearTablaEntregas(db) {
                             case 'completado':
                                 table.boolean('completado').defaultTo(false);
                                 break;
+                            case 'fecha_completado':
+                                table.date('fecha_completado').nullable();
+                                break;
                             case 'ok':
                                 table.boolean('ok').defaultTo(false);
                                 break;

@@ -230,6 +230,7 @@ export async function createTables(db) {
         t.date('fecha_entrega');
         t.text('notas');
         t.boolean('completado').defaultTo(false).comment('Si la entrega parcial está completada');
+        t.date('fecha_completado').nullable().comment('Fecha en que se marcó como completado');
         t.boolean('ok').defaultTo(false).comment('Marca si la entrega fue verificada OK');
         t.timestamp('fecha_creacion').defaultTo(db.fn.now());
         t.integer('numero_entrega').comment('Número secuencial de la entrega dentro del pedido');
@@ -246,6 +247,7 @@ export async function createTables(db) {
         { name: 'fecha_entrega', type: 'date' },
         { name: 'notas', type: 'text' },
         { name: 'completado', type: 'boolean', defaultValue: false },
+        { name: 'fecha_completado', type: 'date' },
         { name: 'ok', type: 'boolean', defaultValue: false },
         { name: 'numero_entrega', type: 'integer' }
       ];
