@@ -232,7 +232,7 @@ function Logistica() {
           subtipo: 'Original',
           nro_comprobante: d.comprobante || 'Sin comprobante',
           cliente: d.cliente_nombre || 'No disponible',
-          direccion: d.direccion || 'Sin dirección',
+          direccion: d.direccion || d.cliente_direccion || 'Sin dirección',
           cantidad: d.cant_bultos || 0,
           armador: ((d.armador_nombre || '') + (d.armador_apellido ? ` ${d.armador_apellido}` : '')).trim() || (d.armador || ''),
           armador_id: d.armador_id || d.armador || null,

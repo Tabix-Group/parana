@@ -295,6 +295,9 @@ export async function createTables(db) {
         t.boolean('recibido');
         t.date('fecha');
         t.text('texto'); // Observaciones
+        t.string('comprobante', 255);
+        t.string('direccion', 255);
+        t.integer('tipo_transporte_id').nullable().references('id').inTable('tipos_transporte').onDelete('SET NULL');
         t.integer('Codigo').nullable().comment('Código del cliente asociado a la devolución');
       });
     } else {
@@ -325,6 +328,27 @@ export async function createTables(db) {
           if (!hasCol) {
             return db.schema.table('devoluciones', t => {
               t.integer('Codigo').nullable().comment('Código del cliente asociado a la devolución');
+            });
+          }
+        }),
+        db.schema.hasColumn('devoluciones', 'comprobante').then(hasCol => {
+          if (!hasCol) {
+            return db.schema.table('devoluciones', t => {
+              t.string('comprobante', 255);
+            });
+          }
+        }),
+        db.schema.hasColumn('devoluciones', 'direccion').then(hasCol => {
+          if (!hasCol) {
+            return db.schema.table('devoluciones', t => {
+              t.string('direccion', 255);
+            });
+          }
+        }),
+        db.schema.hasColumn('devoluciones', 'tipo_transporte_id').then(hasCol => {
+          if (!hasCol) {
+            return db.schema.table('devoluciones', t => {
+              t.integer('tipo_transporte_id').nullable().references('id').inTable('tipos_transporte').onDelete('SET NULL');
             });
           }
         }),

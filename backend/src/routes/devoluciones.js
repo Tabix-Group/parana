@@ -12,20 +12,22 @@ router.get('/', async (req, res) => {
       'devoluciones.*',
       'clientes.nombre as cliente_nombre',
       'clientes.Codigo as cliente_codigo',
-      'clientes.direccion as cliente_direccion',
+      'clientes.direccion as cliente_direccion_default',
       'transportes.nombre as transporte_nombre',
       'pedidos.comprobante as pedido_comprobante',
       'devoluciones.fecha_pedido as fecha_pedido',
       'devoluciones.fecha as fecha_entrega',
       'armadores.nombre as armador_nombre',
       'armadores.apellido as armador_apellido',
-      'estados.nombre as estado_nombre'
+      'estados.nombre as estado_nombre',
+      'tipos_transporte.nombre as tipo_transporte_nombre'
     ])
     .leftJoin('clientes', 'devoluciones.cliente_id', 'clientes.id')
     .leftJoin('transportes', 'devoluciones.transporte_id', 'transportes.id')
     .leftJoin('pedidos', 'devoluciones.pedido_id', 'pedidos.id')
     .leftJoin('armadores', 'pedidos.armador_id', 'armadores.id')
-    .leftJoin('estados', 'pedidos.estado_id', 'estados.id');
+    .leftJoin('estados', 'pedidos.estado_id', 'estados.id')
+    .leftJoin('tipos_transporte', 'devoluciones.tipo_transporte_id', 'tipos_transporte.id');
     
   if (tipo) query = query.where('devoluciones.tipo', tipo);
   if (recibido !== undefined) query = query.where('devoluciones.recibido', recibido === 'true');
@@ -51,6 +53,9 @@ router.post('/', async (req, res) => {
       Codigo: req.body.Codigo && req.body.Codigo !== '' && !isNaN(req.body.Codigo) ? Number(req.body.Codigo) : null,
       cliente_id: req.body.cliente_id && req.body.cliente_id !== '' && !isNaN(req.body.cliente_id) ? Number(req.body.cliente_id) : null,
       transporte_id: req.body.transporte_id && req.body.transporte_id !== '' && !isNaN(req.body.transporte_id) ? Number(req.body.transporte_id) : null,
+      tipo_transporte_id: req.body.tipo_transporte_id && req.body.tipo_transporte_id !== '' && !isNaN(req.body.tipo_transporte_id) ? Number(req.body.tipo_transporte_id) : null,
+      comprobante: req.body.comprobante || null,
+      direccion: req.body.direccion || null,
       tipo: req.body.tipo || null,
       recibido: req.body.recibido === true || req.body.recibido === 'true',
       fecha: req.body.fecha || null,
@@ -85,20 +90,22 @@ router.get('/logistica', async (req, res) => {
         'devoluciones.*',
         'clientes.nombre as cliente_nombre',
         'clientes.Codigo as cliente_codigo',
-        'clientes.direccion as cliente_direccion',
+        'clientes.direccion as cliente_direccion_default',
         'transportes.nombre as transporte_nombre',
         'pedidos.comprobante as pedido_comprobante',
         'devoluciones.fecha_pedido as fecha_pedido',
         'devoluciones.fecha as fecha_entrega',
         'armadores.nombre as armador_nombre',
         'armadores.apellido as armador_apellido',
-        'estados.nombre as estado_nombre'
+        'estados.nombre as estado_nombre',
+        'tipos_transporte.nombre as tipo_transporte_nombre'
       ])
       .leftJoin('clientes', 'devoluciones.cliente_id', 'clientes.id')
       .leftJoin('transportes', 'devoluciones.transporte_id', 'transportes.id')
       .leftJoin('pedidos', 'devoluciones.pedido_id', 'pedidos.id')
       .leftJoin('armadores', 'pedidos.armador_id', 'armadores.id')
       .leftJoin('estados', 'pedidos.estado_id', 'estados.id')
+      .leftJoin('tipos_transporte', 'devoluciones.tipo_transporte_id', 'tipos_transporte.id')
       .where('devoluciones.en_logistica', true)
       .orderBy('devoluciones.fecha', 'asc');
 
@@ -163,6 +170,9 @@ router.put('/:id', async (req, res) => {
       Codigo: req.body.Codigo && req.body.Codigo !== '' && !isNaN(req.body.Codigo) ? Number(req.body.Codigo) : null,
       cliente_id: req.body.cliente_id && req.body.cliente_id !== '' && !isNaN(req.body.cliente_id) ? Number(req.body.cliente_id) : null,
       transporte_id: req.body.transporte_id && req.body.transporte_id !== '' && !isNaN(req.body.transporte_id) ? Number(req.body.transporte_id) : null,
+      tipo_transporte_id: req.body.tipo_transporte_id && req.body.tipo_transporte_id !== '' && !isNaN(req.body.tipo_transporte_id) ? Number(req.body.tipo_transporte_id) : null,
+      comprobante: req.body.comprobante || null,
+      direccion: req.body.direccion || null,
       tipo: req.body.tipo || null,
       recibido: req.body.recibido === true || req.body.recibido === 'true',
       fecha: req.body.fecha || null,

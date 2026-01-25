@@ -45,15 +45,18 @@ const formatDate = (dateString) => {
 };
 
 const columns = [
+  { id: 'comprobante', label: 'Comprobante' },
   { id: 'pedido_id', label: 'Pedido' },
   { id: 'Codigo', label: 'Código' },
   { id: 'cliente_id', label: 'Cliente' },
+  { id: 'direccion', label: 'Dirección' },
   { id: 'transporte_id', label: 'Transporte' },
+  { id: 'tipo_transporte_id', label: 'Tipo Tte' },
   { id: 'tipo', label: 'Tipo' },
   { id: 'recibido', label: 'Recibido' },
   { id: 'fecha_pedido', label: 'Fecha Pedido' },
   { id: 'fecha', label: 'Fecha Entrega' },
-  { id: 'texto', label: 'Observaciones', sx: { minWidth: 540, width: 600, maxWidth: 900 } },
+  { id: 'texto', label: 'Observaciones', sx: { minWidth: 340, width: 400, maxWidth: 600 } },
   { id: 'acciones', label: 'Acciones' },
   { id: 'en_logistica', label: 'En Logística' }
 ];
@@ -72,12 +75,17 @@ export default function Devoluciones() {
   const [filter, setFilter] = useState('');
   const [clientes, setClientes] = useState([]);
   const [transportes, setTransportes] = useState([]);
+  const [tiposTransporte, setTiposTransporte] = useState([]);
   const [clientesLoading, setClientesLoading] = useState(false);
 
-  useEffect(() => { fetchData(); fetchPedidos(); fetchClientes(); fetchTransportes(); }, [page, pageSize, filter]);
+  useEffect(() => { fetchData(); fetchPedidos(); fetchClientes(); fetchTransportes(); fetchTiposTransporte(); }, [page, pageSize, filter]);
   const fetchTransportes = async () => {
     const res = await API.get('/transportes', { params: { pageSize: 10000 } });
     setTransportes(res.data.data);
+  };
+  const fetchTiposTransporte = async () => {
+    const res = await API.get('/tiposTransporte', { params: { pageSize: 10000 } });
+    setTiposTransporte(res.data.data || []);
   };
   const fetchClientes = async () => {
     const res = await API.get('/clientes', { params: { pageSize: 10000 } });
@@ -106,6 +114,9 @@ export default function Devoluciones() {
       Codigo: '', 
       cliente_id: null, 
       transporte_id: null, 
+      tipo_transporte_id: null,
+      comprobante: '',
+      direccion: '',
       tipo: '', 
       recibido: false, 
       fecha: '', 
@@ -150,6 +161,7 @@ export default function Devoluciones() {
         ...prev,
         cliente_id: value,
         Codigo: cliente && cliente.Codigo ? cliente.Codigo : '',
+        direccion: cliente && cliente.direccion ? cliente.direccion : prev.direccion,
       }));
     } else if (type === 'checkbox') {
       // Manejar checkbox
@@ -421,6 +433,10 @@ export default function Devoluciones() {
                     if (col.id === 'fecha') {
                       return <TableCell key={col.id} sx={cellSx}>{formatDate(row.fecha)}</TableCell>;
                     }
+                    if (col.id === 'tipo_transporte_id') {
+                      const tipo = tiposTransporte.find(t => String(t.id) === String(row.tipo_transporte_id));
+                      return <TableCell key={col.id} sx={cellSx}>{tipo ? tipo.nombre : '-'}</TableCell>;
+                    }
                     if (col.id === 'en_logistica') {
                       return (
                         <TableCell key={col.id} sx={cellSx}>
@@ -480,6 +496,15 @@ export default function Devoluciones() {
             InputLabelProps={{ shrink: true }} 
             sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
             helperText={clientesLoading ? "Buscando cliente..." : (form.cliente_id ? `Cliente seleccionado` : "")}
+          />
+          <TextField 
+            label="Comprobante (opcional)" 
+            name="comprobante" 
+            value={form.comprobante || ''} 
+            onChange={handleChange} 
+            fullWidth 
+            InputLabelProps={{ shrink: true }} 
+            sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
           />
           <Autocomplete
             options={pedidos}
@@ -559,6 +584,29 @@ export default function Devoluciones() {
             isOptionEqualToValue={(option, value) => option.id === value.id}
             sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
             filterOptions={(options) => options}
+          />
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, gridColumn: { md: 'span 2' } }}>
+            <InputLabel shrink>Tipo de Transporte</InputLabel>
+            <Select 
+              name="tipo_transporte_id" 
+              value={form.tipo_transporte_id || ''} 
+              onChange={handleChange} 
+              label="Tipo de Transporte"
+            >
+              <MenuItem value=""><em>Ninguno</em></MenuItem>
+              {tiposTransporte.map(t => (
+                <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField 
+            label="Dirección (opcional)" 
+            name="direccion" 
+            value={form.direccion || ''} 
+            onChange={handleChange} 
+            fullWidth 
+            InputLabelProps={{ shrink: true }} 
+            sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, gridColumn: { md: 'span 2' } }} 
           />
           <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
             <InputLabel shrink>Tipo</InputLabel>
