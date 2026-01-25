@@ -924,12 +924,13 @@ export default function Pedidos() {
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                     <CircularProgress />
                 </Box>
-            ) : entregasDetail.length > 0 ? (
+            ) : (entregasDetail.length > 0 || selectedPedido?.completado) ? (
                 <TableContainer component={Paper} variant="outlined">
                     <Table size="small">
                         <TableHead sx={{ bgcolor: '#f5f5f5' }}>
                             <TableRow>
-                                <TableCell><strong>Fecha Entrega</strong></TableCell>
+                                <TableCell><strong>F. Pactada</strong></TableCell>
+                                <TableCell><strong>F. Real</strong></TableCell>
                                 <TableCell align="center"><strong>Cant. Bultos</strong></TableCell>
                                 <TableCell><strong>Transporte</strong></TableCell>
                                 <TableCell><strong>Armador</strong></TableCell>
@@ -939,9 +940,23 @@ export default function Pedidos() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
+                            {/* Si el pedido está completado y no tiene entregas o queremos mostrar el final */}
+                            {selectedPedido?.completado && (
+                                <TableRow sx={{ bgcolor: 'rgba(76, 175, 80, 0.08)' }}>
+                                    <TableCell>{formatDate(selectedPedido.fecha_entrega)}</TableCell>
+                                    <TableCell>{formatDate(selectedPedido.fecha_completado) || '-'}</TableCell>
+                                    <TableCell align="center">{selectedPedido.cant_bultos}</TableCell>
+                                    <TableCell>{selectedPedido.transporte_nombre || '-'}</TableCell>
+                                    <TableCell>{selectedPedido.armador_nombre} {selectedPedido.armador_apellido || ''}</TableCell>
+                                    <TableCell>Finalizado</TableCell>
+                                    <TableCell>Sí</TableCell>
+                                    <TableCell>Entrega Total / Final</TableCell>
+                                </TableRow>
+                            )}
                             {entregasDetail.map((entrega) => (
                                 <TableRow key={entrega.id}>
-                                    <TableCell>{formatDate(entrega.fecha_completado || entrega.fecha_entrega)}</TableCell>
+                                    <TableCell>{formatDate(entrega.fecha_entrega)}</TableCell>
+                                    <TableCell>{formatDate(entrega.fecha_completado) || '-'}</TableCell>
                                     <TableCell align="center">{entrega.cant_bultos}</TableCell>
                                     <TableCell>{entrega.transporte_nombre || '-'}</TableCell>
                                     <TableCell>{entrega.armador_nombre} {entrega.armador_apellido}</TableCell>
