@@ -707,8 +707,10 @@ export default function Pedidos() {
                             )}
                             <span>{row[col.id]}</span>
                           </Box>
-                        ) : col.id === 'fecha_entrega' || col.id === 'fecha_pedido' ? (
-                          formatDate(row[col.id])
+                        ) : col.id === 'fecha_entrega' ? (
+                          formatDate(row.fecha_completado || row.fecha_entrega)
+                        ) : col.id === 'fecha_pedido' ? (
+                          formatDate(row.fecha_pedido)
                         ) : (
                           row[col.id]
                         )}
@@ -906,8 +908,9 @@ export default function Pedidos() {
                         <Typography variant="body2"><strong>Fecha Pedido:</strong> {formatDate(selectedPedido.fecha_pedido)}</Typography>
                         <Typography variant="body2"><strong>Dirección:</strong> {selectedPedido.direccion}</Typography>
                         <Typography variant="body2"><strong>Estado:</strong> {selectedPedido.estado_nombre}</Typography>
-                         <Typography variant="body2"><strong>Total Bultos Pedido:</strong> {selectedPedido.cant_bultos}</Typography>
-                         <Typography variant="body2"><strong>Notas:</strong> {selectedPedido.notas}</Typography>
+                        <Typography variant="body2"><strong>Fecha Entrega:</strong> {formatDate(selectedPedido.fecha_completado) || '-'}</Typography>
+                        <Typography variant="body2"><strong>Total Bultos Pedido:</strong> {selectedPedido.cant_bultos}</Typography>
+                        <Typography variant="body2"><strong>Notas:</strong> {selectedPedido.notas}</Typography>
                     </Box>
                 </Box>
             )}
@@ -937,7 +940,7 @@ export default function Pedidos() {
                         <TableBody>
                             {entregasDetail.map((entrega) => (
                                 <TableRow key={entrega.id}>
-                                    <TableCell>{formatDate(entrega.fecha_entrega)}</TableCell>
+                                    <TableCell>{formatDate(entrega.fecha_completado || entrega.fecha_entrega)}</TableCell>
                                     <TableCell align="center">{entrega.cant_bultos}</TableCell>
                                     <TableCell>{entrega.transporte_nombre || '-'}</TableCell>
                                     <TableCell>{entrega.armador_nombre} {entrega.armador_apellido}</TableCell>

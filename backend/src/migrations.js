@@ -117,6 +117,7 @@ export async function createTables(db) {
         t.integer('Codigo').nullable().comment('Código del cliente asociado al pedido');
         t.boolean('en_logistica').defaultTo(false).comment('Si el pedido está enviado a logística');
         t.boolean('completado').defaultTo(false).comment('Si el pedido está completado/entregado');
+        t.date('fecha_completado').nullable().comment('Fecha en que se marcó como completado');
         t.boolean('ok').defaultTo(false).comment('Marca si el pedido fue verificado OK');
       }).then(() => {
         // Agregar índices después de crear la tabla
@@ -166,6 +167,14 @@ export async function createTables(db) {
           t.boolean('completado').defaultTo(false).comment('Si el pedido está completado/entregado');
         });
       }
+
+      const hasFechaCompletado = await db.schema.hasColumn('pedidos', 'fecha_completado');
+      if (!hasFechaCompletado) {
+        await db.schema.table('pedidos', t => {
+          t.date('fecha_completado').nullable().comment('Fecha en que se marcó como completado');
+        });
+      }
+
       // Agregar columna 'ok' para marcar pedidos OK/No OK
       const hasOk = await db.schema.hasColumn('pedidos', 'ok');
       if (!hasOk) {
@@ -328,6 +337,13 @@ export async function createTables(db) {
           if (!hasCol) {
             return db.schema.table('devoluciones', t => {
               t.boolean('completado').defaultTo(false).comment('Si la devolución está completada');
+            });
+          }
+        }),
+        db.schema.hasColumn('devoluciones', 'fecha_completado').then(hasCol => {
+          if (!hasCol) {
+            return db.schema.table('devoluciones', t => {
+              t.date('fecha_completado').nullable().comment('Fecha en que se marcó como completado');
             });
           }
         }),

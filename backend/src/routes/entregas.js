@@ -387,7 +387,14 @@ router.put('/:id/completado', async (req, res) => {
         }
 
         // Actualizar la entrega
-        await db('entregas').where({ id: entregaId }).update({ completado: !!completado });
+        const now = new Date().toISOString().split('T')[0];
+        const entregaUpdate = { completado: !!completado };
+        if (!!completado) {
+            entregaUpdate.fecha_completado = now;
+        } else {
+            entregaUpdate.fecha_completado = null;
+        }
+        await db('entregas').where({ id: entregaId }).update(entregaUpdate);
 
         // Verificar si todas las entregas del pedido están completadas
         const entregasPedido = await db('entregas')
@@ -406,7 +413,8 @@ router.put('/:id/completado', async (req, res) => {
 
             const updateData = { 
                 completado: true,
-                ok: true 
+                ok: true,
+                fecha_completado: now
             };
 
             if (estadoCompleto) {
@@ -416,7 +424,10 @@ router.put('/:id/completado', async (req, res) => {
             await db('pedidos').where({ id: entrega.pedido_id }).update(updateData);
         } else {
             // Si ninguna está completada, el pedido no está completado
-            await db('pedidos').where({ id: entrega.pedido_id }).update({ completado: false });
+            await db('pedidos').where({ id: entrega.pedido_id }).update({ 
+                completado: false,
+                fecha_completado: null
+            });
         }
 
         res.json({ success: true });

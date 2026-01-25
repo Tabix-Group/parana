@@ -20,6 +20,7 @@ export async function crearTablaEntregas(db) {
                 t.date('fecha_entrega');
                 t.text('notas');
                 t.boolean('completado').defaultTo(false).comment('Si la entrega parcial está completada');
+                t.date('fecha_completado').nullable().comment('Fecha en que se marcó como completado');
                 t.boolean('ok').defaultTo(false).comment('Marca si la entrega fue verificada OK');
                 t.timestamp('fecha_creacion').defaultTo(db.fn.now());
                 t.integer('numero_entrega').comment('Número secuencial de la entrega dentro del pedido');
@@ -35,7 +36,7 @@ export async function crearTablaEntregas(db) {
             const columnasRequeridas = [
                 'cant_bultos', 'direccion', 'armador_id', 'tipo_transporte_id',
                 'transporte_id', 'estado_id', 'fecha_entrega', 'notas',
-                'completado', 'ok', 'fecha_creacion', 'numero_entrega'
+                'completado', 'fecha_completado', 'ok', 'fecha_creacion', 'numero_entrega'
             ];
 
             for (const columna of columnasRequeridas) {

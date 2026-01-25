@@ -646,7 +646,7 @@ function Logistica() {
       'Dirección': row.direccion,
       'Armador': row.armador,
       'Cantidad': row.cantidad,
-      'Fecha Entrega': formatDate(row.fecha_entrega),
+      'Fecha Entrega': formatDate(row.fecha_completado || row.fecha_entrega),
       'Ok': row.ok ? 'Sí' : 'No',
       'Vendedor': vendedoresMap[row.vendedor_id] || 'Sin vendedor',
       'Estado': estadosMap[row.estado_id] || 'Sin estado',
@@ -671,7 +671,7 @@ function Logistica() {
       row.armador,
       row.direccion,
       row.cantidad,
-      formatDate(row.fecha_entrega),
+      formatDate(row.fecha_completado || row.fecha_entrega),
       row.ok ? 'Sí' : 'No',
       vendedoresMap[row.vendedor_id] || 'Sin vendedor',
       estadosMap[row.estado_id] || 'Sin estado',
@@ -938,7 +938,7 @@ function Logistica() {
                       </TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.direccion}</TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', textAlign: 'center', color: isCompleted ? '#666' : 'inherit' }}>{row.cantidad}</TableCell>
-                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_entrega)}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{formatDate(row.fecha_completado || row.fecha_entrega)}</TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{vendedoresMap[row.vendedor_id] || 'Sin vendedor'}</TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{estadosMap[row.estado_id] || 'Sin estado'}</TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', color: isCompleted ? '#666' : 'inherit' }}>{row.tipo_transporte}</TableCell>

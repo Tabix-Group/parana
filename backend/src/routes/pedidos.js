@@ -280,27 +280,42 @@ router.put('/:id/logistica', async (req, res) => {
 router.put('/:id/completado', async (req, res) => {
   try {
     const pedidoId = req.params.id;
+    const { completado } = req.body;
 
-    // Verificar si el pedido tiene entregas parciales
-    const entregasCount = await db('entregas').where('pedido_id', pedidoId).count('id as count').first();
+    // Si se está marcando como completado, validar entregas parciales
+    if (completado !== false) {
+      // Verificar si el pedido tiene entregas parciales
+      const entregasCount = await db('entregas').where('pedido_id', pedidoId).count('id as count').first();
 
-    if (entregasCount.count > 0) {
-      // Si tiene entregas parciales, verificar si todas están completadas
-      const entregasCompletadas = await db('entregas')
-        .where('pedido_id', pedidoId)
-        .where('completado', true)
-        .count('id as count')
-        .first();
+      if (entregasCount.count > 0) {
+        // Si tiene entregas parciales, verificar si todas están completadas
+        const entregasCompletadas = await db('entregas')
+          .where('pedido_id', pedidoId)
+          .where('completado', true)
+          .count('id as count')
+          .first();
 
-      if (entregasCompletadas.count !== entregasCount.count) {
-        return res.status(400).json({
-          error: 'No se puede marcar como completado. El pedido tiene entregas parciales pendientes.'
-        });
+        if (entregasCompletadas.count !== entregasCount.count) {
+          return res.status(400).json({
+            error: 'No se puede marcar como completado. El pedido tiene entregas parciales pendientes.'
+          });
+        }
       }
     }
 
-    // Si no tiene entregas o todas están completadas, marcar como completado
-    await db('pedidos').where({ id: pedidoId }).update({ completado: true });
+    // Actualizar estado del pedido
+    const now = new Date().toISOString().split('T')[0];
+    const updateData = { 
+      completado: completado !== false 
+    };
+
+    if (completado !== false) {
+      updateData.fecha_completado = now;
+    } else {
+      updateData.fecha_completado = null;
+    }
+
+    await db('pedidos').where({ id: pedidoId }).update(updateData);
     res.json({ success: true });
   } catch (error) {
     console.error('Error PUT /pedidos/:id/completado:', error);

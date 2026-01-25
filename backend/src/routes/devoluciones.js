@@ -131,7 +131,17 @@ router.put('/:id/recibido', async (req, res) => {
 
 // Marcar devolución como completada
 router.put('/:id/completado', async (req, res) => {
-  await db('devoluciones').where({ id: req.params.id }).update({ completado: true });
+  const { completado } = req.body;
+  const now = new Date().toISOString().split('T')[0];
+  const updateData = { completado: completado !== false };
+  
+  if (completado !== false) {
+    updateData.fecha_completado = now;
+  } else {
+    updateData.fecha_completado = null;
+  }
+  
+  await db('devoluciones').where({ id: req.params.id }).update(updateData);
   res.json({ success: true });
 });
 
