@@ -209,6 +209,7 @@ router.get('/logistica', async (req, res) => {
         'pedidos.comprobante',
         'pedidos.direccion',
         'pedidos.fecha_entrega',
+        'pedidos.fecha_completado',
         'pedidos.cant_bultos',
         'pedidos.tipo_bultos',
         'pedidos.notas',

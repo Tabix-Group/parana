@@ -908,7 +908,8 @@ export default function Pedidos() {
                         <Typography variant="body2"><strong>Fecha Pedido:</strong> {formatDate(selectedPedido.fecha_pedido)}</Typography>
                         <Typography variant="body2"><strong>Dirección:</strong> {selectedPedido.direccion}</Typography>
                         <Typography variant="body2"><strong>Estado:</strong> {selectedPedido.estado_nombre}</Typography>
-                        <Typography variant="body2"><strong>Fecha Entrega:</strong> {formatDate(selectedPedido.fecha_completado) || '-'}</Typography>
+                        <Typography variant="body2"><strong>F. Entrega Pactada:</strong> {formatDate(selectedPedido.fecha_entrega) || '-'}</Typography>
+                        <Typography variant="body2"><strong>F. Entrega Real:</strong> {formatDate(selectedPedido.fecha_completado) || '-'}</Typography>
                         <Typography variant="body2"><strong>Total Bultos Pedido:</strong> {selectedPedido.cant_bultos}</Typography>
                         <Typography variant="body2"><strong>Notas:</strong> {selectedPedido.notas}</Typography>
                     </Box>
