@@ -565,8 +565,8 @@ function Logistica() {
         const newData = prev.map((row) => {
           if (row.id === item.id && row.tipo === item.tipo) {
             const updatedRow = { ...row, completado: newCompletedState };
-            if (row.tipo === 'Devolución' && newCompletedState) {
-              updatedRow.recibido = true;
+            if (row.tipo === 'Devolución') {
+              updatedRow.recibido = newCompletedState;
             }
             return updatedRow;
           }

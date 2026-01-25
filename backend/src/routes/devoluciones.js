@@ -147,6 +147,7 @@ router.put('/:id/completado', async (req, res) => {
     updateData.recibido = true;
   } else {
     updateData.fecha_completado = null;
+    updateData.recibido = false;
   }
   
   await db('devoluciones').where({ id: req.params.id }).update(updateData);
