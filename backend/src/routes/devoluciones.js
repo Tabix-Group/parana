@@ -144,6 +144,7 @@ router.put('/:id/completado', async (req, res) => {
   
   if (completado !== false) {
     updateData.fecha_completado = now;
+    updateData.recibido = true;
   } else {
     updateData.fecha_completado = null;
   }

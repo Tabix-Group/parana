@@ -590,7 +590,7 @@ export default function Devoluciones() {
             sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}
             filterOptions={(options) => options}
           />
-          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1, gridColumn: { md: 'span 2' } }}>
+          <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
             <InputLabel shrink>Tipo de Transporte</InputLabel>
             <Select 
               name="tipo_transporte_id" 

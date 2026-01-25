@@ -562,11 +562,16 @@ function Logistica() {
 
       // Optimistic update - actualizar estado local inmediatamente y manejar relaciones padre-hijo
       setCombinedData((prev) => {
-        const newData = prev.map((row) =>
-          row.id === item.id && row.tipo === item.tipo
-            ? { ...row, completado: newCompletedState }
-            : row
-        );
+        const newData = prev.map((row) => {
+          if (row.id === item.id && row.tipo === item.tipo) {
+            const updatedRow = { ...row, completado: newCompletedState };
+            if (row.tipo === 'Devolución' && newCompletedState) {
+              updatedRow.recibido = true;
+            }
+            return updatedRow;
+          }
+          return row;
+        });
 
         // Lógica para actualizar el pedido padre cuando cambia una entrega parcial
         if (item.tipo === 'Entrega') {
