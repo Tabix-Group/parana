@@ -84,8 +84,13 @@ export default function Devoluciones() {
     setTransportes(res.data.data);
   };
   const fetchTiposTransporte = async () => {
-    const res = await API.get('/tiposTransporte', { params: { pageSize: 10000 } });
-    setTiposTransporte(res.data.data || []);
+    try {
+      const res = await API.get('/tipos-transporte', { params: { pageSize: 10000 } });
+      setTiposTransporte(res.data.data || []);
+    } catch (error) {
+      console.error('Error fetching tipos transporte:', error);
+      setTiposTransporte([]);
+    }
   };
   const fetchClientes = async () => {
     const res = await API.get('/clientes', { params: { pageSize: 10000 } });
