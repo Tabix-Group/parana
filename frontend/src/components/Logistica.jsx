@@ -156,14 +156,14 @@ function Logistica() {
     try {
       const [pedidosRes, devolucionesRes, entregasRes, vendedoresRes, clientesRes, transportesRes, tiposTransporteRes, estadosRes, armadoresRes] = await Promise.all([
         api.get('/pedidos/logistica'),
-        api.get('/devoluciones?pageSize=1000'),
+        api.get('/devoluciones', { params: { pageSize: 0, en_logistica: 1 } }),
         api.get('/entregas/logistica'),
         api.get('/vendedores', { params: { pageSize: 0 } }),
-        api.get('/clientes?pageSize=1000'),
-        api.get('/transportes?pageSize=1000'),
-        api.get('/tipos-transporte?pageSize=1000'),
-        api.get('/estados?pageSize=1000'),
-        api.get('/armadores?pageSize=1000')
+        api.get('/clientes', { params: { pageSize: 0 } }),
+        api.get('/transportes', { params: { pageSize: 0 } }),
+        api.get('/tipos-transporte', { params: { pageSize: 0 } }),
+        api.get('/estados', { params: { pageSize: 0 } }),
+        api.get('/armadores', { params: { pageSize: 0 } })
       ]);
 
       setPedidos(pedidosRes.data || []);

@@ -360,10 +360,10 @@ export default function Pedidos() {
 
   // Cargar catálogos al montar (excepto clientes)
   useEffect(() => {
-    API.get('/estados').then(res => setEstados(res.data.data));
-    API.get('/armadores').then(res => setArmadores(res.data.data));
-    API.get('/tipos-transporte').then(res => setTiposTransporte(res.data.data));
-    API.get('/transportes').then(res => setTransportes(res.data.data));
+    API.get('/estados', { params: { pageSize: 0 } }).then(res => setEstados(res.data.data));
+    API.get('/armadores', { params: { pageSize: 0 } }).then(res => setArmadores(res.data.data));
+    API.get('/tipos-transporte', { params: { pageSize: 0 } }).then(res => setTiposTransporte(res.data.data));
+    API.get('/transportes', { params: { pageSize: 0 } }).then(res => setTransportes(res.data.data));
     // Request all vendedores (pageSize=0) so dropdowns contain the full list
     API.get('/vendedores', { params: { pageSize: 0 } }).then(res => setVendedores(res.data.data));
   }, []);
@@ -849,9 +849,26 @@ export default function Pedidos() {
             </FormControl>
             <FormControl fullWidth sx={{ bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
               <InputLabel shrink>Transporte</InputLabel>
-              <Select name="transporte_id" value={form.transporte_id} onChange={handleChange} label="Transporte">
-                {transportes.map(t => <MenuItem key={t.id} value={t.id}>{t.nombre}</MenuItem>)}
-              </Select>
+              <Box sx={{ pt: 1 }}>
+                <Autocomplete
+                  options={transportes}
+                  getOptionLabel={option => option.nombre || ''}
+                  value={transportes.find(t => String(t.id) === String(form.transporte_id)) || null}
+                  onChange={(_, value) => {
+                    setForm(prev => ({
+                      ...prev,
+                      transporte_id: value ? value.id : ''
+                    }));
+                  }}
+                  renderInput={params => (
+                    <TextField {...params} variant="outlined" fullWidth />
+                  )}
+                  isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
+                  autoHighlight
+                  openOnFocus
+                  disablePortal
+                />
+              </Box>
             </FormControl>
           </Box>
 
