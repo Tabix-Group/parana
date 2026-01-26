@@ -73,19 +73,21 @@ export default function Devoluciones() {
   const [pedidos, setPedidos] = useState([]);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
+  const [filterCliente, setFilterCliente] = useState('');
+  const [filterComprobante, setFilterComprobante] = useState('');
   const [clientes, setClientes] = useState([]);
   const [transportes, setTransportes] = useState([]);
   const [tiposTransporte, setTiposTransporte] = useState([]);
   const [clientesLoading, setClientesLoading] = useState(false);
 
-  useEffect(() => { fetchData(); fetchPedidos(); fetchClientes(); fetchTransportes(); fetchTiposTransporte(); }, [page, pageSize, filter]);
+  useEffect(() => { fetchData(); fetchPedidos(); fetchClientes(); fetchTransportes(); fetchTiposTransporte(); }, [page, pageSize, filter, filterCliente, filterComprobante]);
   const fetchTransportes = async () => {
-    const res = await API.get('/transportes', { params: { pageSize: 10000 } });
+    const res = await API.get('/transportes', { params: { pageSize: 0 } });
     setTransportes(res.data.data);
   };
   const fetchTiposTransporte = async () => {
     try {
-      const res = await API.get('/tipos-transporte', { params: { pageSize: 10000 } });
+      const res = await API.get('/tipos-transporte', { params: { pageSize: 0 } });
       setTiposTransporte(res.data.data || []);
     } catch (error) {
       console.error('Error fetching tipos transporte:', error);
@@ -99,13 +101,19 @@ export default function Devoluciones() {
 
   const fetchData = async () => {
     const res = await API.get('/devoluciones', {
-      params: { page: page + 1, pageSize, filter }
+      params: { 
+        page: page + 1, 
+        pageSize, 
+        filter,
+        cliente: filterCliente,
+        comprobante: filterComprobante
+      }
     });
     setData(res.data.data);
     setTotal(Number(res.data.total));
   };
   const fetchPedidos = async () => {
-    const res = await API.get('/pedidos', { params: { pageSize: 10000 } });
+    const res = await API.get('/pedidos', { params: { pageSize: 0 } });
     setPedidos(res.data.data);
   };
   const handleChangePage = (_, newPage) => setPage(newPage);
@@ -299,27 +307,54 @@ export default function Devoluciones() {
   const handleExportClose = () => setExportAnchor(null);
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()}>Nuevo Cobro/Devolución</Button>
-        <Button
-          variant="outlined"
-          startIcon={<FileDownload />}
-          onClick={handleExportClick}
-        >
-          Exportar
-        </Button>
+    <Box sx={{ p: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()} sx={{ height: 40, whiteSpace: 'nowrap' }}>Nuevo Cobro/Devolución</Button>
+          <Button
+            variant="outlined"
+            startIcon={<FileDownload />}
+            onClick={handleExportClick}
+            sx={{ height: 40 }}
+          >
+            Exportar
+          </Button>
+        </Box>
+        
         <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={handleExportClose}>
           <MenuItem onClick={() => { handleExportExcel(); handleExportClose(); }}>Exportar a Excel</MenuItem>
           <MenuItem onClick={() => { handleExportPDF(); handleExportClose(); }}>Exportar a PDF</MenuItem>
         </Menu>
-        <input
-          type="text"
-          value={filter}
-          onChange={e => setFilter(e.target.value)}
-          placeholder="Buscar..."
-          style={{ padding: 8, borderRadius: 6, border: '1px solid #d0d7e2', minWidth: 220 }}
-        />
+        
+        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center', ml: 'auto' }}>
+          <TextField
+            size="small"
+            label="Filtrar Cliente"
+            value={filterCliente}
+            onChange={e => setFilterCliente(e.target.value)}
+            variant="outlined"
+            placeholder="Nombre o ID..."
+            sx={{ bgcolor: '#fff', width: { xs: '100%', sm: 180 } }}
+          />
+          <TextField
+            size="small"
+            label="Filtrar Comprobante"
+            value={filterComprobante}
+            onChange={e => setFilterComprobante(e.target.value)}
+            variant="outlined"
+            placeholder="Número..."
+            sx={{ bgcolor: '#fff', width: { xs: '100%', sm: 180 } }}
+          />
+          <TextField
+            size="small"
+            label="Búsqueda General"
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            variant="outlined"
+            placeholder="Texto..."
+            sx={{ bgcolor: '#fff', width: { xs: '100%', sm: 200 } }}
+          />
+        </Box>
       </Box>
       <TableContainer sx={{ borderRadius: 2, boxShadow: '0 2px 12px 0 rgba(34,51,107,0.06)', border: '1px solid #e0e3e7', background: '#fff' }}>
         <Table size="small" stickyHeader>
@@ -551,11 +586,11 @@ export default function Devoluciones() {
             }}
             onInputChange={(_, value) => {
               if (value && value.length > 0) {
-                API.get('/clientes', { params: { nombre: value, pageSize: 100 } })
+                API.get('/clientes', { params: { nombre: value, pageSize: 0 } })
                   .then(res => setClientes(res.data.data));
               } else if (value === '') {
                 // Si el campo está vacío, cargar todos los clientes
-                API.get('/clientes', { params: { pageSize: 10000 } })
+                API.get('/clientes', { params: { pageSize: 0 } })
                   .then(res => setClientes(res.data.data));
               }
             }}
@@ -575,11 +610,11 @@ export default function Devoluciones() {
             }}
             onInputChange={(_, value) => {
               if (value && value.length > 0) {
-                API.get('/transportes', { params: { nombre: value, pageSize: 100 } })
+                API.get('/transportes', { params: { nombre: value, pageSize: 0 } })
                   .then(res => setTransportes(res.data.data));
               } else if (value === '') {
                 // Si el campo está vacío, cargar todos los transportes
-                API.get('/transportes', { params: { pageSize: 10000 } })
+                API.get('/transportes', { params: { pageSize: 0 } })
                   .then(res => setTransportes(res.data.data));
               }
             }}
