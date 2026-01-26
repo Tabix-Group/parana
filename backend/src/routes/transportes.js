@@ -4,15 +4,31 @@ import { db } from '../index.js';
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', nombre } = req.query;
-  let query = db('transportes');
-  if (nombre) query = query.whereRaw('LOWER(nombre) LIKE ?', [`%${nombre.toLowerCase()}%`]);
-  const totalResult = await db('transportes').modify(qb => {
-    if (nombre) qb.whereRaw('LOWER(nombre) LIKE ?', [`%${nombre.toLowerCase()}%`]);
-  }).count({ count: '*' }).first();
-  const total = totalResult ? totalResult.count : 0;
-  const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
-  res.json({ data, total });
+  try {
+    const page = parseInt(req.query.page) || 1;
+    let pageSize = parseInt(req.query.pageSize) || 10;
+    const sortBy = req.query.sortBy || 'id';
+    const order = req.query.order || 'desc';
+    const { nombre } = req.query;
+
+    // Si se pide un pageSize muy alto o 0, permitirlo para lookups
+    if (req.query.pageSize === '0') pageSize = 100000;
+
+    let query = db('transportes');
+    if (nombre) query = query.whereRaw('LOWER(nombre) LIKE ?', [`%${nombre.toLowerCase()}%`]);
+
+    const totalResult = await db('transportes').modify(qb => {
+      if (nombre) qb.whereRaw('LOWER(nombre) LIKE ?', [`%${nombre.toLowerCase()}%`]);
+    }).count({ count: '*' }).first();
+    
+    const total = totalResult ? (parseInt(totalResult.count) || 0) : 0;
+    const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
+    
+    res.json({ data, total });
+  } catch (err) {
+    console.error('Error GET /transportes:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.post('/', async (req, res) => {

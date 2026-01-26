@@ -5,9 +5,17 @@ const router = express.Router();
 
 // Listar pedidos con paginación, filtros y orden
 router.get('/', async (req, res) => {
-  const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', estado, cliente, comprobante, parcial, fecha_entrega, fecha_pedido, armador, vendedor, transporte } = req.query;
-  // Filtros para ambos queries - usar joins para permitir filtros por nombre o id
-  let baseQuery = db('pedidos')
+  try {
+    const page = parseInt(req.query.page) || 1;
+    let pageSize = parseInt(req.query.pageSize) || 10;
+    const sortBy = req.query.sortBy || 'id';
+    const order = req.query.order || 'desc';
+    const { estado, cliente, comprobante, parcial, fecha_entrega, fecha_pedido, armador, vendedor, transporte } = req.query;
+
+    if (req.query.pageSize === '0') pageSize = 100000;
+
+    // Filtros para ambos queries - usar joins para permitir filtros por nombre o id
+    let baseQuery = db('pedidos')
     .leftJoin('clientes', 'pedidos.cliente_id', 'clientes.id')
     .leftJoin('armadores', 'pedidos.armador_id', 'armadores.id')
     .leftJoin('transportes', 'pedidos.transporte_id', 'transportes.id')
@@ -162,6 +170,10 @@ router.get('/', async (req, res) => {
   }
   const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
   res.json({ data, total });
+} catch (err) {
+  console.error('Error GET /pedidos:', err);
+  res.status(500).json({ error: err.message });
+}
 });
 
 // Crear pedido

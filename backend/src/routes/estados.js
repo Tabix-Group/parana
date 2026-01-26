@@ -4,15 +4,27 @@ import { db } from '../index.js';
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  const { page = 1, pageSize = 10, sortBy = 'id', order = 'desc', nombre } = req.query;
-  let query = db('estados');
-  if (nombre) query = query.where('nombre', 'like', `%${nombre}%`);
-  const totalResult = await db('estados').modify(qb => {
-    if (nombre) qb.where('nombre', 'like', `%${nombre}%`);
-  }).count({ count: '*' }).first();
-  const total = totalResult ? totalResult.count : 0;
-  const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
-  res.json({ data, total });
+  try {
+    const page = parseInt(req.query.page) || 1;
+    let pageSize = parseInt(req.query.pageSize) || 10;
+    const sortBy = req.query.sortBy || 'id';
+    const order = req.query.order || 'desc';
+    const { nombre } = req.query;
+
+    if (req.query.pageSize === '0') pageSize = 10000;
+
+    let query = db('estados');
+    if (nombre) query = query.where('nombre', 'like', `%${nombre}%`);
+    const totalResult = await db('estados').modify(qb => {
+      if (nombre) qb.where('nombre', 'like', `%${nombre}%`);
+    }).count({ count: '*' }).first();
+    const total = totalResult ? (parseInt(totalResult.count) || 0) : 0;
+    const data = await query.orderBy(sortBy, order).limit(pageSize).offset((page - 1) * pageSize);
+    res.json({ data, total });
+  } catch (err) {
+    console.error('Error GET /estados:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.post('/', async (req, res) => {
